@@ -1,0 +1,246 @@
+---
+title: Heap
+description: Keep the smallest or largest item instantly available, and solve "top k" problems in O(n log k).
+readingTime: 10 min
+---
+
+## The idea
+
+A heap is a binary tree where every parent is smaller than its children (a **min-heap**) or larger (a **max-heap**). That one rule means the smallest (or largest) item is always at the root.
+
+| Operation | Cost |
+|-----------|------|
+| Look at the top | `O(1)` |
+| Push | `O(log n)` |
+| Pop the top | `O(log n)` |
+| Build from a list | `O(n)` |
+
+Heaps are stored as plain arrays: the children of index `i` are at `2i + 1` and `2i + 2`. When you push, the new item **sifts up** past larger parents. When you pop, the last item moves to the root and **sifts down**.
+
+## When to use it
+
+- **Top k / kth largest / kth smallest.** Keep a heap of size `k` instead of sorting everything.
+- You repeatedly need the **current minimum or maximum** while items are added: scheduling, streaming medians, merging sorted lists.
+- **Shortest path** in a weighted graph (Dijkstra's algorithm).
+
+<Callout type="tip" title="Heaps in each language">
+Python's `heapq` and Java's `PriorityQueue` are min-heaps. C++'s `priority_queue` is a **max-heap** by default; pass `greater<>` to get a min-heap. JavaScript has no built-in heap, so use the small class below.
+</Callout>
+
+```javascript title="heap.js"
+class Heap {
+  // compare(a, b) < 0 means a belongs closer to the top.
+  constructor(compare = (a, b) => a - b) {
+    this.items = [];
+    this.compare = compare;
+  }
+
+  get size() {
+    return this.items.length;
+  }
+
+  peek() {
+    return this.items[0];
+  }
+
+  push(value) {
+    const items = this.items;
+    items.push(value);
+    let i = items.length - 1;
+    while (i > 0) {
+      const parent = (i - 1) >> 1;
+      if (this.compare(items[parent], items[i]) <= 0) break;
+      [items[parent], items[i]] = [items[i], items[parent]];
+      i = parent;
+    }
+  }
+
+  pop() {
+    const items = this.items;
+    const top = items[0];
+    const last = items.pop();
+    if (items.length > 0) {
+      items[0] = last;
+      let i = 0;
+      for (;;) {
+        const left = 2 * i + 1;
+        const right = left + 1;
+        let best = i;
+        if (left < items.length && this.compare(items[left], items[best]) < 0) best = left;
+        if (right < items.length && this.compare(items[right], items[best]) < 0) best = right;
+        if (best === i) break;
+        [items[best], items[i]] = [items[i], items[best]];
+        i = best;
+      }
+    }
+    return top;
+  }
+}
+```
+
+## Problem 1: Kth Largest Element in an Array
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/kth-largest-element-in-an-array/">
+
+Given an integer array `nums` and an integer `k`, return the `k`th largest element.
+
+**Example:** `nums = [3, 2, 1, 5, 6, 4]`, `k = 2` returns `5`.
+
+</Problem>
+
+### Brute force
+
+Sort and take `nums[n - k]`: `O(n log n)`.
+
+### Min-heap of size k
+
+Keep a **min-heap** of the `k` largest numbers seen so far. Whenever it grows past `k`, pop the smallest, since it can't be among the `k` largest. At the end, the root is the smallest of the `k` largest: exactly the `k`th largest.
+
+It sounds backwards to use a *min*-heap to find *large* numbers, but the heap's job is to throw away small numbers quickly.
+
+<Visualizer id="kth-largest" />
+
+<CodeTabs>
+
+```python
+import heapq
+
+def find_kth_largest(nums: list[int], k: int) -> int:
+    heap = []  # min-heap of the k largest so far
+    for num in nums:
+        heapq.heappush(heap, num)
+        if len(heap) > k:
+            heapq.heappop(heap)  # drop the smallest
+    return heap[0]
+```
+
+```java
+public int findKthLargest(int[] nums, int k) {
+    PriorityQueue<Integer> heap = new PriorityQueue<>();  // min-heap of the k largest so far
+    for (int num : nums) {
+        heap.offer(num);
+        if (heap.size() > k) heap.poll();  // drop the smallest
+    }
+    return heap.peek();
+}
+```
+
+```cpp
+int findKthLargest(const vector<int>& nums, int k) {
+    priority_queue<int, vector<int>, greater<int>> heap;  // min-heap of the k largest so far
+    for (int num : nums) {
+        heap.push(num);
+        if ((int)heap.size() > k) heap.pop();  // drop the smallest
+    }
+    return heap.top();
+}
+```
+
+```javascript
+function findKthLargest(nums, k) {
+  const heap = new Heap(); // min-heap of the k largest so far
+  for (const num of nums) {
+    heap.push(num);
+    if (heap.size > k) heap.pop(); // drop the smallest
+  }
+  return heap.peek();
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(n log k)" space="O(k)" />
+
+## Problem 2: Top K Frequent Elements
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/top-k-frequent-elements/">
+
+Given an integer array `nums` and an integer `k`, return the `k` most frequent elements, in any order.
+
+**Example:** `nums = [1, 1, 1, 2, 2, 3]`, `k = 2` returns `[1, 2]`.
+
+</Problem>
+
+Count each number with a hash map. Then it's the same problem as before, except the heap compares **counts**: keep a min-heap of size `k` ordered by frequency and pop the least frequent whenever it grows too big.
+
+<CodeTabs>
+
+```python
+from collections import Counter
+import heapq
+
+def top_k_frequent(nums: list[int], k: int) -> list[int]:
+    counts = Counter(nums)
+    heap = []  # (count, num), least frequent on top
+    for num, count in counts.items():
+        heapq.heappush(heap, (count, num))
+        if len(heap) > k:
+            heapq.heappop(heap)  # drop the least frequent
+    return [num for count, num in heap]
+```
+
+```java
+public int[] topKFrequent(int[] nums, int k) {
+    Map<Integer, Integer> counts = new HashMap<>();
+    for (int n : nums) counts.merge(n, 1, Integer::sum);
+    // least frequent on top
+    PriorityQueue<Integer> heap = new PriorityQueue<>((a, b) -> counts.get(a) - counts.get(b));
+    for (int num : counts.keySet()) {
+        heap.offer(num);
+        if (heap.size() > k) heap.poll();  // drop the least frequent
+    }
+    int[] result = new int[k];
+    for (int i = 0; i < k; i++) result[i] = heap.poll();
+    return result;
+}
+```
+
+```cpp
+vector<int> topKFrequent(const vector<int>& nums, int k) {
+    unordered_map<int, int> counts;
+    for (int n : nums) counts[n]++;
+    // (count, num), least frequent on top
+    priority_queue<pair<int, int>, vector<pair<int, int>>, greater<>> heap;
+    for (const auto& [num, count] : counts) {
+        heap.push({count, num});
+        if ((int)heap.size() > k) heap.pop();  // drop the least frequent
+    }
+    vector<int> result;
+    while (!heap.empty()) {
+        result.push_back(heap.top().second);
+        heap.pop();
+    }
+    return result;
+}
+```
+
+```javascript
+function topKFrequent(nums, k) {
+  const counts = new Map();
+  for (const n of nums) counts.set(n, (counts.get(n) ?? 0) + 1);
+  const heap = new Heap((a, b) => a[0] - b[0]); // [count, num], least frequent on top
+  for (const [num, count] of counts) {
+    heap.push([count, num]);
+    if (heap.size > k) heap.pop(); // drop the least frequent
+  }
+  return heap.items.map(([, num]) => num);
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(n log k)" space="O(n) for the counts" />
+
+<Callout type="interview">
+Mention the alternatives and their trade-offs: sorting is `O(n log n)`, the heap is `O(n log k)`, and quickselect (for kth largest) or bucket sort (for top k frequent) is `O(n)` on average. Then pick the heap as the simple, reliable choice unless the interviewer pushes for linear time.
+</Callout>
+
+## Practice problems
+
+| Problem | Difficulty |
+|---------|------------|
+| [Last Stone Weight](https://leetcode.com/problems/last-stone-weight/) | <Difficulty level="Easy" /> |
+| [K Closest Points to Origin](https://leetcode.com/problems/k-closest-points-to-origin/) | <Difficulty level="Medium" /> |
+| [Task Scheduler](https://leetcode.com/problems/task-scheduler/) | <Difficulty level="Medium" /> |
+| [Merge k Sorted Lists](https://leetcode.com/problems/merge-k-sorted-lists/) | <Difficulty level="Hard" /> |
+| [Find Median from Data Stream](https://leetcode.com/problems/find-median-from-data-stream/) | <Difficulty level="Hard" /> |

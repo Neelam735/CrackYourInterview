@@ -1,16 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { ArrayRow, CollectionView, GraphView, GridView, IntervalsView, TreeView } from "./panels";
 import { scenarios } from "./scenarios";
-import type { Frame, PointerColor, Scenario } from "./types";
-
-const pointerColors: Record<PointerColor, string> = {
-  blue: "bg-brand-600 text-white",
-  green: "bg-emerald-600 text-white",
-  rose: "bg-rose-600 text-white",
-  amber: "bg-amber-500 text-slate-950",
-  violet: "bg-violet-600 text-white",
-};
+import type { ArrayPanel, CellState, CollectionPanel, Frame, Scenario } from "./types";
 
 const PLAY_INTERVAL_MS = 1400;
 
@@ -61,9 +54,16 @@ export function Visualizer({ id }: { id: string }) {
       </header>
 
       <div className="space-y-5 px-5 py-6">
-        <Cells frame={frame} kind={scenario.kind ?? "array"} cycleTo={scenario.cycleTo} />
+        {frame.array && (
+          <ArrayRow panel={mainArray(frame)} kind={scenario.kind ?? "array"} cycleTo={scenario.cycleTo} />
+        )}
+        {frame.tree && <TreeView panel={frame.tree} />}
+        {frame.graph && <GraphView panel={frame.graph} />}
+        {frame.grid && <GridView panel={frame.grid} />}
+        {frame.intervals?.map((panel, i) => <IntervalsView key={i} panel={panel} />)}
+        {frame.arrays?.map((panel, i) => <ArrayRow key={i} panel={panel} />)}
 
-        {(frame.variables || frame.stack) && (
+        {(frame.variables || collections(frame).length > 0) && (
           <div className="flex flex-wrap items-start gap-4">
             {frame.variables && (
               <div className="flex flex-wrap gap-2">
@@ -78,7 +78,9 @@ export function Visualizer({ id }: { id: string }) {
                 ))}
               </div>
             )}
-            {frame.stack && <StackView items={frame.stack} label={frame.stackLabel ?? "stack"} />}
+            {collections(frame).map((panel) => (
+              <CollectionView key={panel.label} panel={panel} />
+            ))}
           </div>
         )}
 
@@ -130,92 +132,19 @@ export function Visualizer({ id }: { id: string }) {
   );
 }
 
-function Cells({ frame, kind, cycleTo }: { frame: Frame; kind: "array" | "list"; cycleTo?: number }) {
-  const isList = kind === "list";
-
-  return (
-    <div className="overflow-x-auto pb-1">
-      <div className="flex w-max items-start">
-        {frame.array.map((value, index) => {
-          const inWindow = frame.window && index >= frame.window[0] && index <= frame.window[1];
-          const highlighted = frame.highlight?.includes(index);
-          const dimmed = frame.dimmed?.includes(index);
-          const pointers = frame.pointers?.filter((p) => p.index === index) ?? [];
-
-          let cellClass =
-            "border-slate-300 bg-white text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100";
-          if (inWindow) cellClass = "border-brand-400 bg-brand-100 text-brand-950 dark:border-brand-600 dark:bg-brand-900/60 dark:text-white";
-          if (highlighted) cellClass = "border-emerald-500 bg-emerald-100 text-emerald-950 dark:border-emerald-500 dark:bg-emerald-900/60 dark:text-white";
-          if (dimmed) cellClass = "border-slate-200 bg-slate-50 text-slate-300 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-600";
-
-          return (
-            <div key={index} className="flex items-start">
-              <div className="flex w-12 flex-col items-center">
-                <div
-                  className={`grid h-12 w-12 place-items-center border-2 font-mono text-base font-semibold transition-colors duration-300 ${
-                    isList ? "rounded-full" : "rounded-lg"
-                  } ${cellClass}`}
-                >
-                  {value}
-                </div>
-                <span className="mt-1 font-mono text-[11px] text-slate-400">{index}</span>
-                <div className="mt-1 flex min-h-[2.25rem] flex-col items-center gap-1">
-                  {pointers.map((pointer) => (
-                    <span
-                      key={pointer.name}
-                      className={`rounded px-1.5 py-0.5 font-mono text-[11px] font-semibold leading-none ${
-                        pointerColors[pointer.color ?? "blue"]
-                      }`}
-                    >
-                      {pointer.name}
-                    </span>
-                  ))}
-                </div>
-              </div>
-              {isList && index < frame.array.length - 1 && (
-                <span className="mt-3 w-6 text-center text-slate-400" aria-hidden>
-                  →
-                </span>
-              )}
-              {!isList && index < frame.array.length - 1 && <span className="w-1.5" />}
-            </div>
-          );
-        })}
-        {isList && (
-          <span className="ml-1 mt-3 whitespace-nowrap font-mono text-xs text-slate-500 dark:text-slate-400">
-            {cycleTo === undefined ? "→ null" : `↺ back to index ${cycleTo}`}
-          </span>
-        )}
-      </div>
-    </div>
-  );
+// The original array fields (window/highlight/dimmed) map onto cell states.
+function mainArray(frame: Frame): ArrayPanel {
+  const states: Record<number, CellState> = {};
+  if (frame.window) for (let i = frame.window[0]; i <= frame.window[1]; i++) states[i] = "window";
+  frame.highlight?.forEach((i) => (states[i] = "highlight"));
+  frame.dimmed?.forEach((i) => (states[i] = "dimmed"));
+  return { values: frame.array ?? [], pointers: frame.pointers, states };
 }
 
-function StackView({ items, label }: { items: (number | string)[]; label: string }) {
-  return (
-    <div className="flex items-center gap-2">
-      <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">{label}</span>
-      <div className="flex min-h-9 min-w-24 items-center gap-1 rounded-lg border-2 border-dashed border-slate-300 px-1.5 py-1 dark:border-slate-700">
-        {items.length === 0 ? (
-          <span className="px-1 text-xs italic text-slate-400">empty</span>
-        ) : (
-          items.map((item, i) => (
-            <span
-              key={i}
-              className={`rounded-md px-2 py-1 font-mono text-xs font-semibold ${
-                i === items.length - 1
-                  ? "bg-violet-600 text-white"
-                  : "bg-violet-100 text-violet-900 dark:bg-violet-900/50 dark:text-violet-100"
-              }`}
-            >
-              {item}
-            </span>
-          ))
-        )}
-      </div>
-      <span className="text-xs text-slate-400">← top</span>
-    </div>
-  );
+function collections(frame: Frame): CollectionPanel[] {
+  const panels = frame.collections ?? [];
+  if (!frame.stack) return panels;
+  return [{ label: frame.stackLabel ?? "stack", items: frame.stack, note: "← top" }, ...panels];
 }
 
 function ControlButton({

@@ -1,0 +1,258 @@
+---
+title: Backtracking
+description: Build candidates one choice at a time, and undo each choice to explore the next one.
+readingTime: 10 min
+---
+
+## The idea
+
+Some problems ask for **every** valid combination: all subsets, all permutations, every way to place queens on a board. There's no shortcut around listing them all, so the goal is to generate them cleanly without missing or repeating any.
+
+Backtracking builds a candidate **one choice at a time**:
+
+1. **Choose:** add an option to the current path.
+2. **Explore:** recurse to make the next choice.
+3. **Un-choose:** remove the option, so the path is ready for the next one.
+
+Picture a decision tree. Each recursive call is a node, each choice is an edge, and backtracking is a depth-first walk over that tree. If a partial path can already never become valid, stop exploring it. That's called **pruning**, and it's what makes backtracking fast enough in practice.
+
+## When to use it
+
+- The problem says **"all"**: all subsets, all permutations, all combinations, all valid placements.
+- Inputs are small (often `n ≤ 15` or so), because the number of answers grows exponentially.
+- Constraint puzzles: N-Queens, Sudoku, word search on a grid.
+
+### The template
+
+```python
+def backtrack(path, choices):
+    if path is a complete answer:
+        result.append(path[:])   # copy! path keeps changing
+        return
+    for choice in choices:
+        if choice is not allowed:
+            continue             # prune
+        path.append(choice)      # choose
+        backtrack(path, ...)     # explore
+        path.pop()               # un-choose
+```
+
+## Problem 1: Subsets
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/subsets/">
+
+Given an array `nums` of unique integers, return all possible subsets (the power set), in any order.
+
+**Example:** `nums = [1, 2, 3]` returns `[[], [1], [1, 2], [1, 2, 3], [1, 3], [2], [2, 3], [3]]`.
+
+</Problem>
+
+Every path in the decision tree is a subset, so record the path at every call, not just at the leaves. To avoid duplicates like `[2, 1]` alongside `[1, 2]`, only choose numbers **after** the last one chosen: pass a `start` index.
+
+<Visualizer id="subsets" />
+
+<CodeTabs>
+
+```python
+def subsets(nums: list[int]) -> list[list[int]]:
+    result = []
+    path = []
+
+    def backtrack(start):
+        result.append(path[:])          # every path is a subset
+        for i in range(start, len(nums)):
+            path.append(nums[i])        # choose
+            backtrack(i + 1)            # explore
+            path.pop()                  # un-choose
+
+    backtrack(0)
+    return result
+```
+
+```java
+public List<List<Integer>> subsets(int[] nums) {
+    List<List<Integer>> result = new ArrayList<>();
+    backtrack(nums, 0, new ArrayList<>(), result);
+    return result;
+}
+
+private void backtrack(int[] nums, int start, List<Integer> path, List<List<Integer>> result) {
+    result.add(new ArrayList<>(path));  // every path is a subset
+    for (int i = start; i < nums.length; i++) {
+        path.add(nums[i]);                  // choose
+        backtrack(nums, i + 1, path, result);  // explore
+        path.remove(path.size() - 1);       // un-choose
+    }
+}
+```
+
+```cpp
+void backtrack(const vector<int>& nums, int start, vector<int>& path, vector<vector<int>>& result) {
+    result.push_back(path);  // every path is a subset
+    for (int i = start; i < (int)nums.size(); i++) {
+        path.push_back(nums[i]);                // choose
+        backtrack(nums, i + 1, path, result);   // explore
+        path.pop_back();                        // un-choose
+    }
+}
+
+vector<vector<int>> subsets(const vector<int>& nums) {
+    vector<vector<int>> result;
+    vector<int> path;
+    backtrack(nums, 0, path, result);
+    return result;
+}
+```
+
+```javascript
+function subsets(nums) {
+  const result = [];
+  const path = [];
+  const backtrack = (start) => {
+    result.push([...path]); // every path is a subset
+    for (let i = start; i < nums.length; i++) {
+      path.push(nums[i]);   // choose
+      backtrack(i + 1);     // explore
+      path.pop();           // un-choose
+    }
+  };
+  backtrack(0);
+  return result;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(n × 2ⁿ)" space="O(n) besides the output" />
+
+<Callout type="warning" title="Copy the path">
+Append a **copy** of the path (`path[:]`, `new ArrayList<>(path)`, `[...path]`). If you append `path` itself, every entry in the result points to the same list, and they'll all be empty when the recursion finishes.
+</Callout>
+
+## Problem 2: Permutations
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/permutations/">
+
+Given an array `nums` of distinct integers, return all possible orderings.
+
+**Example:** `nums = [1, 2, 3]` returns all 6 orderings, such as `[1, 2, 3]` and `[3, 1, 2]`.
+
+</Problem>
+
+Order matters now, so any unused number can come next, not just the ones after the last choice. Track which numbers are already in the path with a `used` array. A path is complete when it contains every number.
+
+<CodeTabs>
+
+```python
+def permute(nums: list[int]) -> list[list[int]]:
+    result = []
+    path = []
+    used = [False] * len(nums)
+
+    def backtrack():
+        if len(path) == len(nums):
+            result.append(path[:])
+            return
+        for i in range(len(nums)):
+            if used[i]:
+                continue
+            used[i] = True
+            path.append(nums[i])
+            backtrack()
+            path.pop()
+            used[i] = False
+
+    backtrack()
+    return result
+```
+
+```java
+public List<List<Integer>> permute(int[] nums) {
+    List<List<Integer>> result = new ArrayList<>();
+    backtrack(nums, new boolean[nums.length], new ArrayList<>(), result);
+    return result;
+}
+
+private void backtrack(int[] nums, boolean[] used, List<Integer> path, List<List<Integer>> result) {
+    if (path.size() == nums.length) {
+        result.add(new ArrayList<>(path));
+        return;
+    }
+    for (int i = 0; i < nums.length; i++) {
+        if (used[i]) continue;
+        used[i] = true;
+        path.add(nums[i]);
+        backtrack(nums, used, path, result);
+        path.remove(path.size() - 1);
+        used[i] = false;
+    }
+}
+```
+
+```cpp
+void backtrack(const vector<int>& nums, vector<bool>& used, vector<int>& path, vector<vector<int>>& result) {
+    if (path.size() == nums.size()) {
+        result.push_back(path);
+        return;
+    }
+    for (int i = 0; i < (int)nums.size(); i++) {
+        if (used[i]) continue;
+        used[i] = true;
+        path.push_back(nums[i]);
+        backtrack(nums, used, path, result);
+        path.pop_back();
+        used[i] = false;
+    }
+}
+
+vector<vector<int>> permute(const vector<int>& nums) {
+    vector<vector<int>> result;
+    vector<int> path;
+    vector<bool> used(nums.size(), false);
+    backtrack(nums, used, path, result);
+    return result;
+}
+```
+
+```javascript
+function permute(nums) {
+  const result = [];
+  const path = [];
+  const used = new Array(nums.length).fill(false);
+  const backtrack = () => {
+    if (path.length === nums.length) {
+      result.push([...path]);
+      return;
+    }
+    for (let i = 0; i < nums.length; i++) {
+      if (used[i]) continue;
+      used[i] = true;
+      path.push(nums[i]);
+      backtrack();
+      path.pop();
+      used[i] = false;
+    }
+  };
+  backtrack();
+  return result;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(n × n!)" space="O(n) besides the output" />
+
+<Callout type="interview">
+State the complexity in terms of the **number of answers**. There are `2ⁿ` subsets and `n!` permutations, and copying each one costs `O(n)`, so no algorithm can do better than listing them. This shows the interviewer you know the exponential cost is unavoidable, not a flaw in your approach.
+</Callout>
+
+## Practice problems
+
+| Problem | Difficulty |
+|---------|------------|
+| [Combination Sum](https://leetcode.com/problems/combination-sum/) | <Difficulty level="Medium" /> |
+| [Subsets II](https://leetcode.com/problems/subsets-ii/) | <Difficulty level="Medium" /> |
+| [Letter Combinations of a Phone Number](https://leetcode.com/problems/letter-combinations-of-a-phone-number/) | <Difficulty level="Medium" /> |
+| [Word Search](https://leetcode.com/problems/word-search/) | <Difficulty level="Medium" /> |
+| [Palindrome Partitioning](https://leetcode.com/problems/palindrome-partitioning/) | <Difficulty level="Medium" /> |
+| [N-Queens](https://leetcode.com/problems/n-queens/) | <Difficulty level="Hard" /> |

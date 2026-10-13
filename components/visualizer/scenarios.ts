@@ -1,3 +1,4 @@
+import { advancedScenarios } from "./advancedScenarios";
 import type { Frame, Scenario } from "./types";
 
 // Each scenario runs the real algorithm and records a frame at every decision,
@@ -390,4 +391,5 @@ export const scenarios: Record<string, () => Scenario> = {
   "daily-temperatures": dailyTemperatures,
   "linked-list-cycle": linkedListCycle,
   "middle-of-list": middleOfList,
+  ...advancedScenarios,
 };

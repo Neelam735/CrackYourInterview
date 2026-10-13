@@ -1,0 +1,290 @@
+---
+title: Trees (DFS / BFS)
+description: Solve binary tree problems by combining answers from subtrees (DFS) or by walking level by level (BFS).
+readingTime: 12 min
+---
+
+## The idea
+
+A binary tree is made of nodes, each with up to two children. Almost every tree question comes down to visiting the nodes in one of two orders:
+
+- **Depth-first search (DFS)** goes as deep as possible down one branch before backing up. It's usually written with recursion: solve the left subtree, solve the right subtree, then combine.
+- **Breadth-first search (BFS)** visits the tree **level by level**, using a queue.
+
+| Use | When the problem asks about |
+|-----|-----------------------------|
+| DFS | Heights, depths, paths, subtree sums, validating structure, anything you can build from the children's answers |
+| BFS | Levels, the shallowest node, the right-side view, anything "by row" |
+
+### The recursive mindset
+
+For DFS, don't trace the whole recursion in your head. Instead, **trust that the recursive call returns the right answer for a subtree** and only ask: *given the answers for my left and right children, what's the answer for me?* Then handle the base case (an empty tree).
+
+<CodeTabs>
+
+```python
+class TreeNode:
+    def __init__(self, val=0, left=None, right=None):
+        self.val = val
+        self.left = left
+        self.right = right
+```
+
+```java
+class TreeNode {
+    int val;
+    TreeNode left, right;
+    TreeNode(int val) { this.val = val; }
+}
+```
+
+```cpp
+struct TreeNode {
+    int val;
+    TreeNode* left;
+    TreeNode* right;
+    TreeNode(int v) : val(v), left(nullptr), right(nullptr) {}
+};
+```
+
+```javascript
+class TreeNode {
+  constructor(val = 0, left = null, right = null) {
+    this.val = val;
+    this.left = left;
+    this.right = right;
+  }
+}
+```
+
+</CodeTabs>
+
+## Problem 1: Maximum Depth of Binary Tree
+
+<Problem difficulty="Easy" link="https://leetcode.com/problems/maximum-depth-of-binary-tree/">
+
+Given the `root` of a binary tree, return its maximum depth: the number of nodes on the longest path from the root down to a leaf.
+
+**Example:** `root = [3, 9, 20, null, null, 15, 7]` returns `3`.
+
+</Problem>
+
+Ask the recursive question: if I know the depth of my left subtree and my right subtree, my depth is `1 + max(left, right)`. An empty tree has depth `0`.
+
+<Visualizer id="max-depth" />
+
+<CodeTabs>
+
+```python
+def max_depth(root: TreeNode | None) -> int:
+    if root is None:
+        return 0
+    return 1 + max(max_depth(root.left), max_depth(root.right))
+```
+
+```java
+public int maxDepth(TreeNode root) {
+    if (root == null) return 0;
+    return 1 + Math.max(maxDepth(root.left), maxDepth(root.right));
+}
+```
+
+```cpp
+int maxDepth(TreeNode* root) {
+    if (!root) return 0;
+    return 1 + max(maxDepth(root->left), maxDepth(root->right));
+}
+```
+
+```javascript
+function maxDepth(root) {
+  if (root === null) return 0;
+  return 1 + Math.max(maxDepth(root.left), maxDepth(root.right));
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(n)" space="O(h), h = height of the tree" />
+
+<Callout type="info" title="Recursion uses space">
+The call stack holds one frame per level of the current path, so space is `O(h)`. That's `O(log n)` for a balanced tree but `O(n)` for a tree shaped like a linked list.
+</Callout>
+
+## Problem 2: Binary Tree Level Order Traversal
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/binary-tree-level-order-traversal/">
+
+Given the `root` of a binary tree, return the values of its nodes level by level, from left to right.
+
+**Example:** `root = [3, 9, 20, null, null, 15, 7]` returns `[[3], [9, 20], [15, 7]]`.
+
+</Problem>
+
+Use BFS. The queue starts with the root. At the start of each round, the queue holds **exactly one full level**, so record its size, dequeue that many nodes, and enqueue their children for the next round.
+
+<Visualizer id="level-order" />
+
+<CodeTabs>
+
+```python
+from collections import deque
+
+def level_order(root: TreeNode | None) -> list[list[int]]:
+    if root is None:
+        return []
+    result = []
+    queue = deque([root])
+    while queue:
+        level = []
+        for _ in range(len(queue)):  # exactly the nodes on this level
+            node = queue.popleft()
+            level.append(node.val)
+            if node.left:
+                queue.append(node.left)
+            if node.right:
+                queue.append(node.right)
+        result.append(level)
+    return result
+```
+
+```java
+public List<List<Integer>> levelOrder(TreeNode root) {
+    List<List<Integer>> result = new ArrayList<>();
+    if (root == null) return result;
+    Queue<TreeNode> queue = new ArrayDeque<>();
+    queue.offer(root);
+    while (!queue.isEmpty()) {
+        List<Integer> level = new ArrayList<>();
+        for (int i = queue.size(); i > 0; i--) {  // exactly the nodes on this level
+            TreeNode node = queue.poll();
+            level.add(node.val);
+            if (node.left != null) queue.offer(node.left);
+            if (node.right != null) queue.offer(node.right);
+        }
+        result.add(level);
+    }
+    return result;
+}
+```
+
+```cpp
+vector<vector<int>> levelOrder(TreeNode* root) {
+    vector<vector<int>> result;
+    if (!root) return result;
+    queue<TreeNode*> q;
+    q.push(root);
+    while (!q.empty()) {
+        vector<int> level;
+        for (int i = q.size(); i > 0; i--) {  // exactly the nodes on this level
+            TreeNode* node = q.front();
+            q.pop();
+            level.push_back(node->val);
+            if (node->left) q.push(node->left);
+            if (node->right) q.push(node->right);
+        }
+        result.push_back(level);
+    }
+    return result;
+}
+```
+
+```javascript
+function levelOrder(root) {
+  const result = [];
+  let level = root ? [root] : [];
+  while (level.length > 0) {
+    result.push(level.map((node) => node.val));
+    const next = [];
+    for (const node of level) {
+      if (node.left) next.push(node.left);
+      if (node.right) next.push(node.right);
+    }
+    level = next;
+  }
+  return result;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(n)" space="O(w), w = widest level" />
+
+## Problem 3: Validate Binary Search Tree
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/validate-binary-search-tree/">
+
+Given the `root` of a binary tree, decide whether it is a valid binary search tree: every node in a left subtree is smaller than its ancestor, and every node in a right subtree is larger.
+
+</Problem>
+
+It's not enough to compare each node with its children. In `[5, 4, 6, null, null, 3, 7]`, the `3` is a valid left child of `6` but it sits in `5`'s right subtree, so the tree is invalid.
+
+Instead, pass down the **range of allowed values**. Going left tightens the upper bound to the current value; going right tightens the lower bound.
+
+<CodeTabs>
+
+```python
+def is_valid_bst(root: TreeNode | None) -> bool:
+    def check(node, low, high):
+        if node is None:
+            return True
+        if not (low < node.val < high):
+            return False
+        return check(node.left, low, node.val) and check(node.right, node.val, high)
+
+    return check(root, float("-inf"), float("inf"))
+```
+
+```java
+public boolean isValidBST(TreeNode root) {
+    return check(root, Long.MIN_VALUE, Long.MAX_VALUE);
+}
+
+private boolean check(TreeNode node, long low, long high) {
+    if (node == null) return true;
+    if (node.val <= low || node.val >= high) return false;
+    return check(node.left, low, node.val) && check(node.right, node.val, high);
+}
+```
+
+```cpp
+bool check(TreeNode* node, long long low, long long high) {
+    if (!node) return true;
+    if (node->val <= low || node->val >= high) return false;
+    return check(node->left, low, node->val) && check(node->right, node->val, high);
+}
+
+bool isValidBST(TreeNode* root) {
+    return check(root, LLONG_MIN, LLONG_MAX);
+}
+```
+
+```javascript
+function isValidBST(root) {
+  const check = (node, low, high) => {
+    if (node === null) return true;
+    if (node.val <= low || node.val >= high) return false;
+    return check(node.left, low, node.val) && check(node.right, node.val, high);
+  };
+  return check(root, -Infinity, Infinity);
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(n)" space="O(h)" />
+
+<Callout type="interview">
+Java and C++ use `long` bounds on purpose. A node can hold `Integer.MAX_VALUE`, so an `int` bound would wrongly reject it. Pointing out edge cases like this unprompted is a strong signal.
+</Callout>
+
+## Practice problems
+
+| Problem | Difficulty | Approach |
+|---------|------------|----------|
+| [Invert Binary Tree](https://leetcode.com/problems/invert-binary-tree/) | <Difficulty level="Easy" /> | DFS |
+| [Same Tree](https://leetcode.com/problems/same-tree/) | <Difficulty level="Easy" /> | DFS |
+| [Binary Tree Right Side View](https://leetcode.com/problems/binary-tree-right-side-view/) | <Difficulty level="Medium" /> | BFS |
+| [Lowest Common Ancestor of a Binary Tree](https://leetcode.com/problems/lowest-common-ancestor-of-a-binary-tree/) | <Difficulty level="Medium" /> | DFS |
+| [Binary Tree Maximum Path Sum](https://leetcode.com/problems/binary-tree-maximum-path-sum/) | <Difficulty level="Hard" /> | DFS |
