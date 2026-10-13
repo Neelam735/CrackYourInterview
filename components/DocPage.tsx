@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Doc } from "@/lib/content";
 import type { NavItem } from "@/lib/navigation";
+import { MarkComplete } from "./MarkComplete";
 import { MDXContent } from "./mdx/MDXContent";
 import { Difficulty } from "./mdx/Problem";
 import { TableOfContents } from "./TableOfContents";
@@ -36,7 +37,9 @@ export function DocPage({
           <MDXContent source={doc.body} />
         </div>
 
-        <nav className="mt-16 grid gap-4 border-t border-slate-200 pt-8 sm:grid-cols-2 dark:border-slate-800">
+        <MarkComplete slug={doc.slug} />
+
+        <nav className="mt-8 grid gap-4 border-t border-slate-200 pt-8 sm:grid-cols-2 dark:border-slate-800">
           {prev ? (
             <PagerLink href={`${basePath}/${prev.slug}`} label="Previous" title={prev.title} />
           ) : (

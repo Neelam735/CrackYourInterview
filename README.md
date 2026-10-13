@@ -2,7 +2,12 @@
 
 A coding interview prep site that teaches algorithm patterns with step-by-step visual walkthroughs.
 
-Built with **Next.js (App Router)**, **MDX** and **Tailwind CSS v4**.
+Built with **Next.js (App Router)**, **MDX**, **Tailwind CSS v4**, **Auth.js** and **Postgres (Drizzle ORM)**.
+
+- 13 lessons: Big-O plus 11 patterns (two pointers through dynamic programming)
+- Step-through visualizations for arrays, linked lists, stacks, trees, heaps, grids, graphs, intervals and DP tables
+- Every solution in Python, Java, C++ and JavaScript; the chosen language is remembered
+- Progress tracking: in the browser when signed out, synced to your account when signed in
 
 ## Getting started
 
@@ -12,6 +17,21 @@ npm run dev      # http://localhost:3000
 npm run build    # production build (all lessons are statically generated)
 npm run lint     # type-check
 ```
+
+The site runs without any configuration. To try accounts locally, copy `.env.example` to `.env.local`, set `AUTH_SECRET` (`npx auth secret`) and `DATABASE_URL`, keep `AUTH_DEV_LOGIN=true`, and run `npm run db:push` once to create the table. The sign-in page then offers a "dev login" that accepts any name.
+
+## Deploying to Vercel
+
+1. **Import the repo** at [vercel.com/new](https://vercel.com/new). The defaults (Next.js, `npm run build`) are correct.
+2. **Add a database.** In the project's *Storage* tab, add a Postgres database (e.g. Neon from the Marketplace). It sets `DATABASE_URL` for you.
+3. **Create the table** once from your machine: `DATABASE_URL="<connection string>" npm run db:push`.
+4. **Create OAuth apps** for the providers you want, using your Vercel domain:
+   - GitHub: [github.com/settings/developers](https://github.com/settings/developers) → callback `https://<domain>/api/auth/callback/github`
+   - Google: [console.cloud.google.com/apis/credentials](https://console.cloud.google.com/apis/credentials) → redirect URI `https://<domain>/api/auth/callback/google`
+5. **Set environment variables** in *Settings → Environment Variables*: `AUTH_SECRET`, plus `AUTH_GITHUB_ID`/`AUTH_GITHUB_SECRET` and/or `AUTH_GOOGLE_ID`/`AUTH_GOOGLE_SECRET`. Don't set `AUTH_DEV_LOGIN` in production (it's ignored there anyway).
+6. **Redeploy** so the new variables take effect.
+
+Accounts only switch on when `AUTH_SECRET` and at least one provider are set. Until then the Sign in button is hidden and progress stays in the browser.
 
 ## Project structure
 
@@ -29,6 +49,9 @@ components/
 content/code/*.mdx           Lesson content
 lib/navigation.ts            Sidebar order (add new lessons here)
 lib/content.ts               Reads MDX files and extracts headings
+auth.ts                      Auth.js config (GitHub, Google, local dev login)
+lib/db/                      Drizzle schema and connection (progress table)
+app/api/progress/route.ts    Progress API: GET, POST one lesson, PUT to merge browser progress
 ```
 
 ## Adding a lesson
@@ -38,7 +61,7 @@ lib/content.ts               Reads MDX files and extracts headings
 
 ### MDX components
 
-```mdx
+````mdx
 <Problem difficulty="Medium" link="https://leetcode.com/problems/...">
 
 Problem statement in **markdown**.
@@ -52,8 +75,20 @@ Problem statement in **markdown**.
 <Callout type="tip | info | warning | interview" title="Optional title">
 Body text.
 </Callout>
+
+<CodeTabs>
+
+```python
+...
 ```
+
+```java
+...
+```
+
+</CodeTabs>
+````
 
 ## Adding a visualization
 
-Visualizations live in `components/visualizer/scenarios.ts`. Each scenario runs the real algorithm and records a `Frame` (array, pointers, window, highlighted cells, stack, variables and an explanation) at every decision. Register it in the `scenarios` map and reference it from MDX with `<Visualizer id="..." />`.
+Visualizations live in `components/visualizer/scenarios.ts` and `advancedScenarios.ts`. Each scenario runs the real algorithm and records a `Frame` at every decision. A frame can show any mix of panels: the main array with pointers, extra arrays (e.g. a dp row), a binary tree, a grid, a graph, intervals, stacks/queues, variables, and an explanation. The panel types are in `components/visualizer/types.ts`. Register the scenario in the map and reference it from MDX with `<Visualizer id="..." />`.

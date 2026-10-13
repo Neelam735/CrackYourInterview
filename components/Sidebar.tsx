@@ -3,12 +3,30 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { NavSection } from "@/lib/navigation";
+import { useProgress } from "./ProgressProvider";
 
 export function Sidebar({ basePath, sections }: { basePath: string; sections: NavSection[] }) {
   const pathname = usePathname();
+  const { completed } = useProgress();
+  const lessons = sections.flatMap((section) => section.items).filter((item) => !item.comingSoon);
+  const doneCount = lessons.filter((item) => completed.has(item.slug)).length;
 
   return (
     <nav className="space-y-8 text-sm">
+      <div className="px-3">
+        <div className="flex justify-between text-xs font-medium text-slate-500 dark:text-slate-400">
+          <span>Your progress</span>
+          <span>
+            {doneCount} / {lessons.length}
+          </span>
+        </div>
+        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
+          <div
+            className="h-full rounded-full bg-emerald-500 transition-all duration-500"
+            style={{ width: `${(doneCount / Math.max(lessons.length, 1)) * 100}%` }}
+          />
+        </div>
+      </div>
       {sections.map((section) => (
         <div key={section.title}>
           <h3 className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
@@ -43,7 +61,21 @@ export function Sidebar({ basePath, sections }: { basePath: string; sections: Na
                         : "block rounded-md px-3 py-1.5 text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
                     }
                   >
-                    {item.title}
+                    <span className="flex items-center justify-between gap-2">
+                      {item.title}
+                      {completed.has(item.slug) && (
+                        <svg
+                          className="h-4 w-4 shrink-0 text-emerald-500"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="3"
+                          aria-label="Completed"
+                        >
+                          <path d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </span>
                   </Link>
                 </li>
               );

@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { authEnabled } from "@/auth";
+import { Providers } from "@/components/Providers";
 import { SiteHeader } from "@/components/SiteHeader";
 import "./globals.css";
 
@@ -28,8 +30,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body className="min-h-screen">
-        <SiteHeader />
-        {children}
+        <Providers authEnabled={authEnabled}>
+          <SiteHeader />
+          {children}
+        </Providers>
       </body>
     </html>
   );

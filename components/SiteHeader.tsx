@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ThemeToggle } from "./ThemeToggle";
+import { UserMenu } from "./UserMenu";
 
 const links = [
   { href: "/learn/code", label: "Coding" },
@@ -36,8 +37,9 @@ export function SiteHeader() {
             ),
           )}
         </nav>
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-2">
           <ThemeToggle />
+          <UserMenu />
         </div>
       </div>
     </header>
