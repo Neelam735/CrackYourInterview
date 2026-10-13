@@ -6,6 +6,7 @@ Built with **Next.js (App Router)**, **MDX**, **Tailwind CSS v4**, **Auth.js** a
 
 - 122 pages in 17 sections: 30 concept guides and 92 problem walkthroughs, from Two Pointers to Dynamic Programming, Greedy, Trie, Prefix Sum and Matrices
 - 30 step-through visualizations for arrays, linked lists, stacks, trees, heaps, grids, graphs, intervals and DP tables, with optional spoken narration (browser Web Speech API: each step is read aloud and playback advances when it finishes; voice and speed are selectable)
+- A narrated 1080p MP4 for every visualization, watchable inline or downloadable (generated with the open-weight Kokoro voice; see `scripts/video/README.md` to regenerate)
 - Every solution in Python, Java, C++ and JavaScript; the chosen language is remembered
 - Progress tracking: in the browser when signed out, synced to your account when signed in
 

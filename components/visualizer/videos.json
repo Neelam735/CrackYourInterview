@@ -1,1 +1,74 @@
-{}
+{
+  "binary-search": {
+    "duration": 32.2,
+    "bytes": 617929
+  },
+  "container-with-most-water": {
+    "duration": 84.7,
+    "bytes": 1757632
+  },
+  "course-schedule": {
+    "duration": 68.2,
+    "bytes": 1511463
+  },
+  "daily-temperatures": {
+    "duration": 111.3,
+    "bytes": 2406104
+  },
+  "house-robber": {
+    "duration": 51.8,
+    "bytes": 1015817
+  },
+  "kth-largest": {
+    "duration": 83.6,
+    "bytes": 1711632
+  },
+  "level-order": {
+    "duration": 56.0,
+    "bytes": 1173451
+  },
+  "linked-list-cycle": {
+    "duration": 43.6,
+    "bytes": 873460
+  },
+  "longest-common-subsequence": {
+    "duration": 140.7,
+    "bytes": 2789884
+  },
+  "longest-substring-no-repeat": {
+    "duration": 75.0,
+    "bytes": 1528161
+  },
+  "max-depth": {
+    "duration": 66.1,
+    "bytes": 1406527
+  },
+  "max-sum-fixed-window": {
+    "duration": 46.7,
+    "bytes": 934070
+  },
+  "merge-intervals": {
+    "duration": 54.8,
+    "bytes": 1193046
+  },
+  "middle-of-list": {
+    "duration": 29.7,
+    "bytes": 570238
+  },
+  "number-of-islands": {
+    "duration": 78.6,
+    "bytes": 1629807
+  },
+  "subsets": {
+    "duration": 101.7,
+    "bytes": 1968508
+  },
+  "two-sum-sorted": {
+    "duration": 50.2,
+    "bytes": 975932
+  },
+  "valid-parentheses": {
+    "duration": 51.0,
+    "bytes": 990143
+  }
+}

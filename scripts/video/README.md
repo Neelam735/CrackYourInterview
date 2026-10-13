@@ -1,7 +1,7 @@
 # Narrated visualization videos
 
 Every visualization can be watched or downloaded as a narrated MP4 (1920×1080,
-H.264 + AAC). The videos live in `public/videos/` and are listed in
+H.264 + AAC). The videos and their poster images live in `public/videos/` and are listed in
 `components/visualizer/videos.json`, which the site reads to show the
 **Video** button. Regenerate them after changing a visualization's steps or
 messages.

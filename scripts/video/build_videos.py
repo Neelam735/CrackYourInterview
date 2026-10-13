@@ -104,6 +104,12 @@ def build_one(kokoro, folder: Path, target: Path, voice: str, speed: float) -> f
         ],
         check=True,
     )
+    # Poster image shown by the player before playback: the title card.
+    subprocess.run(
+        ["ffmpeg", "-y", "-loglevel", "error", "-i", str(slides[0]), "-vf", "scale=1280:-2", "-q:v", "4",
+         str(target.with_suffix(".jpg"))],
+        check=True,
+    )
     return sum(durations)
 
 

@@ -20,7 +20,7 @@ export function VideoPanel({ id, title, info }: { id: string; title: string; inf
   return (
     <div className="border-b border-slate-200 bg-slate-950 dark:border-slate-800">
       {/* eslint-disable-next-line jsx-a11y/media-has-caption -- the narration is shown on screen as subtitles */}
-      <video src={src} controls autoPlay preload="metadata" className="aspect-video w-full" aria-label={`${title} narrated video`} />
+      <video src={src} poster={`/videos/${id}.jpg`} controls autoPlay preload="metadata" className="aspect-video w-full" aria-label={`${title} narrated video`} />
       <div className="flex flex-wrap items-center justify-between gap-2 bg-slate-50 px-5 py-2 text-xs text-slate-600 dark:bg-slate-900/60 dark:text-slate-400">
         <span>
           Narrated walkthrough · {formatDuration(info.duration)} · MP4 {(info.bytes / 1_000_000).toFixed(1)} MB
