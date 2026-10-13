@@ -1,0 +1,124 @@
+---
+title: Paint House II
+description: With k colors, remember only the smallest and second-smallest totals from the previous house.
+---
+
+<Problem difficulty="Hard" link="https://leetcode.com/problems/paint-house-ii/">
+
+Same as [Paint House](/learn/code/dynamic-programming/paint-house), but with `k` colors: `costs[i][c]` is the cost of painting house `i` with color `c`, and adjacent houses must differ. Return the minimum total cost.
+
+**Example:** `costs = [[1, 5, 3], [2, 9, 4]]` returns `5`: color 0 then color 2 (1 + 4), or color 2 then color 0 (3 + 2).
+
+</Problem>
+
+## Approach
+
+The same recurrence applies: `dp[i][c] = costs[i][c] + min(dp[i-1][c'] for c' != c)`. Done directly, every color scans every other color: `O(n · k²)`.
+
+### The trick: best and second best
+
+For each house, you only need **two** numbers from the previous house:
+
+- `min1`: the smallest total, and the color `min1_color` that achieves it,
+- `min2`: the second smallest total.
+
+For color `c`, the cheapest previous total with a **different** color is `min1`, unless `c` is `min1_color`, in which case it's `min2`. Each house then takes `O(k)`.
+
+## Solution
+
+<CodeTabs>
+
+```python
+def min_cost_ii(costs: list[list[int]]) -> int:
+    min1, min2, min1_color = 0, 0, -1               # before the first house: all totals are 0
+    for row in costs:
+        new_min1 = new_min2 = float("inf")
+        new_color = -1
+        for c, cost in enumerate(row):
+            total = cost + (min2 if c == min1_color else min1)   # best previous with a different color
+            if total < new_min1:
+                new_min1, new_min2, new_color = total, new_min1, c
+            elif total < new_min2:
+                new_min2 = total
+        min1, min2, min1_color = new_min1, new_min2, new_color
+    return min1
+```
+
+```java
+public int minCostII(int[][] costs) {
+    int min1 = 0, min2 = 0, min1Color = -1;  // before the first house: all totals are 0
+    for (int[] row : costs) {
+        int newMin1 = Integer.MAX_VALUE, newMin2 = Integer.MAX_VALUE, newColor = -1;
+        for (int c = 0; c < row.length; c++) {
+            int total = row[c] + (c == min1Color ? min2 : min1);  // best previous with a different color
+            if (total < newMin1) {
+                newMin2 = newMin1;
+                newMin1 = total;
+                newColor = c;
+            } else if (total < newMin2) {
+                newMin2 = total;
+            }
+        }
+        min1 = newMin1;
+        min2 = newMin2;
+        min1Color = newColor;
+    }
+    return min1;
+}
+```
+
+```cpp
+int minCostII(const vector<vector<int>>& costs) {
+    int min1 = 0, min2 = 0, min1Color = -1;  // before the first house: all totals are 0
+    for (const auto& row : costs) {
+        int newMin1 = INT_MAX, newMin2 = INT_MAX, newColor = -1;
+        for (int c = 0; c < (int)row.size(); c++) {
+            int total = row[c] + (c == min1Color ? min2 : min1);  // best previous with a different color
+            if (total < newMin1) {
+                newMin2 = newMin1;
+                newMin1 = total;
+                newColor = c;
+            } else if (total < newMin2) {
+                newMin2 = total;
+            }
+        }
+        min1 = newMin1;
+        min2 = newMin2;
+        min1Color = newColor;
+    }
+    return min1;
+}
+```
+
+```javascript
+function minCostII(costs) {
+  let min1 = 0; // before the first house: all totals are 0
+  let min2 = 0;
+  let min1Color = -1;
+  for (const row of costs) {
+    let newMin1 = Infinity;
+    let newMin2 = Infinity;
+    let newColor = -1;
+    row.forEach((cost, c) => {
+      const total = cost + (c === min1Color ? min2 : min1); // best previous with a different color
+      if (total < newMin1) {
+        newMin2 = newMin1;
+        newMin1 = total;
+        newColor = c;
+      } else if (total < newMin2) {
+        newMin2 = total;
+      }
+    });
+    [min1, min2, min1Color] = [newMin1, newMin2, newColor];
+  }
+  return min1;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(n × k)" space="O(1)" />
+
+<Callout type="tip">
+"Keep the best and second best" is a reusable trick whenever a choice must differ from the previous one. It turns an `O(k²)` transition into `O(k)`.
+</Callout>

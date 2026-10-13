@@ -1,0 +1,109 @@
+---
+title: Minimum Window Subsequence
+description: For each position in s, track the latest start from which each prefix of t can be matched as a subsequence.
+---
+
+<Problem difficulty="Hard" link="https://leetcode.com/problems/minimum-window-subsequence/">
+
+Given strings `s` and `t`, return the **shortest contiguous substring** of `s` that contains `t` as a **subsequence** (the characters of `t` appear in order, not necessarily next to each other). If there are several, return the one that starts earliest. If none exists, return `""`.
+
+**Example:** `s = "abcdebdde"`, `t = "bde"` returns `"bcde"`. The window `"bdde"` also works but starts later.
+
+</Problem>
+
+## Approach
+
+Unlike [sliding window](/learn/code/sliding-window/variable-length) problems, the order of characters matters here, so DP over both strings is the reliable tool.
+
+**State.** As we scan `s` from left to right, keep `start[j]` = the **latest** index in `s` from which `t[0..j]` can be matched as a subsequence ending at or before the current position. A later start means a shorter window. `-1` means no match yet.
+
+**Update at position `i`.** For each `j` where `s[i] == t[j]`:
+
+- `j == 0`: `t[0]` can start right here, so `start[0] = i`.
+- `j > 0`: extend whatever matched `t[0..j-1]` before this character: `start[j] = start[j - 1]`.
+
+Loop `j` **from the end of `t` to the start**, so that `start[j - 1]` still holds its value from before position `i`. Otherwise one character of `s` could be used for two characters of `t`.
+
+**Answer.** Whenever `start[m - 1]` is valid at position `i`, the window `s[start[m-1] .. i]` contains `t`. Keep the shortest one. Scanning left to right and only replacing on a strictly shorter window keeps the earliest one on ties.
+
+## Solution
+
+<CodeTabs>
+
+```python
+def min_window(s: str, t: str) -> str:
+    m = len(t)
+    start = [-1] * m
+    best_start, best_len = -1, float("inf")
+    for i, char in enumerate(s):
+        for j in range(m - 1, -1, -1):          # backwards: use values from before i
+            if char == t[j]:
+                start[j] = i if j == 0 else start[j - 1]
+        if start[m - 1] != -1 and i - start[m - 1] + 1 < best_len:
+            best_start, best_len = start[m - 1], i - start[m - 1] + 1
+    return "" if best_start == -1 else s[best_start:best_start + best_len]
+```
+
+```java
+public String minWindow(String s, String t) {
+    int m = t.length();
+    int[] start = new int[m];
+    Arrays.fill(start, -1);
+    int bestStart = -1, bestLen = Integer.MAX_VALUE;
+    for (int i = 0; i < s.length(); i++) {
+        for (int j = m - 1; j >= 0; j--) {  // backwards: use values from before i
+            if (s.charAt(i) == t.charAt(j)) start[j] = j == 0 ? i : start[j - 1];
+        }
+        if (start[m - 1] != -1 && i - start[m - 1] + 1 < bestLen) {
+            bestStart = start[m - 1];
+            bestLen = i - start[m - 1] + 1;
+        }
+    }
+    return bestStart == -1 ? "" : s.substring(bestStart, bestStart + bestLen);
+}
+```
+
+```cpp
+string minWindow(const string& s, const string& t) {
+    int m = t.size();
+    vector<int> start(m, -1);
+    int bestStart = -1, bestLen = INT_MAX;
+    for (int i = 0; i < (int)s.size(); i++) {
+        for (int j = m - 1; j >= 0; j--) {  // backwards: use values from before i
+            if (s[i] == t[j]) start[j] = j == 0 ? i : start[j - 1];
+        }
+        if (start[m - 1] != -1 && i - start[m - 1] + 1 < bestLen) {
+            bestStart = start[m - 1];
+            bestLen = i - start[m - 1] + 1;
+        }
+    }
+    return bestStart == -1 ? "" : s.substr(bestStart, bestLen);
+}
+```
+
+```javascript
+function minWindow(s, t) {
+  const m = t.length;
+  const start = new Array(m).fill(-1);
+  let bestStart = -1;
+  let bestLen = Infinity;
+  for (let i = 0; i < s.length; i++) {
+    for (let j = m - 1; j >= 0; j--) { // backwards: use values from before i
+      if (s[i] === t[j]) start[j] = j === 0 ? i : start[j - 1];
+    }
+    if (start[m - 1] !== -1 && i - start[m - 1] + 1 < bestLen) {
+      bestStart = start[m - 1];
+      bestLen = i - start[m - 1] + 1;
+    }
+  }
+  return bestStart === -1 ? "" : s.slice(bestStart, bestStart + bestLen);
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(|s| × |t|)" space="O(|t|)" />
+
+<Callout type="tip" title="Two-pointer alternative">
+Scan forward through `s` until you've matched all of `t`, then scan **backward** from that end point to find the latest possible start. Record the window, then resume the forward scan from one past that start. It's also `O(|s| × |t|)` in the worst case and often faster in practice.
+</Callout>

@@ -1,0 +1,103 @@
+---
+title: Decode Ways
+description: Each position can be reached by decoding one digit or two, so the counts add like a Fibonacci sequence with conditions.
+---
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/decode-ways/">
+
+Letters are encoded as numbers: `A = 1`, `B = 2`, …, `Z = 26`. Given a string of digits `s`, return the number of ways to decode it into letters. A code can't start with `0`, so `"06"` isn't valid, but `"10"` (J) and `"20"` (T) are.
+
+**Examples:** `"12"` → `2` (`AB` or `L`). `"226"` → `3` (`BZ`, `VF`, `BBF`). `"06"` → `0`.
+
+</Problem>
+
+## Approach
+
+**State.** `dp[i]` = the number of ways to decode the first `i` characters, `s[0..i-1]`.
+
+**Last decision.** The last letter of the decoding used either the last **one** digit or the last **two** digits:
+
+- **One digit:** valid if `s[i - 1]` isn't `"0"`. Then everything before it can be decoded in `dp[i - 1]` ways.
+- **Two digits:** valid if `s[i-2..i-1]` is between `"10"` and `"26"`. Then add `dp[i - 2]`.
+
+```text nocheck
+dp[i] = (dp[i - 1] if s[i-1] != '0') + (dp[i - 2] if 10 <= int(s[i-2:i]) <= 26)
+```
+
+**Base case.** `dp[0] = 1`: there's one way to decode the empty prefix (decode nothing). This makes the formula work for the first one or two characters without special cases.
+
+Each state only uses the previous two, so two variables are enough.
+
+## Solution
+
+<CodeTabs>
+
+```python
+def num_decodings(s: str) -> int:
+    prev2 = 1                         # dp[0]: one way to decode nothing
+    prev1 = 1 if s[0] != "0" else 0   # dp[1]
+    for i in range(2, len(s) + 1):
+        current = 0
+        if s[i - 1] != "0":
+            current += prev1                    # last letter used one digit
+        if 10 <= int(s[i - 2:i]) <= 26:
+            current += prev2                    # last letter used two digits
+        prev2, prev1 = prev1, current
+    return prev1
+```
+
+```java
+public int numDecodings(String s) {
+    int prev2 = 1;                              // dp[0]
+    int prev1 = s.charAt(0) != '0' ? 1 : 0;     // dp[1]
+    for (int i = 2; i <= s.length(); i++) {
+        int current = 0;
+        if (s.charAt(i - 1) != '0') current += prev1;               // one digit
+        int two = Integer.parseInt(s.substring(i - 2, i));
+        if (two >= 10 && two <= 26) current += prev2;                // two digits
+        prev2 = prev1;
+        prev1 = current;
+    }
+    return prev1;
+}
+```
+
+```cpp
+int numDecodings(const string& s) {
+    int prev2 = 1;                       // dp[0]
+    int prev1 = s[0] != '0' ? 1 : 0;     // dp[1]
+    for (int i = 2; i <= (int)s.size(); i++) {
+        int current = 0;
+        if (s[i - 1] != '0') current += prev1;                       // one digit
+        int two = (s[i - 2] - '0') * 10 + (s[i - 1] - '0');
+        if (two >= 10 && two <= 26) current += prev2;                 // two digits
+        prev2 = prev1;
+        prev1 = current;
+    }
+    return prev1;
+}
+```
+
+```javascript
+function numDecodings(s) {
+  let prev2 = 1;                       // dp[0]
+  let prev1 = s[0] !== "0" ? 1 : 0;    // dp[1]
+  for (let i = 2; i <= s.length; i++) {
+    let current = 0;
+    if (s[i - 1] !== "0") current += prev1;          // one digit
+    const two = Number(s.slice(i - 2, i));
+    if (two >= 10 && two <= 26) current += prev2;    // two digits
+    prev2 = prev1;
+    prev1 = current;
+  }
+  return prev1;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(n)" space="O(1)" />
+
+<Callout type="warning">
+Zeros are where most bugs hide. A `"0"` can't stand alone, so it must pair with the digit before it as `10` or `20`. Test `"10"`, `"100"`, `"230"` and `"06"` before you call the code done.
+</Callout>

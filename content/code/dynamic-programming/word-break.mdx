@@ -1,0 +1,110 @@
+---
+title: Word Break
+description: A prefix can be segmented if some earlier segmentable prefix is followed by a dictionary word.
+---
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/word-break/">
+
+Given a string `s` and a dictionary `wordDict`, return `True` if `s` can be split into a sequence of one or more dictionary words. The same word may be reused.
+
+**Examples:** `s = "leetcode"`, `wordDict = ["leet", "code"]` → `True`. `s = "applepenapple"`, `wordDict = ["apple", "pen"]` → `True`. `s = "catsandog"`, `wordDict = ["cats", "dog", "sand", "and", "cat"]` → `False`.
+
+</Problem>
+
+## Approach
+
+**State.** `dp[i]` = `True` if the first `i` characters, `s[0..i-1]`, can be split into dictionary words.
+
+**Last decision.** The last word of the split is some `s[j..i-1]`. The split works if that piece is a word **and** everything before it can be split:
+
+```text nocheck
+dp[i] = any(dp[j] and s[j:i] in words for j < i)
+```
+
+**Base case.** `dp[0] = True`: the empty prefix needs no words.
+
+**Answer.** `dp[len(s)]`.
+
+Put the dictionary in a hash set for `O(1)` lookups. You can also limit `j` so the piece is never longer than the longest dictionary word.
+
+## Solution
+
+<CodeTabs>
+
+```python
+def word_break(s: str, word_dict: list[str]) -> bool:
+    words = set(word_dict)
+    longest = max(map(len, words))
+    dp = [False] * (len(s) + 1)
+    dp[0] = True                                     # empty prefix
+    for i in range(1, len(s) + 1):
+        for j in range(max(0, i - longest), i):
+            if dp[j] and s[j:i] in words:            # split before j, then one word
+                dp[i] = True
+                break
+    return dp[len(s)]
+```
+
+```java
+public boolean wordBreak(String s, List<String> wordDict) {
+    Set<String> words = new HashSet<>(wordDict);
+    int longest = 0;
+    for (String w : words) longest = Math.max(longest, w.length());
+    boolean[] dp = new boolean[s.length() + 1];
+    dp[0] = true;  // empty prefix
+    for (int i = 1; i <= s.length(); i++) {
+        for (int j = Math.max(0, i - longest); j < i; j++) {
+            if (dp[j] && words.contains(s.substring(j, i))) {  // split before j, then one word
+                dp[i] = true;
+                break;
+            }
+        }
+    }
+    return dp[s.length()];
+}
+```
+
+```cpp
+bool wordBreak(const string& s, const vector<string>& wordDict) {
+    unordered_set<string> words(wordDict.begin(), wordDict.end());
+    int longest = 0;
+    for (const auto& w : words) longest = max(longest, (int)w.size());
+    vector<bool> dp(s.size() + 1, false);
+    dp[0] = true;  // empty prefix
+    for (int i = 1; i <= (int)s.size(); i++) {
+        for (int j = max(0, i - longest); j < i; j++) {
+            if (dp[j] && words.count(s.substr(j, i - j))) {  // split before j, then one word
+                dp[i] = true;
+                break;
+            }
+        }
+    }
+    return dp[s.size()];
+}
+```
+
+```javascript
+function wordBreak(s, wordDict) {
+  const words = new Set(wordDict);
+  const longest = Math.max(...wordDict.map((w) => w.length));
+  const dp = new Array(s.length + 1).fill(false);
+  dp[0] = true; // empty prefix
+  for (let i = 1; i <= s.length; i++) {
+    for (let j = Math.max(0, i - longest); j < i; j++) {
+      if (dp[j] && words.has(s.slice(j, i))) { // split before j, then one word
+        dp[i] = true;
+        break;
+      }
+    }
+  }
+  return dp[s.length];
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(n × L²), L = longest word" space="O(n)" />
+
+<Callout type="tip">
+A [Trie](/learn/code/trie/overview) of the dictionary lets you extend `s[j..]` one character at a time and stop as soon as no word has that prefix, which helps when the dictionary is large.
+</Callout>

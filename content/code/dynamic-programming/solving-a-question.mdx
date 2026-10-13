@@ -1,0 +1,113 @@
+---
+title: Solving a Question with Dynamic Programming
+description: A five-step recipe for any DP problem, worked through on House Robber.
+readingTime: 9 min
+---
+
+## The recipe
+
+1. **Define the state.** Write in words what `dp[i]` (or `dp[i][j]`) means. Usually: "the best answer for the first `i` items" or "the answer for the subproblem that ends at / starts at `i`".
+2. **Find the recurrence.** Think about the **last decision**. How does `dp[i]` follow from smaller states?
+3. **Set the base cases.** The smallest subproblems you can answer directly.
+4. **Choose the order.** Fill the table so every state's dependencies are computed before it.
+5. **Read off the answer.** Often `dp[n]`, the last cell, or the best value over all cells.
+
+## Worked example: House Robber
+
+> Houses along a street hold `nums[i]` money. You can't rob two adjacent houses. What's the most you can rob?
+>
+> `nums = [2, 7, 9, 3, 1]` → `12` (houses 0, 2 and 4).
+
+A greedy "take the richest house" approach fails: grabbing the richest house can block two good neighbours. Follow the recipe instead.
+
+**1. State.** `dp[i]` = the most money you can rob from houses `0..i`.
+
+**2. Recurrence.** Think about house `i`, the last decision:
+
+- **Skip it:** the best is whatever you could get from houses `0..i-1`: `dp[i - 1]`.
+- **Rob it:** you can't rob house `i - 1`, so add `nums[i]` to the best from `0..i-2`: `dp[i - 2] + nums[i]`.
+
+So `dp[i] = max(dp[i - 1], dp[i - 2] + nums[i])`.
+
+**3. Base cases.** `dp[0] = nums[0]`, and `dp[1] = max(nums[0], nums[1])`.
+
+**4. Order.** Each state needs the two before it, so fill left to right.
+
+**5. Answer.** `dp[n - 1]`.
+
+<Visualizer id="house-robber" />
+
+**Space optimization.** Each state only needs the previous two, so two variables are enough.
+
+<CodeTabs>
+
+```python
+def rob(nums: list[int]) -> int:
+    prev, curr = 0, 0                 # dp[i - 2], dp[i - 1]
+    for money in nums:
+        prev, curr = curr, max(curr, prev + money)
+    return curr
+```
+
+```java
+public int rob(int[] nums) {
+    int prev = 0, curr = 0;  // dp[i - 2], dp[i - 1]
+    for (int money : nums) {
+        int next = Math.max(curr, prev + money);
+        prev = curr;
+        curr = next;
+    }
+    return curr;
+}
+```
+
+```cpp
+int rob(const vector<int>& nums) {
+    int prev = 0, curr = 0;  // dp[i - 2], dp[i - 1]
+    for (int money : nums) {
+        int next = max(curr, prev + money);
+        prev = curr;
+        curr = next;
+    }
+    return curr;
+}
+```
+
+```javascript
+function rob(nums) {
+  let prev = 0; // dp[i - 2]
+  let curr = 0; // dp[i - 1]
+  for (const money of nums) {
+    [prev, curr] = [curr, Math.max(curr, prev + money)];
+  }
+  return curr;
+}
+```
+
+</CodeTabs>
+
+Starting both variables at 0 (as if there were two empty houses before the first) means the base cases need no special code.
+
+## Two inputs: a 2D state
+
+When the input is **two** strings or arrays, or a grid, the state usually needs two indices. For the longest common subsequence of `text1` and `text2`, `dp[i][j]` is the answer for the first `i` letters of one and the first `j` letters of the other. The last decision compares `text1[i - 1]` with `text2[j - 1]`: if they match, extend the diagonal; if not, drop a letter from one string or the other.
+
+<Visualizer id="longest-common-subsequence" />
+
+## Common state shapes
+
+| Shape | State | Examples |
+|-------|-------|----------|
+| Prefix of one sequence | `dp[i]` = answer for the first `i` items | House Robber, Decode Ways, Word Break |
+| Ending at `i` | `dp[i]` = best answer that **ends** at index `i` | Longest Increasing Subsequence |
+| Two sequences | `dp[i][j]` = answer for prefixes of length `i` and `j` | LCS, edit distance, Minimum Window Subsequence |
+| Grid | `dp[r][c]` = answer for reaching or ending at cell `(r, c)` | Unique Paths, Maximal Square |
+| Item + choice | `dp[i][c]` = best for the first `i` items when item `i` uses choice `c` | Paint House |
+
+<Callout type="tip">
+If you're stuck, write the brute-force recursion first. The arguments that change between recursive calls **are** the DP state, and the recursive formula **is** the recurrence. Add a cache and you have a working top-down solution.
+</Callout>
+
+## Problems
+
+<ProblemList section="dynamic-programming" />

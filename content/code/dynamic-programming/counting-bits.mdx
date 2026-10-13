@@ -1,0 +1,77 @@
+---
+title: Counting Bits
+description: The number of 1 bits in i equals the count for i with its last bit removed, plus that last bit.
+---
+
+<Problem difficulty="Easy" link="https://leetcode.com/problems/counting-bits/">
+
+Given an integer `n`, return an array `ans` of length `n + 1` where `ans[i]` is the number of `1` bits in the binary representation of `i`.
+
+**Example:** `n = 5` returns `[0, 1, 1, 2, 1, 2]` (0 = `0`, 1 = `1`, 2 = `10`, 3 = `11`, 4 = `100`, 5 = `101`).
+
+</Problem>
+
+## Brute force
+
+Count the bits of each number separately. Each count takes `O(log n)`, so the total is `O(n log n)`.
+
+## Approach
+
+Look at how `i` relates to a **smaller** number you've already solved. Shifting `i` right by one (`i >> 1`, which is `i // 2`) drops its last bit:
+
+```text nocheck
+i = 13 = 1101
+i >> 1 = 110 (6), and the bit that fell off is i & 1 = 1
+```
+
+So `i` has exactly the same 1 bits as `i >> 1`, plus one more if its last bit is 1:
+
+```text nocheck
+dp[i] = dp[i >> 1] + (i & 1)
+```
+
+`i >> 1` is always smaller than `i`, so filling the array from 0 upward means it's always ready. Base case: `dp[0] = 0`.
+
+## Solution
+
+<CodeTabs>
+
+```python
+def count_bits(n: int) -> list[int]:
+    dp = [0] * (n + 1)
+    for i in range(1, n + 1):
+        dp[i] = dp[i >> 1] + (i & 1)    # bits of i without its last bit, plus the last bit
+    return dp
+```
+
+```java
+public int[] countBits(int n) {
+    int[] dp = new int[n + 1];
+    for (int i = 1; i <= n; i++) dp[i] = dp[i >> 1] + (i & 1);
+    return dp;
+}
+```
+
+```cpp
+vector<int> countBits(int n) {
+    vector<int> dp(n + 1, 0);
+    for (int i = 1; i <= n; i++) dp[i] = dp[i >> 1] + (i & 1);
+    return dp;
+}
+```
+
+```javascript
+function countBits(n) {
+  const dp = new Array(n + 1).fill(0);
+  for (let i = 1; i <= n; i++) dp[i] = dp[i >> 1] + (i & 1);
+  return dp;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(n)" space="O(n) for the output" />
+
+<Callout type="tip" title="Another recurrence">
+`i & (i - 1)` clears the lowest set bit of `i`. That gives `dp[i] = dp[i & (i - 1)] + 1`, which is just as fast. Any relation that points to a smaller, already-solved number works.
+</Callout>

@@ -1,0 +1,120 @@
+---
+title: Maximum Profit in Job Scheduling
+description: Sort jobs by end time; each job either is skipped or is added to the best schedule that finishes before it starts.
+---
+
+<Problem difficulty="Hard" link="https://leetcode.com/problems/maximum-profit-in-job-scheduling/">
+
+Job `i` runs from `startTime[i]` to `endTime[i]` and earns `profit[i]`. Choose a set of jobs with **no overlapping times** to maximize total profit. A job that ends at time `t` doesn't overlap one that starts at `t`.
+
+**Example:** `startTime = [1, 2, 3, 3]`, `endTime = [3, 4, 5, 6]`, `profit = [50, 10, 40, 70]` returns `120` (jobs 1 and 4: 50 + 70).
+
+</Problem>
+
+## Approach
+
+This is [Non-Overlapping Intervals](/learn/code/intervals/non-overlapping-intervals) with weights. The greedy "earliest end" rule no longer works, because a long job might be worth more than several short ones. DP handles the trade-off.
+
+**Sort the jobs by end time.**
+
+**State.** `dp[i]` = the best profit using only the first `i` jobs (in end-time order).
+
+**Last decision.** Job `i - 1`, the one ending last, is either:
+
+- **skipped:** `dp[i - 1]`, or
+- **taken:** its profit plus the best schedule of jobs that end by the time it starts. Because jobs are sorted by end time, those jobs form a prefix of length `k`, which you find with **binary search** on the end times: `profit + dp[k]`.
+
+```text nocheck
+dp[i] = max(dp[i - 1], profit[i-1] + dp[k]),   k = number of jobs with end <= start[i-1]
+```
+
+## Solution
+
+<CodeTabs>
+
+```python
+from bisect import bisect_right
+
+def job_scheduling(start_time: list[int], end_time: list[int], profit: list[int]) -> int:
+    jobs = sorted(zip(end_time, start_time, profit))
+    ends = [end for end, _, _ in jobs]
+    dp = [0] * (len(jobs) + 1)
+    for i, (end, start, gain) in enumerate(jobs, 1):
+        k = bisect_right(ends, start, 0, i - 1)      # jobs that finish by `start`
+        dp[i] = max(dp[i - 1], dp[k] + gain)         # skip it, or take it
+    return dp[-1]
+```
+
+```java
+public int jobScheduling(int[] startTime, int[] endTime, int[] profit) {
+    int n = startTime.length;
+    Integer[] order = new Integer[n];
+    for (int i = 0; i < n; i++) order[i] = i;
+    Arrays.sort(order, (a, b) -> Integer.compare(endTime[a], endTime[b]));
+    int[] ends = new int[n];
+    for (int i = 0; i < n; i++) ends[i] = endTime[order[i]];
+    int[] dp = new int[n + 1];
+    for (int i = 1; i <= n; i++) {
+        int job = order[i - 1];
+        int k = upperBound(ends, i - 1, startTime[job]);  // jobs that finish by its start
+        dp[i] = Math.max(dp[i - 1], dp[k] + profit[job]); // skip it, or take it
+    }
+    return dp[n];
+}
+
+// Number of entries in ends[0..len) that are <= target.
+private int upperBound(int[] ends, int len, int target) {
+    int lo = 0, hi = len;
+    while (lo < hi) {
+        int mid = (lo + hi) / 2;
+        if (ends[mid] <= target) lo = mid + 1;
+        else hi = mid;
+    }
+    return lo;
+}
+```
+
+```cpp
+int jobScheduling(const vector<int>& startTime, const vector<int>& endTime, const vector<int>& profit) {
+    int n = startTime.size();
+    vector<array<int, 3>> jobs;  // {end, start, profit}
+    for (int i = 0; i < n; i++) jobs.push_back({endTime[i], startTime[i], profit[i]});
+    sort(jobs.begin(), jobs.end());
+    vector<int> ends;
+    for (auto& j : jobs) ends.push_back(j[0]);
+    vector<int> dp(n + 1, 0);
+    for (int i = 1; i <= n; i++) {
+        auto [end, start, gain] = jobs[i - 1];
+        int k = upper_bound(ends.begin(), ends.begin() + i - 1, start) - ends.begin();  // finish by start
+        dp[i] = max(dp[i - 1], dp[k] + gain);  // skip it, or take it
+    }
+    return dp[n];
+}
+```
+
+```javascript
+function jobScheduling(startTime, endTime, profit) {
+  const jobs = startTime.map((s, i) => [endTime[i], s, profit[i]]).sort((a, b) => a[0] - b[0]);
+  const dp = new Array(jobs.length + 1).fill(0);
+  for (let i = 1; i <= jobs.length; i++) {
+    const [, start, gain] = jobs[i - 1];
+    let lo = 0;
+    let hi = i - 1; // count jobs among the first i - 1 that finish by `start`
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      if (jobs[mid][0] <= start) lo = mid + 1;
+      else hi = mid;
+    }
+    dp[i] = Math.max(dp[i - 1], dp[lo] + gain); // skip it, or take it
+  }
+  return dp[jobs.length];
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(n log n)" space="O(n)" />
+
+<Callout type="interview">
+"Sort by end time, then DP with binary search for the last compatible job" is the standard **weighted interval scheduling** solution. Naming it shows the interviewer you recognize the classic problem underneath.
+</Callout>

@@ -1,0 +1,94 @@
+---
+title: Paint House
+description: Track the cheapest total for each color of the current house; each color builds on the cheapest different color before it.
+---
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/paint-house/">
+
+There are `n` houses in a row, each to be painted red, blue or green. `costs[i][c]` is the cost of painting house `i` with color `c`. No two **adjacent** houses may have the same color. Return the minimum total cost.
+
+**Example:** `costs = [[17, 2, 17], [16, 16, 5], [14, 3, 19]]` returns `10`: blue (2), green (5), blue (3).
+
+</Problem>
+
+## Approach
+
+The choice for one house limits the next, so a greedy "cheapest color each time" can fail. Track all three options.
+
+**State.** `dp[i][c]` = the minimum cost to paint houses `0..i` with house `i` painted color `c`.
+
+**Recurrence.** House `i - 1` must use a different color, so take the cheaper of the other two:
+
+```text nocheck
+dp[i][0] = costs[i][0] + min(dp[i-1][1], dp[i-1][2])
+dp[i][1] = costs[i][1] + min(dp[i-1][0], dp[i-1][2])
+dp[i][2] = costs[i][2] + min(dp[i-1][0], dp[i-1][1])
+```
+
+**Base case.** `dp[0] = costs[0]`. **Answer.** `min(dp[n - 1])`.
+
+Each row only needs the previous row, so keep three numbers.
+
+## Solution
+
+<CodeTabs>
+
+```python
+def min_cost(costs: list[list[int]]) -> int:
+    red, blue, green = 0, 0, 0                    # best totals ending in each color
+    for r, b, g in costs:
+        red, blue, green = (r + min(blue, green),
+                            b + min(red, green),
+                            g + min(red, blue))
+    return min(red, blue, green)
+```
+
+```java
+public int minCost(int[][] costs) {
+    int red = 0, blue = 0, green = 0;  // best totals ending in each color
+    for (int[] c : costs) {
+        int r = c[0] + Math.min(blue, green);
+        int b = c[1] + Math.min(red, green);
+        int g = c[2] + Math.min(red, blue);
+        red = r;
+        blue = b;
+        green = g;
+    }
+    return Math.min(red, Math.min(blue, green));
+}
+```
+
+```cpp
+int minCost(const vector<vector<int>>& costs) {
+    int red = 0, blue = 0, green = 0;  // best totals ending in each color
+    for (const auto& c : costs) {
+        int r = c[0] + min(blue, green);
+        int b = c[1] + min(red, green);
+        int g = c[2] + min(red, blue);
+        red = r;
+        blue = b;
+        green = g;
+    }
+    return min({red, blue, green});
+}
+```
+
+```javascript
+function minCost(costs) {
+  let red = 0; // best totals ending in each color
+  let blue = 0;
+  let green = 0;
+  for (const [r, b, g] of costs) {
+    [red, blue, green] = [r + Math.min(blue, green), b + Math.min(red, green), g + Math.min(red, blue)];
+  }
+  return Math.min(red, blue, green);
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(n)" space="O(1)" />
+
+<Callout type="warning">
+Compute all three new values from the **old** ones before overwriting any. Updating `red` first and then using the new `red` for `blue` is a classic bug, which is why the code uses simultaneous assignment or temporary variables.
+</Callout>

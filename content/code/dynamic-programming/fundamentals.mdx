@@ -1,0 +1,129 @@
+---
+title: Dynamic Programming Fundamentals
+description: Solve each overlapping subproblem once, store the answer, and build the full answer from smaller ones.
+readingTime: 8 min
+---
+
+## The idea
+
+Dynamic programming (DP) is for problems where a plain recursive solution **solves the same smaller problems over and over**. Instead of recomputing them, you solve each one **once** and store its answer.
+
+A problem is a good fit for DP when it has two properties:
+
+- **Optimal substructure:** the answer can be built from answers to smaller versions of the same problem.
+- **Overlapping subproblems:** a naive recursion would solve the same smaller problems many times.
+
+## A first example: Fibonacci
+
+`fib(n) = fib(n - 1) + fib(n - 2)`, with `fib(0) = 0` and `fib(1) = 1`. Written directly as recursion, `fib(5)` calls `fib(3)` twice, `fib(2)` three times, and so on: the number of calls grows exponentially, about `O(1.6ⁿ)`.
+
+There are only `n + 1` distinct subproblems, though. Storing their answers makes the whole computation `O(n)`. There are two ways to do it.
+
+### Top-down: memoization
+
+Keep the recursive code, and add a cache. Before computing `fib(i)`, check whether it's already in the cache.
+
+### Bottom-up: tabulation
+
+Fill a table from the smallest subproblems upward, so every value you need is ready before you need it. No recursion at all.
+
+<CodeTabs>
+
+```python
+from functools import cache
+
+@cache
+def fib_memo(n: int) -> int:          # top-down: recursion + cache
+    if n < 2:
+        return n
+    return fib_memo(n - 1) + fib_memo(n - 2)
+
+
+def fib_table(n: int) -> int:         # bottom-up: fill a table
+    if n < 2:
+        return n
+    dp = [0] * (n + 1)
+    dp[1] = 1
+    for i in range(2, n + 1):
+        dp[i] = dp[i - 1] + dp[i - 2]
+    return dp[n]
+```
+
+```java
+private final Map<Integer, Long> memo = new HashMap<>();
+
+public long fibMemo(int n) {  // top-down: recursion + cache
+    if (n < 2) return n;
+    if (memo.containsKey(n)) return memo.get(n);
+    long result = fibMemo(n - 1) + fibMemo(n - 2);
+    memo.put(n, result);
+    return result;
+}
+
+public long fibTable(int n) {  // bottom-up: fill a table
+    if (n < 2) return n;
+    long[] dp = new long[n + 1];
+    dp[1] = 1;
+    for (int i = 2; i <= n; i++) dp[i] = dp[i - 1] + dp[i - 2];
+    return dp[n];
+}
+```
+
+```cpp
+long long fibMemo(int n, unordered_map<int, long long>& memo) {  // top-down: recursion + cache
+    if (n < 2) return n;
+    if (memo.count(n)) return memo[n];
+    return memo[n] = fibMemo(n - 1, memo) + fibMemo(n - 2, memo);
+}
+
+long long fibTable(int n) {  // bottom-up: fill a table
+    if (n < 2) return n;
+    vector<long long> dp(n + 1, 0);
+    dp[1] = 1;
+    for (int i = 2; i <= n; i++) dp[i] = dp[i - 1] + dp[i - 2];
+    return dp[n];
+}
+```
+
+```javascript
+function fibMemo(n, memo = new Map()) { // top-down: recursion + cache
+  if (n < 2) return n;
+  if (memo.has(n)) return memo.get(n);
+  const result = fibMemo(n - 1, memo) + fibMemo(n - 2, memo);
+  memo.set(n, result);
+  return result;
+}
+
+function fibTable(n) { // bottom-up: fill a table
+  if (n < 2) return n;
+  const dp = new Array(n + 1).fill(0);
+  dp[1] = 1;
+  for (let i = 2; i <= n; i++) dp[i] = dp[i - 1] + dp[i - 2];
+  return dp[n];
+}
+```
+
+</CodeTabs>
+
+## Top-down or bottom-up?
+
+| | Top-down (memoization) | Bottom-up (tabulation) |
+|-|------------------------|------------------------|
+| Easiest to write | Usually: it's the recursion you already have, plus a cache | Needs the right fill order |
+| Solves | Only the subproblems actually reached | Every subproblem in the table |
+| Risk | Deep recursion can overflow the stack | None |
+| Space optimizations | Hard | Easy: often keep only the last row or two values |
+
+A good interview strategy: write the recursion, add memoization, then, if asked, convert to bottom-up and shrink the table.
+
+## Space optimization
+
+If each state only depends on the **previous few** states, you don't need the whole table. Fibonacci only needs the last two values, so two variables replace the array: `O(1)` space. 2D tables that only look at the previous row can keep just one or two rows.
+
+<Callout type="interview">
+The hard part of DP is never the loops. It's defining the **state** ("what does `dp[i]` mean?") and the **recurrence** ("how is it built from smaller states?"). Say both out loud before writing any code. The next page walks through a recipe for finding them.
+</Callout>
+
+## Problems
+
+<ProblemList section="dynamic-programming" />
