@@ -1,0 +1,45 @@
+---
+title: Graphs
+description: Model dependencies and networks as graphs, then order them with topological sort or measure them with shortest paths.
+readingTime: 7 min
+---
+
+## Beyond plain traversal
+
+The [DFS](/learn/code/depth-first-search/graphs-overview) and [BFS](/learn/code/breadth-first-search/graphs-overview) sections cover the basics: adjacency lists, visited sets, connected components and unweighted shortest paths. This section covers two more families of graph problems that come up often in interviews:
+
+1. **Ordering with dependencies** (topological sort): courses with prerequisites, build steps, task scheduling.
+2. **Shortest paths with weights**: travel times, prices, effort. See [Shortest Path Algorithms](/learn/code/graphs/shortest-path-algorithms).
+
+## Directed acyclic graphs and topological order
+
+When edges mean "must come before" (`a → b`: do `a` before `b`), the graph is **directed**. A valid order of all the nodes that respects every edge is called a **topological order**. One exists exactly when the graph has **no cycle**: a cycle like `a → b → c → a` means each task must come before itself.
+
+<Visualizer id="course-schedule" />
+
+### Kahn's algorithm
+
+1. Compute each node's **in-degree**: how many edges point into it (how many unmet prerequisites it has).
+2. Put every node with in-degree 0 into a queue: these can be done right away.
+3. Repeatedly take a node from the queue, append it to the order, and **decrease the in-degree of each node it points to**. Any node that drops to 0 joins the queue.
+4. If the order contains every node, it's a valid topological order. If some nodes never reach in-degree 0, they're stuck in a cycle.
+
+This runs in `O(V + E)`: each node is queued once and each edge is examined once.
+
+<Callout type="tip" title="DFS alternative">
+A DFS-based topological sort adds each node to a list **after** all its descendants are finished, then reverses the list. Cycle detection needs three node states: unvisited, in progress, done. Reaching an "in progress" node means you found a cycle. Kahn's algorithm is usually easier to get right in an interview.
+</Callout>
+
+## Choosing an algorithm
+
+| Question | Tool |
+|----------|------|
+| Can these tasks be ordered? In what order? | Topological sort (Kahn's algorithm) |
+| Fewest edges between two nodes | BFS |
+| Cheapest path, non-negative weights | Dijkstra |
+| Cheapest path with at most `k` edges, or negative weights | Bellman-Ford |
+| Distances between **all** pairs of nodes, small `n` | Floyd-Warshall |
+
+## Problems
+
+<ProblemList section="graphs" />

@@ -1,0 +1,128 @@
+---
+title: Network Delay Time
+description: Run Dijkstra from the source; the signal reaches everyone when the farthest node hears it.
+---
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/network-delay-time/">
+
+A network has `n` nodes labelled `1` to `n`. `times[i] = [u, v, w]` means a signal takes `w` time to travel from `u` to `v` (one direction only). A signal is sent from node `k`. Return the time it takes for **all** nodes to receive it, or `-1` if some node never does.
+
+**Example:** `times = [[2, 1, 1], [2, 3, 1], [3, 4, 1]]`, `n = 4`, `k = 2` returns `2`.
+
+</Problem>
+
+## Approach
+
+The signal spreads along every edge at once, so each node receives it at the time of its **shortest path** from `k`. All nodes have the signal once the **slowest** of them does: the answer is the **maximum** shortest-path distance.
+
+Edge weights are non-negative, so run [Dijkstra](/learn/code/graphs/shortest-path-algorithms) from `k`, then take the largest distance. If any node is unreachable, return `-1`.
+
+Nodes are labelled from 1, so size the arrays `n + 1` and ignore index 0.
+
+## Solution
+
+<CodeTabs>
+
+```python
+import heapq
+
+def network_delay_time(times: list[list[int]], n: int, k: int) -> int:
+    graph = [[] for _ in range(n + 1)]
+    for u, v, w in times:
+        graph[u].append((v, w))
+
+    dist = [float("inf")] * (n + 1)
+    dist[k] = 0
+    heap = [(0, k)]
+    while heap:
+        d, node = heapq.heappop(heap)
+        if d > dist[node]:
+            continue
+        for neighbor, w in graph[node]:
+            if d + w < dist[neighbor]:
+                dist[neighbor] = d + w
+                heapq.heappush(heap, (d + w, neighbor))
+
+    slowest = max(dist[1:])
+    return slowest if slowest != float("inf") else -1
+```
+
+```java
+public int networkDelayTime(int[][] times, int n, int k) {
+    List<List<int[]>> graph = new ArrayList<>();
+    for (int i = 0; i <= n; i++) graph.add(new ArrayList<>());
+    for (int[] t : times) graph.get(t[0]).add(new int[] {t[1], t[2]});
+
+    int[] dist = new int[n + 1];
+    Arrays.fill(dist, Integer.MAX_VALUE);
+    dist[k] = 0;
+    PriorityQueue<int[]> heap = new PriorityQueue<>((a, b) -> Integer.compare(a[0], b[0]));
+    heap.offer(new int[] {0, k});
+    while (!heap.isEmpty()) {
+        int[] top = heap.poll();
+        int d = top[0], node = top[1];
+        if (d > dist[node]) continue;
+        for (int[] edge : graph.get(node)) {
+            if (d + edge[1] < dist[edge[0]]) {
+                dist[edge[0]] = d + edge[1];
+                heap.offer(new int[] {dist[edge[0]], edge[0]});
+            }
+        }
+    }
+    int slowest = 0;
+    for (int i = 1; i <= n; i++) slowest = Math.max(slowest, dist[i]);
+    return slowest == Integer.MAX_VALUE ? -1 : slowest;
+}
+```
+
+```cpp
+int networkDelayTime(const vector<vector<int>>& times, int n, int k) {
+    vector<vector<pair<int, int>>> graph(n + 1);
+    for (const auto& t : times) graph[t[0]].push_back({t[1], t[2]});
+
+    vector<int> dist(n + 1, INT_MAX);
+    dist[k] = 0;
+    priority_queue<pair<int, int>, vector<pair<int, int>>, greater<>> heap;
+    heap.push({0, k});
+    while (!heap.empty()) {
+        auto [d, node] = heap.top();
+        heap.pop();
+        if (d > dist[node]) continue;
+        for (auto [neighbor, w] : graph[node]) {
+            if (d + w < dist[neighbor]) {
+                dist[neighbor] = d + w;
+                heap.push({dist[neighbor], neighbor});
+            }
+        }
+    }
+    int slowest = *max_element(dist.begin() + 1, dist.end());
+    return slowest == INT_MAX ? -1 : slowest;
+}
+```
+
+```javascript
+function networkDelayTime(times, n, k) {
+  const graph = Array.from({ length: n + 1 }, () => []);
+  for (const [u, v, w] of times) graph[u].push([v, w]);
+  const dist = new Array(n + 1).fill(Infinity);
+  dist[k] = 0;
+  const heap = new Heap((a, b) => a[0] - b[0]);
+  heap.push([0, k]);
+  while (heap.size > 0) {
+    const [d, node] = heap.pop();
+    if (d > dist[node]) continue;
+    for (const [neighbor, w] of graph[node]) {
+      if (d + w < dist[neighbor]) {
+        dist[neighbor] = d + w;
+        heap.push([dist[neighbor], neighbor]);
+      }
+    }
+  }
+  const slowest = Math.max(...dist.slice(1));
+  return slowest === Infinity ? -1 : slowest;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O((V + E) log V)" space="O(V + E)" />

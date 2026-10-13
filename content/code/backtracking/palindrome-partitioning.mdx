@@ -1,0 +1,142 @@
+---
+title: Palindrome Partitioning
+description: At each position, try every palindromic prefix as the next piece and partition the rest recursively.
+---
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/palindrome-partitioning/">
+
+Given a string `s`, split it into pieces so that **every piece is a palindrome**. Return all possible ways to do this.
+
+**Example:** `s = "aab"` returns `[["a", "a", "b"], ["aa", "b"]]`.
+
+</Problem>
+
+## Approach
+
+Build the partition from left to right. At position `start`, the choice is **where the next piece ends**:
+
+- For each `end` from `start` to the end of the string, look at the piece `s[start..end]`.
+- If it's a palindrome, **choose** it, then partition the rest of the string starting at `end + 1`.
+- If it isn't, **prune**: no partition can use this piece.
+
+When `start` reaches the end of the string, every piece chosen so far was a palindrome, so record the partition.
+
+### Faster palindrome checks
+
+Checking each piece from scratch costs `O(n)`. You can precompute a table `is_pal[i][j]` with dynamic programming: `s[i..j]` is a palindrome when `s[i] == s[j]` and `s[i+1..j-1]` is a palindrome. That makes every check `O(1)`. With small inputs, the simple check is usually fine, and it's what we use below.
+
+## Solution
+
+<CodeTabs>
+
+```python
+def partition(s: str) -> list[list[str]]:
+    result, path = [], []
+
+    def is_palindrome(lo, hi):
+        while lo < hi:
+            if s[lo] != s[hi]:
+                return False
+            lo, hi = lo + 1, hi - 1
+        return True
+
+    def backtrack(start):
+        if start == len(s):
+            result.append(path[:])
+            return
+        for end in range(start, len(s)):
+            if is_palindrome(start, end):           # prune non-palindromic pieces
+                path.append(s[start:end + 1])
+                backtrack(end + 1)
+                path.pop()
+
+    backtrack(0)
+    return result
+```
+
+```java
+public List<List<String>> partition(String s) {
+    List<List<String>> result = new ArrayList<>();
+    backtrack(s, 0, new ArrayList<>(), result);
+    return result;
+}
+
+private void backtrack(String s, int start, List<String> path, List<List<String>> result) {
+    if (start == s.length()) {
+        result.add(new ArrayList<>(path));
+        return;
+    }
+    for (int end = start; end < s.length(); end++) {
+        if (isPalindrome(s, start, end)) {  // prune non-palindromic pieces
+            path.add(s.substring(start, end + 1));
+            backtrack(s, end + 1, path, result);
+            path.remove(path.size() - 1);
+        }
+    }
+}
+
+private boolean isPalindrome(String s, int lo, int hi) {
+    while (lo < hi) if (s.charAt(lo++) != s.charAt(hi--)) return false;
+    return true;
+}
+```
+
+```cpp
+bool isPalindrome(const string& s, int lo, int hi) {
+    while (lo < hi) if (s[lo++] != s[hi--]) return false;
+    return true;
+}
+
+void backtrack(const string& s, int start, vector<string>& path, vector<vector<string>>& result) {
+    if (start == (int)s.size()) {
+        result.push_back(path);
+        return;
+    }
+    for (int end = start; end < (int)s.size(); end++) {
+        if (isPalindrome(s, start, end)) {  // prune non-palindromic pieces
+            path.push_back(s.substr(start, end - start + 1));
+            backtrack(s, end + 1, path, result);
+            path.pop_back();
+        }
+    }
+}
+
+vector<vector<string>> partition(const string& s) {
+    vector<vector<string>> result;
+    vector<string> path;
+    backtrack(s, 0, path, result);
+    return result;
+}
+```
+
+```javascript
+function partition(s) {
+  const result = [];
+  const path = [];
+  const isPalindrome = (lo, hi) => {
+    while (lo < hi) if (s[lo++] !== s[hi--]) return false;
+    return true;
+  };
+  const backtrack = (start) => {
+    if (start === s.length) {
+      result.push([...path]);
+      return;
+    }
+    for (let end = start; end < s.length; end++) {
+      if (isPalindrome(start, end)) { // prune non-palindromic pieces
+        path.push(s.slice(start, end + 1));
+        backtrack(end + 1);
+        path.pop();
+      }
+    }
+  };
+  backtrack(0);
+  return result;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(n × 2ⁿ)" space="O(n) besides the output" />
+
+A string of length `n` has `2^(n-1)` ways to place cuts, and each partition takes `O(n)` to check and copy.

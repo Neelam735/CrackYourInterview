@@ -1,0 +1,148 @@
+---
+title: N-Queens
+description: Place one queen per row, tracking attacked columns and diagonals in sets so each check is O(1).
+---
+
+<Problem difficulty="Hard" link="https://leetcode.com/problems/n-queens/">
+
+Place `n` queens on an `n × n` chessboard so that no two queens attack each other (no two share a row, column or diagonal). Return all distinct solutions, each as a list of strings where `"Q"` is a queen and `"."` an empty square.
+
+**Example:** `n = 4` returns
+
+```text nocheck
+[".Q..",     ["..Q.",
+ "...Q",      "Q...",
+ "Q...",      "...Q",
+ "..Q."]      ".Q.."]
+```
+
+</Problem>
+
+## Approach
+
+Two queens can never share a row, so place exactly **one queen per row**, going top to bottom. At row `r`, the choice is **which column** to use.
+
+A square `(r, c)` is safe if no earlier queen is in:
+
+- the same **column** `c`,
+- the same **diagonal** (top-left to bottom-right): every square on it has the same `r - c`,
+- the same **anti-diagonal** (top-right to bottom-left): every square on it has the same `r + c`.
+
+Keep three sets of attacked columns, diagonals and anti-diagonals. Checking a square is then `O(1)`, and placing or removing a queen updates three sets.
+
+When `r == n`, all queens are placed: turn the column choices into the board strings and record them.
+
+## Solution
+
+<CodeTabs>
+
+```python
+def solve_n_queens(n: int) -> list[list[str]]:
+    result = []
+    queens = []                       # queens[r] = column of the queen in row r
+    cols, diags, anti = set(), set(), set()
+
+    def backtrack(r):
+        if r == n:
+            result.append(["." * c + "Q" + "." * (n - c - 1) for c in queens])
+            return
+        for c in range(n):
+            if c in cols or (r - c) in diags or (r + c) in anti:
+                continue              # attacked: prune
+            queens.append(c)
+            cols.add(c); diags.add(r - c); anti.add(r + c)
+            backtrack(r + 1)
+            queens.pop()
+            cols.remove(c); diags.remove(r - c); anti.remove(r + c)
+
+    backtrack(0)
+    return result
+```
+
+```java
+public List<List<String>> solveNQueens(int n) {
+    List<List<String>> result = new ArrayList<>();
+    backtrack(n, 0, new int[n], new boolean[n], new boolean[2 * n], new boolean[2 * n], result);
+    return result;
+}
+
+private void backtrack(int n, int r, int[] queens, boolean[] cols, boolean[] diags, boolean[] anti,
+                       List<List<String>> result) {
+    if (r == n) {
+        List<String> board = new ArrayList<>();
+        for (int c : queens) board.add(".".repeat(c) + "Q" + ".".repeat(n - c - 1));
+        result.add(board);
+        return;
+    }
+    for (int c = 0; c < n; c++) {
+        int d = r - c + n, a = r + c;  // shift r - c so it's never negative
+        if (cols[c] || diags[d] || anti[a]) continue;  // attacked: prune
+        queens[r] = c;
+        cols[c] = diags[d] = anti[a] = true;
+        backtrack(n, r + 1, queens, cols, diags, anti, result);
+        cols[c] = diags[d] = anti[a] = false;
+    }
+}
+```
+
+```cpp
+void backtrack(int n, int r, vector<int>& queens, vector<bool>& cols, vector<bool>& diags,
+               vector<bool>& anti, vector<vector<string>>& result) {
+    if (r == n) {
+        vector<string> board;
+        for (int c : queens) board.push_back(string(c, '.') + "Q" + string(n - c - 1, '.'));
+        result.push_back(board);
+        return;
+    }
+    for (int c = 0; c < n; c++) {
+        int d = r - c + n, a = r + c;  // shift r - c so it's never negative
+        if (cols[c] || diags[d] || anti[a]) continue;  // attacked: prune
+        queens[r] = c;
+        cols[c] = diags[d] = anti[a] = true;
+        backtrack(n, r + 1, queens, cols, diags, anti, result);
+        cols[c] = diags[d] = anti[a] = false;
+    }
+}
+
+vector<vector<string>> solveNQueens(int n) {
+    vector<vector<string>> result;
+    vector<int> queens(n);
+    vector<bool> cols(n), diags(2 * n), anti(2 * n);
+    backtrack(n, 0, queens, cols, diags, anti, result);
+    return result;
+}
+```
+
+```javascript
+function solveNQueens(n) {
+  const result = [];
+  const queens = [];
+  const cols = new Set();
+  const diags = new Set();
+  const anti = new Set();
+  const backtrack = (r) => {
+    if (r === n) {
+      result.push(queens.map((c) => ".".repeat(c) + "Q" + ".".repeat(n - c - 1)));
+      return;
+    }
+    for (let c = 0; c < n; c++) {
+      if (cols.has(c) || diags.has(r - c) || anti.has(r + c)) continue; // attacked: prune
+      queens.push(c);
+      cols.add(c); diags.add(r - c); anti.add(r + c);
+      backtrack(r + 1);
+      queens.pop();
+      cols.delete(c); diags.delete(r - c); anti.delete(r + c);
+    }
+  };
+  backtrack(0);
+  return result;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(n!)" space="O(n) besides the output" />
+
+<Callout type="interview">
+The `r - c` and `r + c` diagonal keys are the insight interviewers look for. Explain them with a tiny drawing: moving down-right adds 1 to both `r` and `c` (so `r - c` stays the same), and moving down-left adds 1 to `r` and subtracts 1 from `c` (so `r + c` stays the same).
+</Callout>

@@ -1,0 +1,93 @@
+---
+title: Cheapest Flights Within K Stops
+description: Bellman-Ford with exactly k + 1 rounds finds the cheapest route using at most k stops.
+---
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/cheapest-flights-within-k-stops/">
+
+There are `n` cities and a list of `flights`, where `flights[i] = [from, to, price]`. Return the cheapest price from `src` to `dst` using **at most `k` stops** (intermediate cities), or `-1` if there's no such route.
+
+**Example:** `n = 4`, `flights = [[0, 1, 100], [1, 2, 100], [2, 0, 100], [1, 3, 600], [2, 3, 200]]`, `src = 0`, `dst = 3`, `k = 1` returns `700` (`0 → 1 → 3`). The cheaper route `0 → 1 → 2 → 3` (400) needs 2 stops.
+
+</Problem>
+
+## Why not plain Dijkstra?
+
+Dijkstra finalizes each city at its cheapest price, but the cheapest way to reach a city might use too many stops. A pricier route to that city with fewer stops could be the only one that leads on to `dst` in time. You'd have to track `(city, stops used)` as separate states.
+
+## Approach: Bellman-Ford with k + 1 rounds
+
+At most `k` stops means at most `k + 1` flights. [Bellman-Ford](/learn/code/graphs/shortest-path-algorithms) has exactly the property we need: after round `i`, it knows the cheapest price to every city using **at most `i` flights**.
+
+So run exactly `k + 1` rounds. In each round, relax every flight, but read prices from a **copy of the previous round's prices**. Otherwise a single round could chain several flights together and break the "at most `i` flights" guarantee.
+
+## Solution
+
+<CodeTabs>
+
+```python
+def find_cheapest_price(n: int, flights: list[list[int]], src: int, dst: int, k: int) -> int:
+    price = [float("inf")] * n
+    price[src] = 0
+    for _ in range(k + 1):                 # at most k + 1 flights
+        previous = price[:]                # read only last round's prices
+        for u, v, cost in flights:
+            if previous[u] + cost < price[v]:
+                price[v] = previous[u] + cost
+    return price[dst] if price[dst] != float("inf") else -1
+```
+
+```java
+public int findCheapestPrice(int n, int[][] flights, int src, int dst, int k) {
+    int[] price = new int[n];
+    Arrays.fill(price, Integer.MAX_VALUE);
+    price[src] = 0;
+    for (int round = 0; round <= k; round++) {  // at most k + 1 flights
+        int[] previous = price.clone();         // read only last round's prices
+        for (int[] f : flights) {
+            if (previous[f[0]] != Integer.MAX_VALUE && previous[f[0]] + f[2] < price[f[1]]) {
+                price[f[1]] = previous[f[0]] + f[2];
+            }
+        }
+    }
+    return price[dst] == Integer.MAX_VALUE ? -1 : price[dst];
+}
+```
+
+```cpp
+int findCheapestPrice(int n, const vector<vector<int>>& flights, int src, int dst, int k) {
+    vector<int> price(n, INT_MAX);
+    price[src] = 0;
+    for (int round = 0; round <= k; round++) {  // at most k + 1 flights
+        vector<int> previous = price;           // read only last round's prices
+        for (const auto& f : flights) {
+            if (previous[f[0]] != INT_MAX && previous[f[0]] + f[2] < price[f[1]]) {
+                price[f[1]] = previous[f[0]] + f[2];
+            }
+        }
+    }
+    return price[dst] == INT_MAX ? -1 : price[dst];
+}
+```
+
+```javascript
+function findCheapestPrice(n, flights, src, dst, k) {
+  let price = new Array(n).fill(Infinity);
+  price[src] = 0;
+  for (let round = 0; round <= k; round++) { // at most k + 1 flights
+    const previous = [...price];             // read only last round's prices
+    for (const [u, v, cost] of flights) {
+      if (previous[u] + cost < price[v]) price[v] = previous[u] + cost;
+    }
+  }
+  return price[dst] === Infinity ? -1 : price[dst];
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(k × E)" space="O(V)" />
+
+<Callout type="warning">
+Forgetting the `previous` copy is the classic bug here. Without it, a round can use a price that was itself updated earlier in the same round, sneaking in extra flights. On the example above, that returns 400 instead of 700.
+</Callout>

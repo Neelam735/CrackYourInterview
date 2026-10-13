@@ -1,0 +1,50 @@
+---
+title: Backtracking
+description: Build a solution one choice at a time, and undo each choice to try the next one.
+readingTime: 6 min
+---
+
+## The idea
+
+Some problems ask for **every** valid arrangement, or for one arrangement that satisfies tricky constraints: all subsets, all permutations, a path through a grid that spells a word, queens that don't attack each other. You can't avoid trying many possibilities, so the goal is to try them **systematically**, without missing or repeating any, and to **stop early** on dead ends.
+
+Backtracking builds a candidate one choice at a time:
+
+1. **Choose:** make a choice and add it to the current partial solution.
+2. **Explore:** recurse to make the next choice.
+3. **Un-choose:** undo the choice, so the partial solution is ready for the next option.
+
+It's a depth-first search over the space of possible choices. See [Solution Space Trees](/learn/code/backtracking/solution-space-trees) for the picture behind this.
+
+## The template
+
+```python nocheck
+def backtrack(state):
+    if state is a complete solution:
+        record a copy of it
+        return
+    for choice in choices available from state:
+        if choice can't lead to a valid solution:
+            continue                  # prune
+        apply choice to state         # choose
+        backtrack(state)              # explore
+        undo choice                   # un-choose
+```
+
+## When to use it
+
+- The problem says **"all"**: return all subsets, permutations, combinations, partitions or placements.
+- The input is **small** (often `n ≤ 10`–`20`), because the number of possibilities grows exponentially.
+- Constraint puzzles: N-Queens, Sudoku, word search on a grid.
+
+## Pruning makes it fast
+
+The worst case of backtracking is exponential, but good **pruning** cuts away huge parts of the search. If a partial solution already breaks a rule (a queen is attacked, a sum already exceeds the target, the grid letter doesn't match), stop and back up immediately. Pruning early, near the root of the search, saves the most work.
+
+<Callout type="warning" title="Copy before recording">
+When you record a solution, append a **copy** of the current path (`path[:]`, `new ArrayList<>(path)`, `[...path]`). The path object keeps changing as the search continues, so appending the object itself leaves you with many references to one empty list.
+</Callout>
+
+## Problems
+
+<ProblemList section="backtracking" />

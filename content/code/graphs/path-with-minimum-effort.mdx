@@ -1,0 +1,137 @@
+---
+title: Path With Minimum Effort
+description: Dijkstra where a path's cost is its steepest step, not the sum of its steps.
+---
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/path-with-minimum-effort/">
+
+You're given a grid of `heights`. You start at the top-left cell and want to reach the bottom-right, moving up, down, left or right. A route's **effort** is the **maximum** absolute height difference between two consecutive cells on it. Return the minimum effort needed.
+
+**Example:** `heights = [[1, 2, 2], [3, 8, 2], [5, 3, 5]]` returns `2`: the route `1 → 3 → 5 → 3 → 5` never climbs or drops more than 2.
+
+</Problem>
+
+## Approach
+
+This is a shortest-path problem on a grid, with a twist: a path's cost isn't the **sum** of its edges but the **largest** edge on it. Dijkstra still works, because extending a path can never make its cost go down: `max(cost, step) ≥ cost`. That's the same property that makes Dijkstra correct for sums of non-negative weights.
+
+So run Dijkstra over the cells:
+
+- `effort[cell]` = the smallest maximum-step needed to reach that cell so far.
+- When moving from `cell` to a neighbour, the new effort is `max(effort[cell], |height difference|)`.
+- When the bottom-right cell is popped from the heap, its effort is final: return it.
+
+## Solution
+
+<CodeTabs>
+
+```python
+import heapq
+
+def minimum_effort_path(heights: list[list[int]]) -> int:
+    rows, cols = len(heights), len(heights[0])
+    effort = [[float("inf")] * cols for _ in range(rows)]
+    effort[0][0] = 0
+    heap = [(0, 0, 0)]                          # (effort so far, row, col)
+    while heap:
+        e, r, c = heapq.heappop(heap)
+        if (r, c) == (rows - 1, cols - 1):
+            return e
+        if e > effort[r][c]:
+            continue
+        for nr, nc in ((r + 1, c), (r - 1, c), (r, c + 1), (r, c - 1)):
+            if 0 <= nr < rows and 0 <= nc < cols:
+                ne = max(e, abs(heights[nr][nc] - heights[r][c]))   # steepest step so far
+                if ne < effort[nr][nc]:
+                    effort[nr][nc] = ne
+                    heapq.heappush(heap, (ne, nr, nc))
+    return 0
+```
+
+```java
+public int minimumEffortPath(int[][] heights) {
+    int rows = heights.length, cols = heights[0].length;
+    int[][] effort = new int[rows][cols];
+    for (int[] row : effort) Arrays.fill(row, Integer.MAX_VALUE);
+    effort[0][0] = 0;
+    PriorityQueue<int[]> heap = new PriorityQueue<>((a, b) -> Integer.compare(a[0], b[0]));
+    heap.offer(new int[] {0, 0, 0});  // {effort so far, row, col}
+    int[][] dirs = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+    while (!heap.isEmpty()) {
+        int[] top = heap.poll();
+        int e = top[0], r = top[1], c = top[2];
+        if (r == rows - 1 && c == cols - 1) return e;
+        if (e > effort[r][c]) continue;
+        for (int[] d : dirs) {
+            int nr = r + d[0], nc = c + d[1];
+            if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) continue;
+            int ne = Math.max(e, Math.abs(heights[nr][nc] - heights[r][c]));  // steepest step so far
+            if (ne < effort[nr][nc]) {
+                effort[nr][nc] = ne;
+                heap.offer(new int[] {ne, nr, nc});
+            }
+        }
+    }
+    return 0;
+}
+```
+
+```cpp
+int minimumEffortPath(const vector<vector<int>>& heights) {
+    int rows = heights.size(), cols = heights[0].size();
+    vector<vector<int>> effort(rows, vector<int>(cols, INT_MAX));
+    effort[0][0] = 0;
+    priority_queue<array<int, 3>, vector<array<int, 3>>, greater<>> heap;  // {effort, row, col}
+    heap.push({0, 0, 0});
+    int dirs[4][2] = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+    while (!heap.empty()) {
+        auto [e, r, c] = heap.top();
+        heap.pop();
+        if (r == rows - 1 && c == cols - 1) return e;
+        if (e > effort[r][c]) continue;
+        for (auto& d : dirs) {
+            int nr = r + d[0], nc = c + d[1];
+            if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) continue;
+            int ne = max(e, abs(heights[nr][nc] - heights[r][c]));  // steepest step so far
+            if (ne < effort[nr][nc]) {
+                effort[nr][nc] = ne;
+                heap.push({ne, nr, nc});
+            }
+        }
+    }
+    return 0;
+}
+```
+
+```javascript
+function minimumEffortPath(heights) {
+  const rows = heights.length;
+  const cols = heights[0].length;
+  const effort = Array.from({ length: rows }, () => new Array(cols).fill(Infinity));
+  effort[0][0] = 0;
+  const heap = new Heap((a, b) => a[0] - b[0]); // [effort so far, row, col]
+  heap.push([0, 0, 0]);
+  while (heap.size > 0) {
+    const [e, r, c] = heap.pop();
+    if (r === rows - 1 && c === cols - 1) return e;
+    if (e > effort[r][c]) continue;
+    for (const [nr, nc] of [[r + 1, c], [r - 1, c], [r, c + 1], [r, c - 1]]) {
+      if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) continue;
+      const ne = Math.max(e, Math.abs(heights[nr][nc] - heights[r][c])); // steepest step so far
+      if (ne < effort[nr][nc]) {
+        effort[nr][nc] = ne;
+        heap.push([ne, nr, nc]);
+      }
+    }
+  }
+  return 0;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(R·C log(R·C))" space="O(R·C)" />
+
+<Callout type="tip" title="Two other ways">
+**Binary search on the answer:** for a given effort limit, BFS/DFS can check whether the corner is reachable using only steps within the limit. **Union-Find:** sort all edges by height difference and connect cells until the two corners join. All three approaches are good to know; Dijkstra is the most direct.
+</Callout>

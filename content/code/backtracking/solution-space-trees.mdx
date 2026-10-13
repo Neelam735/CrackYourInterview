@@ -1,0 +1,74 @@
+---
+title: Solution Space Trees
+description: Picture every backtracking search as a tree of decisions; the shape of the tree tells you the code and the complexity.
+readingTime: 7 min
+---
+
+## Drawing the search
+
+Every backtracking algorithm explores an invisible tree:
+
+- the **root** is the empty partial solution,
+- each **edge** is one choice,
+- each **node** is a partial solution (the choices made on the path from the root),
+- **leaves** are complete solutions, or dead ends where pruning stopped the search.
+
+Backtracking is just a depth-first walk over this tree. "Choose" moves down an edge; "un-choose" moves back up.
+
+Before writing code, sketch the first two or three levels of the tree for a tiny input. It answers the three questions every backtracking solution needs:
+
+1. **What choice is made at each level?**
+2. **When is a node a complete solution?**
+3. **Which branches can be pruned?**
+
+## Two common tree shapes
+
+### Include or exclude each element
+
+For subsets, one way to build the tree is: at level `i`, decide whether element `i` is **in** or **out**. Every leaf at depth `n` is one subset, so there are `2ⁿ` leaves.
+
+```text nocheck
+                     []
+             in 1 /      \ out 1
+              [1]          []
+         in 2 /  \ out   in /  \ out
+         [1,2]   [1]      [2]   []
+          ...    ...      ...   ...
+```
+
+### Pick the next element from the remaining ones
+
+Another way: at each node, choose **which element comes next**, only from elements after the last one chosen. Here every node is a subset, not just the leaves. That's the shape used in [Subsets](/learn/code/backtracking/subsets):
+
+<Visualizer id="subsets" />
+
+For permutations, the next element can be **any unused** element, so the first level has `n` branches, the second `n - 1`, and so on: `n!` leaves.
+
+## Reading the complexity off the tree
+
+The running time is roughly **(number of nodes in the tree) × (work per node)**.
+
+| Problem | Leaves | Work to record one | Total |
+|---------|--------|--------------------|-------|
+| Subsets | `2ⁿ` | `O(n)` copy | `O(n · 2ⁿ)` |
+| Permutations | `n!` | `O(n)` copy | `O(n · n!)` |
+| Combinations of size `k` | `C(n, k)` | `O(k)` copy | `O(k · C(n, k))` |
+
+Pruning removes whole subtrees, so real running times are often far smaller than these worst cases.
+
+## Avoiding duplicate answers
+
+If the input contains duplicates, like `[1, 2, 2]`, the tree contains identical branches that produce the same answer twice. The standard fix:
+
+1. **Sort** the input so equal values sit next to each other.
+2. At each level, **skip a value equal to the previous one** at the same level: `if i > start and nums[i] == nums[i - 1]: continue`.
+
+This prunes duplicate branches without needing a set of results.
+
+<Callout type="interview">
+Sketching the decision tree out loud is the best way to start a backtracking question. It shows the interviewer your plan, makes the base case and pruning obvious, and gives you the complexity for free.
+</Callout>
+
+## Problems
+
+<ProblemList section="backtracking" />

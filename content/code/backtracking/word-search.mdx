@@ -1,0 +1,128 @@
+---
+title: Word Search
+description: Try to spell the word from every starting cell, marking cells as used on the way down and freeing them on the way back.
+---
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/word-search/">
+
+Given an `m × n` grid of letters `board` and a string `word`, return `True` if the word can be spelled by a path of horizontally or vertically adjacent cells. Each cell may be used **at most once** in the path.
+
+**Example:**
+
+```text nocheck
+A B C E
+S F C S
+A D E E
+```
+
+`"ABCCED"` → `True`, `"SEE"` → `True`, `"ABCB"` → `False` (it would reuse the `B`).
+
+</Problem>
+
+## Approach
+
+Try every cell as a starting point. From a cell, `search(r, c, i)` asks: can I spell `word[i:]` starting here?
+
+1. **Prune:** if the cell is off the board, already used in this path, or doesn't match `word[i]`, return `False`.
+2. **Done:** if `i` is the last index and the cell matches, return `True`.
+3. **Choose:** mark the cell as used (overwrite it with a placeholder like `#`).
+4. **Explore:** try the four neighbours with `i + 1`.
+5. **Un-choose:** restore the cell's letter, so other paths can use it.
+
+Step 5 is what makes this backtracking rather than a plain DFS: a cell is only "visited" while it's part of the **current** path. Once you back out, it's free again.
+
+## Solution
+
+<CodeTabs>
+
+```python
+def exist(board: list[list[str]], word: str) -> bool:
+    rows, cols = len(board), len(board[0])
+
+    def search(r, c, i):
+        if r < 0 or r >= rows or c < 0 or c >= cols or board[r][c] != word[i]:
+            return False                       # off the board, used, or wrong letter
+        if i == len(word) - 1:
+            return True
+        letter, board[r][c] = board[r][c], "#"  # choose: mark as used
+        found = (search(r + 1, c, i + 1) or search(r - 1, c, i + 1)
+                 or search(r, c + 1, i + 1) or search(r, c - 1, i + 1))
+        board[r][c] = letter                     # un-choose: free the cell
+        return found
+
+    return any(search(r, c, 0) for r in range(rows) for c in range(cols))
+```
+
+```java
+public boolean exist(char[][] board, String word) {
+    for (int r = 0; r < board.length; r++)
+        for (int c = 0; c < board[0].length; c++)
+            if (search(board, word, r, c, 0)) return true;
+    return false;
+}
+
+private boolean search(char[][] board, String word, int r, int c, int i) {
+    if (r < 0 || r >= board.length || c < 0 || c >= board[0].length || board[r][c] != word.charAt(i)) {
+        return false;  // off the board, used, or wrong letter
+    }
+    if (i == word.length() - 1) return true;
+    char letter = board[r][c];
+    board[r][c] = '#';  // choose: mark as used
+    boolean found = search(board, word, r + 1, c, i + 1) || search(board, word, r - 1, c, i + 1)
+            || search(board, word, r, c + 1, i + 1) || search(board, word, r, c - 1, i + 1);
+    board[r][c] = letter;  // un-choose: free the cell
+    return found;
+}
+```
+
+```cpp
+bool search(vector<vector<char>>& board, const string& word, int r, int c, int i) {
+    if (r < 0 || r >= (int)board.size() || c < 0 || c >= (int)board[0].size() || board[r][c] != word[i]) {
+        return false;  // off the board, used, or wrong letter
+    }
+    if (i == (int)word.size() - 1) return true;
+    char letter = board[r][c];
+    board[r][c] = '#';  // choose: mark as used
+    bool found = search(board, word, r + 1, c, i + 1) || search(board, word, r - 1, c, i + 1)
+              || search(board, word, r, c + 1, i + 1) || search(board, word, r, c - 1, i + 1);
+    board[r][c] = letter;  // un-choose: free the cell
+    return found;
+}
+
+bool exist(vector<vector<char>> board, const string& word) {
+    for (int r = 0; r < (int)board.size(); r++)
+        for (int c = 0; c < (int)board[0].size(); c++)
+            if (search(board, word, r, c, 0)) return true;
+    return false;
+}
+```
+
+```javascript
+function exist(board, word) {
+  const rows = board.length;
+  const cols = board[0].length;
+  const search = (r, c, i) => {
+    if (r < 0 || r >= rows || c < 0 || c >= cols || board[r][c] !== word[i]) return false;
+    if (i === word.length - 1) return true;
+    const letter = board[r][c];
+    board[r][c] = "#"; // choose: mark as used
+    const found = search(r + 1, c, i + 1) || search(r - 1, c, i + 1) ||
+                  search(r, c + 1, i + 1) || search(r, c - 1, i + 1);
+    board[r][c] = letter; // un-choose: free the cell
+    return found;
+  };
+  for (let r = 0; r < rows; r++)
+    for (let c = 0; c < cols; c++) if (search(r, c, 0)) return true;
+  return false;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(rows × cols × 3^L), L = word length" space="O(L) for the recursion" />
+
+Each step has at most 3 new directions (it can't go back to the cell it came from), which gives the `3^L` factor.
+
+<Callout type="tip" title="Cheap pruning before you start">
+If the board doesn't contain enough of each letter in `word`, return `False` immediately. And if the word's last letter is rarer on the board than its first, search for the reversed word instead: fewer starting points survive the first check.
+</Callout>

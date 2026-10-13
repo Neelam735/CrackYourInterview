@@ -1,0 +1,158 @@
+---
+title: Shortest Path Algorithms
+description: Dijkstra for non-negative weights, Bellman-Ford for edge limits or negative weights, Floyd-Warshall for all pairs.
+readingTime: 9 min
+---
+
+## When BFS isn't enough
+
+[BFS](/learn/code/breadth-first-search/graphs-overview) finds shortest paths when every edge costs the same. Once edges have **weights** (minutes, dollars, distances), the path with the fewest edges might not be the cheapest. Three algorithms cover almost every interview question:
+
+| Algorithm | Finds | Weights | Time |
+|-----------|-------|---------|------|
+| Dijkstra | Cheapest paths from one source | Non-negative | `O((V + E) log V)` |
+| Bellman-Ford | Cheapest paths from one source; can limit the number of edges | Any (detects negative cycles) | `O(V · E)` |
+| Floyd-Warshall | Cheapest paths between **all** pairs | Any (no negative cycles) | `O(V³)` |
+
+## Dijkstra's algorithm
+
+Dijkstra is BFS with a **priority queue** instead of a plain queue. It always expands the unfinished node with the **smallest known distance**. With non-negative weights, that distance can't be improved later, because any other route would go through nodes that are already at least as far away. So when a node is popped for the first time, its distance is final.
+
+1. Set `dist[source] = 0` and push `(0, source)` onto a min-heap.
+2. Pop the closest node. If its distance is out of date (larger than `dist[node]`), skip it.
+3. For each edge `node → neighbour` with weight `w`, if `dist[node] + w` beats `dist[neighbour]`, update it and push the neighbour.
+
+<CodeTabs>
+
+```python
+import heapq
+
+def dijkstra(n: int, edges: list[list[int]], source: int) -> list[int]:
+    graph = [[] for _ in range(n)]
+    for u, v, w in edges:                 # directed, weighted edges
+        graph[u].append((v, w))
+
+    dist = [float("inf")] * n
+    dist[source] = 0
+    heap = [(0, source)]
+    while heap:
+        d, node = heapq.heappop(heap)
+        if d > dist[node]:
+            continue                      # stale entry: a shorter path was found already
+        for neighbor, w in graph[node]:
+            if d + w < dist[neighbor]:
+                dist[neighbor] = d + w
+                heapq.heappush(heap, (d + w, neighbor))
+    return [d if d != float("inf") else -1 for d in dist]
+```
+
+```java
+public int[] dijkstra(int n, int[][] edges, int source) {
+    List<List<int[]>> graph = new ArrayList<>();
+    for (int i = 0; i < n; i++) graph.add(new ArrayList<>());
+    for (int[] e : edges) graph.get(e[0]).add(new int[] {e[1], e[2]});  // directed, weighted
+
+    int[] dist = new int[n];
+    Arrays.fill(dist, Integer.MAX_VALUE);
+    dist[source] = 0;
+    PriorityQueue<int[]> heap = new PriorityQueue<>((a, b) -> Integer.compare(a[0], b[0]));
+    heap.offer(new int[] {0, source});
+    while (!heap.isEmpty()) {
+        int[] top = heap.poll();
+        int d = top[0], node = top[1];
+        if (d > dist[node]) continue;  // stale entry
+        for (int[] edge : graph.get(node)) {
+            if (d + edge[1] < dist[edge[0]]) {
+                dist[edge[0]] = d + edge[1];
+                heap.offer(new int[] {dist[edge[0]], edge[0]});
+            }
+        }
+    }
+    for (int i = 0; i < n; i++) if (dist[i] == Integer.MAX_VALUE) dist[i] = -1;
+    return dist;
+}
+```
+
+```cpp
+vector<int> dijkstra(int n, const vector<vector<int>>& edges, int source) {
+    vector<vector<pair<int, int>>> graph(n);
+    for (const auto& e : edges) graph[e[0]].push_back({e[1], e[2]});  // directed, weighted
+
+    vector<int> dist(n, INT_MAX);
+    dist[source] = 0;
+    priority_queue<pair<int, int>, vector<pair<int, int>>, greater<>> heap;  // (distance, node)
+    heap.push({0, source});
+    while (!heap.empty()) {
+        auto [d, node] = heap.top();
+        heap.pop();
+        if (d > dist[node]) continue;  // stale entry
+        for (auto [neighbor, w] : graph[node]) {
+            if (d + w < dist[neighbor]) {
+                dist[neighbor] = d + w;
+                heap.push({dist[neighbor], neighbor});
+            }
+        }
+    }
+    for (int& d : dist) if (d == INT_MAX) d = -1;
+    return dist;
+}
+```
+
+```javascript
+function dijkstra(n, edges, source) {
+  const graph = Array.from({ length: n }, () => []);
+  for (const [u, v, w] of edges) graph[u].push([v, w]); // directed, weighted
+  const dist = new Array(n).fill(Infinity);
+  dist[source] = 0;
+  const heap = new Heap((a, b) => a[0] - b[0]); // [distance, node]
+  heap.push([0, source]);
+  while (heap.size > 0) {
+    const [d, node] = heap.pop();
+    if (d > dist[node]) continue; // stale entry
+    for (const [neighbor, w] of graph[node]) {
+      if (d + w < dist[neighbor]) {
+        dist[neighbor] = d + w;
+        heap.push([dist[neighbor], neighbor]);
+      }
+    }
+  }
+  return dist.map((d) => (d === Infinity ? -1 : d));
+}
+```
+
+</CodeTabs>
+
+<Callout type="warning">
+Dijkstra gives wrong answers with **negative** edge weights: a node can be finalized before a cheaper path through a negative edge is found.
+</Callout>
+
+## Bellman-Ford
+
+Bellman-Ford relaxes **every edge** in rounds. After round `i`, it knows the cheapest paths that use at most `i` edges. Since a shortest path in a graph with `V` nodes has at most `V - 1` edges, `V - 1` rounds are enough.
+
+```python nocheck
+dist = [inf] * n; dist[source] = 0
+for _ in range(n - 1):
+    for u, v, w in edges:
+        if dist[u] + w < dist[v]:
+            dist[v] = dist[u] + w
+```
+
+It's slower than Dijkstra, but it handles negative weights, and running exactly `k + 1` rounds answers "cheapest path using **at most `k` stops**". See [Cheapest Flights Within K Stops](/learn/code/graphs/cheapest-flights-within-k-stops).
+
+## Floyd-Warshall
+
+To get distances between **every** pair of nodes, Floyd-Warshall uses dynamic programming over intermediate nodes: for each node `k`, check whether going through `k` improves the path from `i` to `j`.
+
+```python nocheck
+for k in range(n):
+    for i in range(n):
+        for j in range(n):
+            dist[i][j] = min(dist[i][j], dist[i][k] + dist[k][j])
+```
+
+It's `O(V³)`, so it's only practical for small graphs (a few hundred nodes), but it's very short. See [Find City with Fewest Reachable](/learn/code/graphs/find-city-fewest-reachable).
+
+## Problems
+
+<ProblemList section="graphs" />

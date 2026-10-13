@@ -1,0 +1,130 @@
+---
+title: Generate Parentheses
+description: Add "(" while you have some left and ")" only when it closes an open one; every finished string is valid.
+---
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/generate-parentheses/">
+
+Given `n` pairs of parentheses, return all combinations of well-formed (balanced) parentheses.
+
+**Example:** `n = 3` returns `["((()))", "(()())", "(())()", "()(())", "()()()"]`.
+
+</Problem>
+
+## Approach
+
+Generating all `2^(2n)` strings of brackets and filtering the valid ones wastes almost all of the work. Instead, build strings **one character at a time** and only make choices that can still lead to a valid string:
+
+- You may add `"("` if you've used fewer than `n` of them.
+- You may add `")"` only if it closes something: the number of `")"` so far is **less than** the number of `"("`.
+
+With these two rules, every string you build is a valid prefix, and every string of length `2n` you reach is a complete answer. No pruning after the fact is needed.
+
+## Solution
+
+<CodeTabs>
+
+```python
+def generate_parenthesis(n: int) -> list[str]:
+    result, path = [], []
+
+    def backtrack(open_count, close_count):
+        if len(path) == 2 * n:
+            result.append("".join(path))
+            return
+        if open_count < n:
+            path.append("(")
+            backtrack(open_count + 1, close_count)
+            path.pop()
+        if close_count < open_count:          # only close an open bracket
+            path.append(")")
+            backtrack(open_count, close_count + 1)
+            path.pop()
+
+    backtrack(0, 0)
+    return result
+```
+
+```java
+public List<String> generateParenthesis(int n) {
+    List<String> result = new ArrayList<>();
+    backtrack(n, 0, 0, new StringBuilder(), result);
+    return result;
+}
+
+private void backtrack(int n, int open, int close, StringBuilder path, List<String> result) {
+    if (path.length() == 2 * n) {
+        result.add(path.toString());
+        return;
+    }
+    if (open < n) {
+        path.append('(');
+        backtrack(n, open + 1, close, path, result);
+        path.deleteCharAt(path.length() - 1);
+    }
+    if (close < open) {  // only close an open bracket
+        path.append(')');
+        backtrack(n, open, close + 1, path, result);
+        path.deleteCharAt(path.length() - 1);
+    }
+}
+```
+
+```cpp
+void backtrack(int n, int open, int close, string& path, vector<string>& result) {
+    if ((int)path.size() == 2 * n) {
+        result.push_back(path);
+        return;
+    }
+    if (open < n) {
+        path.push_back('(');
+        backtrack(n, open + 1, close, path, result);
+        path.pop_back();
+    }
+    if (close < open) {  // only close an open bracket
+        path.push_back(')');
+        backtrack(n, open, close + 1, path, result);
+        path.pop_back();
+    }
+}
+
+vector<string> generateParenthesis(int n) {
+    vector<string> result;
+    string path;
+    backtrack(n, 0, 0, path, result);
+    return result;
+}
+```
+
+```javascript
+function generateParenthesis(n) {
+  const result = [];
+  const path = [];
+  const backtrack = (open, close) => {
+    if (path.length === 2 * n) {
+      result.push(path.join(""));
+      return;
+    }
+    if (open < n) {
+      path.push("(");
+      backtrack(open + 1, close);
+      path.pop();
+    }
+    if (close < open) { // only close an open bracket
+      path.push(")");
+      backtrack(open, close + 1);
+      path.pop();
+    }
+  };
+  backtrack(0, 0);
+  return result;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(4ⁿ / √n), the nth Catalan number of answers" space="O(n) besides the output" />
+
+<Callout type="interview">
+The number of valid strings is the `n`th **Catalan number**, about `4ⁿ / (n^1.5)`. You don't need to derive it, but recognizing the name tells the interviewer you know why the output is exponential.
+</Callout>
