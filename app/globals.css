@@ -1,0 +1,73 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-brand-50: #eef4ff;
+  --color-brand-100: #dbe6ff;
+  --color-brand-200: #bfd3ff;
+  --color-brand-300: #93b4fd;
+  --color-brand-400: #608bfa;
+  --color-brand-500: #3b63f5;
+  --color-brand-600: #2545ea;
+  --color-brand-700: #1d33d7;
+  --color-brand-800: #1e2cae;
+  --color-brand-900: #1e2c89;
+  --color-brand-950: #161c52;
+}
+
+html {
+  scroll-padding-top: 5rem;
+}
+
+body {
+  @apply bg-white text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100;
+}
+
+/* Code blocks rendered by rehype-pretty-code with light + dark Shiki themes */
+pre[data-theme] {
+  @apply overflow-x-auto rounded-xl border border-slate-200 bg-slate-50 py-4 text-sm leading-6 dark:border-slate-800 dark:bg-slate-900;
+}
+
+pre[data-theme] code {
+  @apply grid min-w-full;
+}
+
+pre[data-theme] [data-line] {
+  @apply px-4;
+}
+
+pre[data-theme] [data-highlighted-line] {
+  @apply bg-brand-100/70 dark:bg-brand-900/40;
+}
+
+code[data-theme] span {
+  color: var(--shiki-light);
+}
+
+.dark code[data-theme] span {
+  color: var(--shiki-dark);
+}
+
+figure[data-rehype-pretty-code-figure] {
+  @apply my-6;
+}
+
+[data-rehype-pretty-code-title] {
+  @apply rounded-t-xl border border-b-0 border-slate-200 bg-slate-100 px-4 py-2 font-mono text-xs text-slate-600 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-300;
+}
+
+[data-rehype-pretty-code-title] + pre {
+  @apply mt-0 rounded-t-none;
+}
+
+/* Inline code */
+.prose :not(pre) > code {
+  @apply rounded-md bg-slate-100 px-1.5 py-0.5 font-medium text-slate-800 before:content-none after:content-none dark:bg-slate-800 dark:text-slate-200;
+}
+
+.prose h2 a,
+.prose h3 a {
+  @apply no-underline;
+}

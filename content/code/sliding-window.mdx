@@ -1,0 +1,129 @@
+---
+title: Sliding Window
+description: Track a contiguous range of an array or string and update it incrementally instead of recomputing from scratch.
+readingTime: 12 min
+---
+
+## The idea
+
+Many problems ask about a **contiguous** subarray or substring: the longest one, the shortest one, or the one with the best sum. Brute force looks at every possible range, which is `O(n²)` ranges, and often `O(n)` work to evaluate each.
+
+A sliding window keeps one range, defined by a `left` and `right` boundary, and **updates its state incrementally** as the boundaries move. Adding an element on the right and removing one on the left are both `O(1)`, so the whole scan is `O(n)`.
+
+## When to use it
+
+- The problem says **subarray**, **substring**, or **consecutive**.
+- You're asked for the **longest / shortest / maximum / minimum** range meeting a condition.
+- The condition can be maintained with a running value: a sum, a count, or a hash map of frequencies.
+
+There are two flavors:
+
+| Flavor | Window size | How it moves |
+|--------|-------------|--------------|
+| Fixed | Always `k` | Add the new right element, remove the old left element |
+| Variable | Grows and shrinks | Expand `right` every step, shrink `left` while the window is invalid |
+
+## Problem 1: Maximum Sum Subarray of Size K
+
+<Problem difficulty="Easy">
+
+Given an array of integers `nums` and an integer `k`, find the maximum sum of any `k` consecutive elements.
+
+**Example:** `nums = [2, 1, 5, 1, 3, 2]`, `k = 3` returns `9` (5 + 1 + 3).
+
+</Problem>
+
+### Brute force
+
+Sum every window from scratch: `O(n · k)`. Notice that two neighboring windows share `k - 1` elements, so most of that adding is repeated.
+
+### Optimal approach
+
+Compute the first window's sum once. Then, to slide one step right, add the element that enters and subtract the element that leaves.
+
+<Visualizer id="max-sum-fixed-window" />
+
+```python
+def max_sum_subarray(nums: list[int], k: int) -> int:
+    window = sum(nums[:k])
+    best = window
+    for end in range(k, len(nums)):
+        window += nums[end] - nums[end - k]  # add new, remove old
+        best = max(best, window)
+    return best
+```
+
+<Complexity time="O(n)" space="O(1)" />
+
+## Problem 2: Longest Substring Without Repeating Characters
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/longest-substring-without-repeating-characters/">
+
+Given a string `s`, find the length of the longest substring that contains no repeated characters.
+
+**Example:** `s = "abcabcbb"` returns `3` (`"abc"`).
+
+</Problem>
+
+### Optimal approach
+
+This is the variable-size template. Keep a set of the characters in the window.
+
+1. Move `right` forward and try to add `s[right]`.
+2. If it's already in the window, the window is invalid. Shrink from the `left`, removing characters, until the duplicate is gone.
+3. Now the window is valid again. Record its length.
+
+<Visualizer id="longest-substring-no-repeat" />
+
+```python
+def length_of_longest_substring(s: str) -> int:
+    seen = set()
+    left = 0
+    best = 0
+    for right, char in enumerate(s):
+        while char in seen:          # shrink until valid
+            seen.remove(s[left])
+            left += 1
+        seen.add(char)
+        best = max(best, right - left + 1)
+    return best
+```
+
+<Complexity time="O(n)" space="O(k), k = size of the character set" />
+
+<Callout type="info" title="Why this is O(n), not O(n²)">
+The `while` loop sits inside the `for` loop, but `left` only ever moves forward. Across the whole run it moves at most `n` times, so the total work is `O(n)` for `right` plus `O(n)` for `left`.
+</Callout>
+
+## The variable window template
+
+Most variable-size window problems fit this shape. Learn it once and adapt the "is the window valid?" check.
+
+```python
+def sliding_window(items):
+    state = ...            # sum, counter, set, etc.
+    left = 0
+    best = 0
+    for right, item in enumerate(items):
+        add item to state
+        while window is invalid:
+            remove items[left] from state
+            left += 1
+        best = max(best, right - left + 1)
+    return best
+```
+
+<Callout type="interview">
+When you spot a sliding window, say so explicitly: "This asks for the longest contiguous substring with a constraint, so I'll use a variable-size sliding window." Naming the pattern early tells the interviewer you know where you're going.
+</Callout>
+
+## Practice problems
+
+| Problem | Difficulty | Flavor |
+|---------|------------|--------|
+| [Best Time to Buy and Sell Stock](https://leetcode.com/problems/best-time-to-buy-and-sell-stock/) | <Difficulty level="Easy" /> | Variable |
+| [Maximum Average Subarray I](https://leetcode.com/problems/maximum-average-subarray-i/) | <Difficulty level="Easy" /> | Fixed |
+| [Fruit Into Baskets](https://leetcode.com/problems/fruit-into-baskets/) | <Difficulty level="Medium" /> | Variable |
+| [Longest Repeating Character Replacement](https://leetcode.com/problems/longest-repeating-character-replacement/) | <Difficulty level="Medium" /> | Variable |
+| [Permutation in String](https://leetcode.com/problems/permutation-in-string/) | <Difficulty level="Medium" /> | Fixed |
+| [Minimum Window Substring](https://leetcode.com/problems/minimum-window-substring/) | <Difficulty level="Hard" /> | Variable |

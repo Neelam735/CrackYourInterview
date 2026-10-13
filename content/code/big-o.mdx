@@ -1,0 +1,70 @@
+---
+title: Big-O Cheat Sheet
+description: The complexity analysis you need for coding interviews, in one page.
+readingTime: 6 min
+---
+
+Every coding interview ends with the same question: *"What's the time and space complexity?"* Big-O describes how an algorithm's cost grows as the input grows, ignoring constant factors. Here's what you need to answer that question confidently.
+
+## Common complexities
+
+| Big-O | Name | Example | n = 1,000,000 |
+|-------|------|---------|---------------|
+| `O(1)` | Constant | Array index, hash map lookup | 1 |
+| `O(log n)` | Logarithmic | Binary search | ~20 |
+| `O(n)` | Linear | One pass over an array | 1,000,000 |
+| `O(n log n)` | Linearithmic | Sorting | ~20,000,000 |
+| `O(n²)` | Quadratic | Checking every pair | 10¹² (too slow) |
+| `O(2ⁿ)` | Exponential | All subsets | (impossible) |
+
+<Callout type="interview" title="Use the constraints">
+The input size in the problem tells you what complexity the interviewer expects. A modern machine does roughly 10⁸ simple operations per second, so:
+
+n ≤ 20 means exponential is fine, n ≤ 10³ allows `O(n²)`, n ≤ 10⁵ or 10⁶ needs `O(n log n)` or `O(n)`, and larger than that usually means `O(log n)` or `O(1)`.
+</Callout>
+
+## Data structure operations
+
+| Structure | Access | Search | Insert | Delete |
+|-----------|--------|--------|--------|--------|
+| Array (Python `list`) | `O(1)` | `O(n)` | `O(n)`, append `O(1)` | `O(n)`, pop end `O(1)` |
+| Hash map / set | n/a | `O(1)` avg | `O(1)` avg | `O(1)` avg |
+| Linked list | `O(n)` | `O(n)` | `O(1)` at a known node | `O(1)` at a known node |
+| Stack / queue (`deque`) | top `O(1)` | `O(n)` | `O(1)` | `O(1)` |
+| Heap (`heapq`) | min `O(1)` | `O(n)` | `O(log n)` | pop min `O(log n)` |
+| Balanced BST | `O(log n)` | `O(log n)` | `O(log n)` | `O(log n)` |
+
+## Rules for analyzing code
+
+### Sequential steps add, nested steps multiply
+
+```python
+for x in nums:          # O(n)
+    ...
+for x in nums:          # O(n)
+    for y in nums:      #   × O(n)
+        ...
+# Total: O(n) + O(n²) = O(n²)
+```
+
+Keep only the fastest-growing term and drop constants: `O(2n + 5)` is just `O(n)`.
+
+### Halving means log
+
+If each step cuts the remaining work in half, the number of steps is `O(log n)`. That's binary search, and it's also the height of a balanced tree.
+
+### Amortized cost
+
+Some loops look nested but aren't. In the [sliding window](/learn/code/sliding-window) pattern, the inner `while` loop moves the left pointer, but the left pointer only ever moves forward, at most `n` times in total. So the whole algorithm is `O(n)`, not `O(n²)`.
+
+<Callout type="warning">
+Don't forget hidden costs. Slicing a list (`nums[1:]`), `in` on a list, and string concatenation in a loop are all `O(n)` each time they run.
+</Callout>
+
+## Space complexity
+
+Space counts the **extra** memory your algorithm uses, not the input itself.
+
+- A few variables: `O(1)`.
+- A hash map or copy of the input: `O(n)`.
+- Recursion uses the call stack: depth `d` means `O(d)` space, even with no other data structures.

@@ -1,0 +1,147 @@
+---
+title: Two Pointers
+description: Use two indices that move toward each other or in the same direction to cut O(n²) pair searches down to O(n).
+readingTime: 10 min
+---
+
+## The idea
+
+Many problems ask you to find a pair, or compare elements from both ends of an array. The brute-force way checks **every pair**, which takes `O(n²)` time.
+
+The two pointers pattern keeps two indices, usually `left` and `right`, and moves one of them at each step based on what it sees. Because each pointer only moves in one direction, the total number of steps is at most `n`, giving an `O(n)` solution.
+
+The key insight: when the input is **sorted**, one comparison tells you which pointer can safely move, because you can prove that every pair you skip could never be the answer.
+
+## When to use it
+
+Look for these clues:
+
+- The input array is **sorted**, or sorting it doesn't break the problem.
+- You need a **pair** (or triplet) that meets a condition, like summing to a target.
+- You're comparing the **two ends** of something, like checking a palindrome.
+- You need to modify an array **in place**, like removing duplicates.
+
+There are two main variants:
+
+| Variant | Pointers start at | Example problems |
+|---------|-------------------|------------------|
+| Opposite ends | `0` and `n - 1`, moving inward | Two Sum II, Container With Most Water, Valid Palindrome |
+| Same direction | Both at `0`, one ahead of the other | Remove Duplicates, Move Zeroes |
+
+## Problem 1: Two Sum II
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/two-sum-ii-input-array-is-sorted/">
+
+Given a **sorted** array of integers `nums` and a `target`, return the indices of the two numbers that add up to `target`. Exactly one solution exists.
+
+**Example:** `nums = [1, 3, 4, 6, 8, 11]`, `target = 10` returns `[2, 3]`, because 4 + 6 = 10.
+
+</Problem>
+
+### Brute force
+
+Check every pair with two nested loops. That's `O(n²)` time and ignores the fact that the array is sorted.
+
+### Optimal approach
+
+Put `left` at the smallest number and `right` at the largest, then look at their sum:
+
+- **Sum too small?** `nums[left]` paired with the largest remaining number still isn't enough, so `nums[left]` can't be part of any answer. Move `left` forward.
+- **Sum too big?** `nums[right]` paired with the smallest remaining number is still too much, so it can't be part of any answer. Move `right` back.
+- **Sum equals target?** Done.
+
+<Visualizer id="two-sum-sorted" />
+
+```python title="two_sum_sorted.py"
+def two_sum(nums: list[int], target: int) -> list[int]:
+    left, right = 0, len(nums) - 1
+    while left < right:
+        total = nums[left] + nums[right]
+        if total == target:
+            return [left, right]
+        if total < target:
+            left += 1   # need a bigger sum
+        else:
+            right -= 1  # need a smaller sum
+    return []
+```
+
+<Complexity time="O(n)" space="O(1)" />
+
+<Callout type="interview">
+Explain *why* moving a pointer is safe, not just *that* you move it. "Every pair using this number is too small, so I can discard it" is the sentence that shows you understand the pattern.
+</Callout>
+
+## Problem 2: Container With Most Water
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/container-with-most-water/">
+
+You're given an array `height` where `height[i]` is the height of a vertical line at position `i`. Pick two lines that, together with the x-axis, form a container holding the most water. Return that maximum area.
+
+**Example:** `height = [1, 8, 6, 2, 5, 4, 8, 3, 7]` returns `49` (lines at index 1 and 8: min(8, 7) × 7).
+
+</Problem>
+
+### Optimal approach
+
+The area between two lines is `min(height[left], height[right]) × (right - left)`. Start with the widest container and shrink it.
+
+At each step, move the pointer at the **shorter** line. Why? The shorter line limits the height. If you moved the taller line instead, the width shrinks and the height can't go up (it's still capped by the shorter line), so the area can only get worse. Moving the shorter line is the only move that might find a bigger area.
+
+<Visualizer id="container-with-most-water" />
+
+```python
+def max_area(height: list[int]) -> int:
+    left, right = 0, len(height) - 1
+    best = 0
+    while left < right:
+        width = right - left
+        best = max(best, min(height[left], height[right]) * width)
+        if height[left] <= height[right]:
+            left += 1
+        else:
+            right -= 1
+    return best
+```
+
+<Complexity time="O(n)" space="O(1)" />
+
+## Problem 3: Valid Palindrome
+
+<Problem difficulty="Easy" link="https://leetcode.com/problems/valid-palindrome/">
+
+Given a string `s`, return `True` if it reads the same forward and backward after converting to lowercase and removing all non-alphanumeric characters.
+
+**Example:** `"A man, a plan, a canal: Panama"` returns `True`.
+
+</Problem>
+
+Compare characters from both ends and walk inward, skipping anything that isn't a letter or digit. You don't need to build a cleaned copy of the string, which keeps space at `O(1)`.
+
+```python
+def is_palindrome(s: str) -> bool:
+    left, right = 0, len(s) - 1
+    while left < right:
+        if not s[left].isalnum():
+            left += 1
+        elif not s[right].isalnum():
+            right -= 1
+        elif s[left].lower() != s[right].lower():
+            return False
+        else:
+            left += 1
+            right -= 1
+    return True
+```
+
+<Complexity time="O(n)" space="O(1)" />
+
+## Practice problems
+
+| Problem | Difficulty | Variant |
+|---------|------------|---------|
+| [Move Zeroes](https://leetcode.com/problems/move-zeroes/) | <Difficulty level="Easy" /> | Same direction |
+| [Remove Duplicates from Sorted Array](https://leetcode.com/problems/remove-duplicates-from-sorted-array/) | <Difficulty level="Easy" /> | Same direction |
+| [3Sum](https://leetcode.com/problems/3sum/) | <Difficulty level="Medium" /> | Sort + opposite ends |
+| [Sort Colors](https://leetcode.com/problems/sort-colors/) | <Difficulty level="Medium" /> | Three pointers |
+| [Trapping Rain Water](https://leetcode.com/problems/trapping-rain-water/) | <Difficulty level="Hard" /> | Opposite ends |
