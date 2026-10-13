@@ -4,10 +4,12 @@ import rehypeSlug from "rehype-slug";
 import remarkGfm from "remark-gfm";
 import { Visualizer } from "@/components/visualizer/Visualizer";
 import { Callout } from "./Callout";
+import { CodeTabs } from "./CodeTabs";
 import { Complexity, Difficulty, Problem } from "./Problem";
 
 const components = {
   Callout,
+  CodeTabs,
   Complexity,
   Difficulty,
   Problem,

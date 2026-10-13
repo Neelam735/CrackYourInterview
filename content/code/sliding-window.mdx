@@ -43,6 +43,8 @@ Compute the first window's sum once. Then, to slide one step right, add the elem
 
 <Visualizer id="max-sum-fixed-window" />
 
+<CodeTabs>
+
 ```python
 def max_sum_subarray(nums: list[int], k: int) -> int:
     window = sum(nums[:k])
@@ -52,6 +54,46 @@ def max_sum_subarray(nums: list[int], k: int) -> int:
         best = max(best, window)
     return best
 ```
+
+```java
+public int maxSumSubarray(int[] nums, int k) {
+    int window = 0;
+    for (int i = 0; i < k; i++) window += nums[i];
+    int best = window;
+    for (int end = k; end < nums.length; end++) {
+        window += nums[end] - nums[end - k];  // add new, remove old
+        best = Math.max(best, window);
+    }
+    return best;
+}
+```
+
+```cpp
+int maxSumSubarray(const vector<int>& nums, int k) {
+    int window = accumulate(nums.begin(), nums.begin() + k, 0);
+    int best = window;
+    for (int end = k; end < (int)nums.size(); end++) {
+        window += nums[end] - nums[end - k];  // add new, remove old
+        best = max(best, window);
+    }
+    return best;
+}
+```
+
+```javascript
+function maxSumSubarray(nums, k) {
+  let window = 0;
+  for (let i = 0; i < k; i++) window += nums[i];
+  let best = window;
+  for (let end = k; end < nums.length; end++) {
+    window += nums[end] - nums[end - k]; // add new, remove old
+    best = Math.max(best, window);
+  }
+  return best;
+}
+```
+
+</CodeTabs>
 
 <Complexity time="O(n)" space="O(1)" />
 
@@ -75,6 +117,8 @@ This is the variable-size template. Keep a set of the characters in the window.
 
 <Visualizer id="longest-substring-no-repeat" />
 
+<CodeTabs>
+
 ```python
 def length_of_longest_substring(s: str) -> int:
     seen = set()
@@ -88,6 +132,58 @@ def length_of_longest_substring(s: str) -> int:
         best = max(best, right - left + 1)
     return best
 ```
+
+```java
+public int lengthOfLongestSubstring(String s) {
+    Set<Character> seen = new HashSet<>();
+    int left = 0, best = 0;
+    for (int right = 0; right < s.length(); right++) {
+        char c = s.charAt(right);
+        while (seen.contains(c)) {  // shrink until valid
+            seen.remove(s.charAt(left));
+            left++;
+        }
+        seen.add(c);
+        best = Math.max(best, right - left + 1);
+    }
+    return best;
+}
+```
+
+```cpp
+int lengthOfLongestSubstring(const string& s) {
+    unordered_set<char> seen;
+    int left = 0, best = 0;
+    for (int right = 0; right < (int)s.size(); right++) {
+        while (seen.count(s[right])) {  // shrink until valid
+            seen.erase(s[left]);
+            left++;
+        }
+        seen.insert(s[right]);
+        best = max(best, right - left + 1);
+    }
+    return best;
+}
+```
+
+```javascript
+function lengthOfLongestSubstring(s) {
+  const seen = new Set();
+  let left = 0;
+  let best = 0;
+  for (let right = 0; right < s.length; right++) {
+    while (seen.has(s[right])) { // shrink until valid
+      seen.delete(s[left]);
+      left++;
+    }
+    seen.add(s[right]);
+    best = Math.max(best, right - left + 1);
+  }
+  return best;
+}
+```
+
+</CodeTabs>
 
 <Complexity time="O(n)" space="O(k), k = size of the character set" />
 

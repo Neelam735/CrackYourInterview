@@ -71,3 +71,12 @@ figure[data-rehype-pretty-code-figure] {
 .prose h3 a {
   @apply no-underline;
 }
+
+/* Code blocks inside <CodeTabs> sit flush in the tab container */
+.code-tab-panel figure[data-rehype-pretty-code-figure] {
+  @apply m-0;
+}
+
+.code-tab-panel pre[data-theme] {
+  @apply m-0 rounded-none border-0;
+}

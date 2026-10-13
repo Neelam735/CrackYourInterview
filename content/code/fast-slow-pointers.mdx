@@ -31,6 +31,8 @@ A hash set of visited nodes works, but uses `O(n)` space. With two pointers: onc
 
 <Visualizer id="linked-list-cycle" />
 
+<CodeTabs>
+
 ```python
 class ListNode:
     def __init__(self, val=0, next=None):
@@ -46,6 +48,65 @@ def has_cycle(head: ListNode | None) -> bool:
             return True
     return False
 ```
+
+```java
+class ListNode {
+    int val;
+    ListNode next;
+    ListNode(int val) { this.val = val; }
+}
+
+public boolean hasCycle(ListNode head) {
+    ListNode slow = head, fast = head;
+    while (fast != null && fast.next != null) {
+        slow = slow.next;
+        fast = fast.next.next;
+        if (slow == fast) return true;
+    }
+    return false;
+}
+```
+
+```cpp
+struct ListNode {
+    int val;
+    ListNode* next;
+    ListNode(int v) : val(v), next(nullptr) {}
+};
+
+bool hasCycle(ListNode* head) {
+    ListNode* slow = head;
+    ListNode* fast = head;
+    while (fast && fast->next) {
+        slow = slow->next;
+        fast = fast->next->next;
+        if (slow == fast) return true;
+    }
+    return false;
+}
+```
+
+```javascript
+class ListNode {
+  constructor(val = 0, next = null) {
+    this.val = val;
+    this.next = next;
+  }
+}
+
+function hasCycle(head) {
+  let slow = head;
+  let fast = head;
+  while (fast && fast.next) {
+    slow = slow.next;
+    fast = fast.next.next;
+    if (slow === fast) return true;
+  }
+  return false;
+}
+```
+
+</CodeTabs>
 
 <Complexity time="O(n)" space="O(1)" />
 
@@ -63,6 +124,8 @@ Given the `head` of a singly linked list, return its middle node. If there are t
 
 <Visualizer id="middle-of-list" />
 
+<CodeTabs>
+
 ```python
 def middle_node(head: ListNode) -> ListNode:
     slow = fast = head
@@ -71,6 +134,43 @@ def middle_node(head: ListNode) -> ListNode:
         fast = fast.next.next
     return slow
 ```
+
+```java
+public ListNode middleNode(ListNode head) {
+    ListNode slow = head, fast = head;
+    while (fast != null && fast.next != null) {
+        slow = slow.next;
+        fast = fast.next.next;
+    }
+    return slow;
+}
+```
+
+```cpp
+ListNode* middleNode(ListNode* head) {
+    ListNode* slow = head;
+    ListNode* fast = head;
+    while (fast && fast->next) {
+        slow = slow->next;
+        fast = fast->next->next;
+    }
+    return slow;
+}
+```
+
+```javascript
+function middleNode(head) {
+  let slow = head;
+  let fast = head;
+  while (fast && fast.next) {
+    slow = slow.next;
+    fast = fast.next.next;
+  }
+  return slow;
+}
+```
+
+</CodeTabs>
 
 <Complexity time="O(n)" space="O(1)" />
 

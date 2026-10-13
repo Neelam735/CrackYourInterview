@@ -33,6 +33,8 @@ Push every opener. When you see a closer, it must match the opener on top of the
 
 <Visualizer id="valid-parentheses" />
 
+<CodeTabs>
+
 ```python
 def is_valid(s: str) -> bool:
     pairs = {")": "(", "]": "[", "}": "{"}
@@ -46,6 +48,56 @@ def is_valid(s: str) -> bool:
             stack.append(char)
     return not stack
 ```
+
+```java
+public boolean isValid(String s) {
+    Map<Character, Character> pairs = Map.of(')', '(', ']', '[', '}', '{');
+    Deque<Character> stack = new ArrayDeque<>();
+    for (char c : s.toCharArray()) {
+        if (pairs.containsKey(c)) {
+            if (stack.isEmpty() || stack.peek() != pairs.get(c)) return false;
+            stack.pop();
+        } else {
+            stack.push(c);
+        }
+    }
+    return stack.isEmpty();
+}
+```
+
+```cpp
+bool isValid(const string& s) {
+    unordered_map<char, char> pairs = {{')', '('}, {']', '['}, {'}', '{'}};
+    stack<char> st;
+    for (char c : s) {
+        if (pairs.count(c)) {
+            if (st.empty() || st.top() != pairs[c]) return false;
+            st.pop();
+        } else {
+            st.push(c);
+        }
+    }
+    return st.empty();
+}
+```
+
+```javascript
+function isValid(s) {
+  const pairs = { ")": "(", "]": "[", "}": "{" };
+  const stack = [];
+  for (const c of s) {
+    if (c in pairs) {
+      if (stack.length === 0 || stack[stack.length - 1] !== pairs[c]) return false;
+      stack.pop();
+    } else {
+      stack.push(c);
+    }
+  }
+  return stack.length === 0;
+}
+```
+
+</CodeTabs>
 
 <Complexity time="O(n)" space="O(n)" />
 
@@ -71,6 +123,8 @@ When a new day arrives, pop every waiting day that's colder than it. Today is th
 
 <Visualizer id="daily-temperatures" />
 
+<CodeTabs>
+
 ```python
 def daily_temperatures(temperatures: list[int]) -> list[int]:
     answer = [0] * len(temperatures)
@@ -82,6 +136,54 @@ def daily_temperatures(temperatures: list[int]) -> list[int]:
         stack.append(i)
     return answer
 ```
+
+```java
+public int[] dailyTemperatures(int[] temperatures) {
+    int[] answer = new int[temperatures.length];
+    Deque<Integer> stack = new ArrayDeque<>();  // indices still waiting, temps decreasing
+    for (int i = 0; i < temperatures.length; i++) {
+        while (!stack.isEmpty() && temperatures[stack.peek()] < temperatures[i]) {
+            int j = stack.pop();
+            answer[j] = i - j;
+        }
+        stack.push(i);
+    }
+    return answer;
+}
+```
+
+```cpp
+vector<int> dailyTemperatures(const vector<int>& temperatures) {
+    vector<int> answer(temperatures.size(), 0);
+    stack<int> st;  // indices still waiting, temps decreasing
+    for (int i = 0; i < (int)temperatures.size(); i++) {
+        while (!st.empty() && temperatures[st.top()] < temperatures[i]) {
+            int j = st.top();
+            st.pop();
+            answer[j] = i - j;
+        }
+        st.push(i);
+    }
+    return answer;
+}
+```
+
+```javascript
+function dailyTemperatures(temperatures) {
+  const answer = new Array(temperatures.length).fill(0);
+  const stack = []; // indices still waiting, temps decreasing
+  for (let i = 0; i < temperatures.length; i++) {
+    while (stack.length && temperatures[stack[stack.length - 1]] < temperatures[i]) {
+      const j = stack.pop();
+      answer[j] = i - j;
+    }
+    stack.push(i);
+  }
+  return answer;
+}
+```
+
+</CodeTabs>
 
 <Complexity time="O(n)" space="O(n)" />
 
