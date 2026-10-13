@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { CODE_BASE, type Difficulty, type NavSection } from "@/lib/navigation";
 import { useProgress } from "./ProgressProvider";
 
@@ -33,24 +33,10 @@ export function Sidebar({ sections }: { sections: NavSection[] }) {
   const activeRef = useRef<HTMLAnchorElement>(null);
 
   const currentSection = sections.find((s) => pathname.startsWith(`${CODE_BASE}/${s.slug}/`))?.slug;
-  const [open, setOpen] = useState<Set<string>>(() => new Set(currentSection ? [currentSection] : []));
-
-  // Opening a page always expands its section.
-  useEffect(() => {
-    if (currentSection) setOpen((prev) => (prev.has(currentSection) ? prev : new Set(prev).add(currentSection)));
-  }, [currentSection]);
 
   useEffect(() => {
     activeRef.current?.scrollIntoView({ block: "nearest" });
   }, [pathname]);
-
-  const toggle = (slug: string) =>
-    setOpen((prev) => {
-      const next = new Set(prev);
-      if (next.has(slug)) next.delete(slug);
-      else next.add(slug);
-      return next;
-    });
 
   const total = sections.reduce((sum, s) => sum + s.pages.length, 0);
   const totalDone = sections.reduce(
@@ -77,40 +63,37 @@ export function Sidebar({ sections }: { sections: NavSection[] }) {
 
       <ul className="space-y-1">
         {sections.map((section) => {
-          const isOpen = open.has(section.slug);
           const done = section.pages.filter((p) => completed.has(`${section.slug}/${p.slug}`)).length;
           const allDone = done === section.pages.length;
           return (
             <li key={section.slug}>
-              <button
-                type="button"
-                onClick={() => toggle(section.slug)}
-                aria-expanded={isOpen}
-                className={`flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-left font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 ${
-                  section.slug === currentSection ? "text-slate-900 dark:text-white" : "text-slate-700 dark:text-slate-300"
-                }`}
-              >
-                <svg
-                  className={`h-3.5 w-3.5 shrink-0 text-slate-400 transition-transform ${isOpen ? "rotate-90" : ""}`}
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="3"
-                  aria-hidden
+              {/* Native <details> so sections open and close even before the page's JavaScript loads. */}
+              <details open={section.slug === currentSection} className="group/section">
+                <summary
+                  className={`flex w-full cursor-pointer list-none items-center gap-2 rounded-md px-3 py-1.5 text-left font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden ${
+                    section.slug === currentSection ? "text-slate-900 dark:text-white" : "text-slate-700 dark:text-slate-300"
+                  }`}
                 >
-                  <path d="M9 18l6-6-6-6" />
-                </svg>
-                <span className="flex-1">{section.title}</span>
-                {allDone ? (
-                  <Check />
-                ) : (
-                  <span className="font-mono text-[11px] font-normal text-slate-400">
-                    {done}/{section.pages.length}
-                  </span>
-                )}
-              </button>
+                  <svg
+                    className="h-3.5 w-3.5 shrink-0 text-slate-400 transition-transform group-open/section:rotate-90"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    aria-hidden
+                  >
+                    <path d="M9 18l6-6-6-6" />
+                  </svg>
+                  <span className="flex-1">{section.title}</span>
+                  {allDone ? (
+                    <Check />
+                  ) : (
+                    <span className="font-mono text-[11px] font-normal text-slate-400">
+                      {done}/{section.pages.length}
+                    </span>
+                  )}
+                </summary>
 
-              {isOpen && (
                 <ul className="mb-2 mt-0.5 space-y-0.5 border-l border-slate-200 pl-2 ml-5 dark:border-slate-800">
                   {section.pages.map((page) => {
                     const href = `${CODE_BASE}/${section.slug}/${page.slug}`;
@@ -143,7 +126,7 @@ export function Sidebar({ sections }: { sections: NavSection[] }) {
                     );
                   })}
                 </ul>
-              )}
+              </details>
             </li>
           );
         })}
