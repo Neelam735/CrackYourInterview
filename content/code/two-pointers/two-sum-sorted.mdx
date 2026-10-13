@@ -1,0 +1,94 @@
+---
+title: Two Sum (Sorted Array)
+description: Find two numbers that add up to a target in a sorted array with one inward scan.
+---
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/two-sum-ii-input-array-is-sorted/">
+
+Given an array of integers `nums` sorted in increasing order and a `target`, return the indices of the two numbers that add up to `target`. Exactly one solution exists, and you can't use the same element twice.
+
+**Example:** `nums = [1, 3, 4, 6, 8, 11]`, `target = 10` returns `[2, 3]`, because 4 + 6 = 10.
+
+</Problem>
+
+## Brute force
+
+Check every pair with two nested loops: `O(n²)`. A hash map gets `O(n)` time but uses `O(n)` space and ignores the fact that the input is sorted.
+
+## Approach
+
+Put `left` on the smallest number and `right` on the largest, then look at their sum.
+
+- **Sum too small?** Even the largest remaining number isn't enough to pair with `nums[left]`, so `nums[left]` can't be in the answer. Move `left` forward.
+- **Sum too big?** Even the smallest remaining number is too much to pair with `nums[right]`, so it can't be in the answer. Move `right` back.
+- **Sum equals the target?** Done.
+
+Each step rules out one number for good, so the scan finishes in at most `n` steps.
+
+<Visualizer id="two-sum-sorted" />
+
+## Solution
+
+<CodeTabs>
+
+```python
+def two_sum(nums: list[int], target: int) -> list[int]:
+    left, right = 0, len(nums) - 1
+    while left < right:
+        total = nums[left] + nums[right]
+        if total == target:
+            return [left, right]
+        if total < target:
+            left += 1   # need a bigger sum
+        else:
+            right -= 1  # need a smaller sum
+    return []
+```
+
+```java
+public int[] twoSum(int[] nums, int target) {
+    int left = 0, right = nums.length - 1;
+    while (left < right) {
+        int total = nums[left] + nums[right];
+        if (total == target) return new int[] {left, right};
+        if (total < target) left++;  // need a bigger sum
+        else right--;                // need a smaller sum
+    }
+    return new int[0];
+}
+```
+
+```cpp
+vector<int> twoSum(const vector<int>& nums, int target) {
+    int left = 0, right = (int)nums.size() - 1;
+    while (left < right) {
+        int total = nums[left] + nums[right];
+        if (total == target) return {left, right};
+        if (total < target) left++;  // need a bigger sum
+        else right--;                // need a smaller sum
+    }
+    return {};
+}
+```
+
+```javascript
+function twoSum(nums, target) {
+  let left = 0;
+  let right = nums.length - 1;
+  while (left < right) {
+    const total = nums[left] + nums[right];
+    if (total === target) return [left, right];
+    if (total < target) left++; // need a bigger sum
+    else right--;               // need a smaller sum
+  }
+  return [];
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(n)" space="O(1)" />
+
+<Callout type="tip">
+LeetCode's version of this problem returns 1-indexed positions. Read the expected output format carefully. Here we return 0-indexed positions.
+</Callout>

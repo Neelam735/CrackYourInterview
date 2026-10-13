@@ -3,9 +3,9 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { getDb } from "@/lib/db";
 import { progress } from "@/lib/db/schema";
-import { availableCodeItems } from "@/lib/navigation";
+import { pageIds } from "@/lib/navigation";
 
-const validSlugs = new Set(availableCodeItems.map((item) => item.slug));
+const validSlugs = pageIds;
 
 async function context() {
   const db = getDb();

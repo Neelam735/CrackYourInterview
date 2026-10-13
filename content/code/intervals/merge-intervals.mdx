@@ -1,0 +1,89 @@
+---
+title: Merge Intervals
+description: Sort by start time and fold each interval into the last merged one whenever they overlap.
+---
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/merge-intervals/">
+
+Given an array of `intervals` where `intervals[i] = [start, end]`, merge all overlapping intervals and return the non-overlapping intervals that cover the same ranges.
+
+**Example:** `[[1, 3], [2, 6], [8, 10], [9, 12], [15, 18]]` returns `[[1, 6], [8, 12], [15, 18]]`.
+
+</Problem>
+
+## Approach
+
+Sort by start time so overlapping intervals sit next to each other. Then compare each interval with the **last merged interval**:
+
+- It starts **after** the last one ends: there's a gap, so start a new group.
+- Otherwise they overlap: extend the last one's end to `max(last end, this end)`.
+
+<Visualizer id="merge-intervals" />
+
+## Solution
+
+<CodeTabs>
+
+```python
+def merge(intervals: list[list[int]]) -> list[list[int]]:
+    intervals.sort(key=lambda x: x[0])
+    merged = []
+    for start, end in intervals:
+        if not merged or merged[-1][1] < start:
+            merged.append([start, end])              # gap: new group
+        else:
+            merged[-1][1] = max(merged[-1][1], end)  # overlap: extend
+    return merged
+```
+
+```java
+public int[][] merge(int[][] intervals) {
+    Arrays.sort(intervals, (a, b) -> Integer.compare(a[0], b[0]));
+    List<int[]> merged = new ArrayList<>();
+    for (int[] cur : intervals) {
+        if (merged.isEmpty() || merged.get(merged.size() - 1)[1] < cur[0]) {
+            merged.add(new int[] {cur[0], cur[1]});  // gap: new group
+        } else {
+            int[] last = merged.get(merged.size() - 1);
+            last[1] = Math.max(last[1], cur[1]);     // overlap: extend
+        }
+    }
+    return merged.toArray(new int[0][]);
+}
+```
+
+```cpp
+vector<vector<int>> merge(vector<vector<int>> intervals) {
+    sort(intervals.begin(), intervals.end());
+    vector<vector<int>> merged;
+    for (const auto& cur : intervals) {
+        if (merged.empty() || merged.back()[1] < cur[0]) {
+            merged.push_back(cur);                             // gap: new group
+        } else {
+            merged.back()[1] = max(merged.back()[1], cur[1]);  // overlap: extend
+        }
+    }
+    return merged;
+}
+```
+
+```javascript
+function merge(intervals) {
+  intervals.sort((a, b) => a[0] - b[0]);
+  const merged = [];
+  for (const [start, end] of intervals) {
+    const last = merged[merged.length - 1];
+    if (!last || last[1] < start) merged.push([start, end]); // gap: new group
+    else last[1] = Math.max(last[1], end);                    // overlap: extend
+  }
+  return merged;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(n log n)" space="O(n) for the output" />
+
+<Callout type="warning">
+Use `max(last_end, end)`, not just `end`. An interval can sit entirely inside the previous one, like `[1, 10]` followed by `[2, 3]`, and then the merged end must stay at 10.
+</Callout>

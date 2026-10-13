@@ -6,6 +6,7 @@ import { Visualizer } from "@/components/visualizer/Visualizer";
 import { Callout } from "./Callout";
 import { CodeTabs } from "./CodeTabs";
 import { Complexity, Difficulty, Problem } from "./Problem";
+import { ProblemList } from "./ProblemList";
 
 const components = {
   Callout,
@@ -13,6 +14,7 @@ const components = {
   Complexity,
   Difficulty,
   Problem,
+  ProblemList,
   Visualizer,
 };
 

@@ -1,0 +1,82 @@
+---
+title: Maximum Sum of Subarrays of Size K
+description: Slide a window of size k across the array, updating its sum in O(1) per step.
+---
+
+<Problem difficulty="Easy" link="https://leetcode.com/problems/maximum-average-subarray-i/">
+
+Given an array of integers `nums` and an integer `k`, return the maximum sum of any `k` consecutive elements.
+
+**Example:** `nums = [2, 1, 5, 1, 3, 2]`, `k = 3` returns `9` (5 + 1 + 3).
+
+</Problem>
+
+## Brute force
+
+Sum every window from scratch: `O(n · k)`. Two neighbouring windows share `k - 1` elements, so most of that adding is repeated work.
+
+## Approach
+
+Compute the first window's sum once. To slide one step right, **add the element that enters and subtract the element that leaves**. Track the best sum seen.
+
+<Visualizer id="max-sum-fixed-window" />
+
+## Solution
+
+<CodeTabs>
+
+```python
+def max_sum_subarray(nums: list[int], k: int) -> int:
+    window = sum(nums[:k])
+    best = window
+    for end in range(k, len(nums)):
+        window += nums[end] - nums[end - k]  # add new, remove old
+        best = max(best, window)
+    return best
+```
+
+```java
+public int maxSumSubarray(int[] nums, int k) {
+    int window = 0;
+    for (int i = 0; i < k; i++) window += nums[i];
+    int best = window;
+    for (int end = k; end < nums.length; end++) {
+        window += nums[end] - nums[end - k];  // add new, remove old
+        best = Math.max(best, window);
+    }
+    return best;
+}
+```
+
+```cpp
+int maxSumSubarray(const vector<int>& nums, int k) {
+    int window = accumulate(nums.begin(), nums.begin() + k, 0);
+    int best = window;
+    for (int end = k; end < (int)nums.size(); end++) {
+        window += nums[end] - nums[end - k];  // add new, remove old
+        best = max(best, window);
+    }
+    return best;
+}
+```
+
+```javascript
+function maxSumSubarray(nums, k) {
+  let window = 0;
+  for (let i = 0; i < k; i++) window += nums[i];
+  let best = window;
+  for (let end = k; end < nums.length; end++) {
+    window += nums[end] - nums[end - k]; // add new, remove old
+    best = Math.max(best, window);
+  }
+  return best;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(n)" space="O(1)" />
+
+<Callout type="tip">
+LeetCode's linked version asks for the maximum **average**. Since every window has the same size, the window with the largest sum also has the largest average: divide the answer by `k`.
+</Callout>

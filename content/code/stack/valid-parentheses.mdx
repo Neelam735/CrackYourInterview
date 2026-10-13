@@ -1,0 +1,96 @@
+---
+title: Valid Parentheses
+description: Push every opening bracket and make sure each closing bracket matches the one on top of the stack.
+---
+
+<Problem difficulty="Easy" link="https://leetcode.com/problems/valid-parentheses/">
+
+Given a string containing only the characters `()[]{}`, decide whether it's valid: every opening bracket is closed by the same type of bracket, and brackets close in the correct order.
+
+**Example:** `"{[()]()}"` is valid. `"([)]"` and `"(("` are not.
+
+</Problem>
+
+## Approach
+
+The bracket that must close next is always the **most recent one still open**. That's exactly what the top of a stack holds.
+
+- **Opening bracket:** push it.
+- **Closing bracket:** the stack must be non-empty and its top must be the matching opener. Pop it. Otherwise the string is invalid.
+- **At the end:** the stack must be empty, or some brackets were never closed.
+
+<Visualizer id="valid-parentheses" />
+
+## Solution
+
+<CodeTabs>
+
+```python
+def is_valid(s: str) -> bool:
+    pairs = {")": "(", "]": "[", "}": "{"}
+    stack = []
+    for char in s:
+        if char in pairs:
+            if not stack or stack[-1] != pairs[char]:
+                return False
+            stack.pop()
+        else:
+            stack.append(char)
+    return not stack
+```
+
+```java
+public boolean isValid(String s) {
+    Map<Character, Character> pairs = Map.of(')', '(', ']', '[', '}', '{');
+    Deque<Character> stack = new ArrayDeque<>();
+    for (char c : s.toCharArray()) {
+        if (pairs.containsKey(c)) {
+            if (stack.isEmpty() || stack.peek() != pairs.get(c)) return false;
+            stack.pop();
+        } else {
+            stack.push(c);
+        }
+    }
+    return stack.isEmpty();
+}
+```
+
+```cpp
+bool isValid(const string& s) {
+    unordered_map<char, char> pairs = {{')', '('}, {']', '['}, {'}', '{'}};
+    stack<char> st;
+    for (char c : s) {
+        if (pairs.count(c)) {
+            if (st.empty() || st.top() != pairs[c]) return false;
+            st.pop();
+        } else {
+            st.push(c);
+        }
+    }
+    return st.empty();
+}
+```
+
+```javascript
+function isValid(s) {
+  const pairs = { ")": "(", "]": "[", "}": "{" };
+  const stack = [];
+  for (const c of s) {
+    if (c in pairs) {
+      if (stack.length === 0 || stack[stack.length - 1] !== pairs[c]) return false;
+      stack.pop();
+    } else {
+      stack.push(c);
+    }
+  }
+  return stack.length === 0;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(n)" space="O(n)" />
+
+<Callout type="tip">
+If the string has an odd length it can't be valid, so you can return early. With only one bracket type, a simple counter replaces the stack, but the stack version handles any number of types.
+</Callout>

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Doc } from "@/lib/content";
-import type { NavItem } from "@/lib/navigation";
+import type { FlatPage } from "@/lib/navigation";
 import { MarkComplete } from "./MarkComplete";
 import { MDXContent } from "./mdx/MDXContent";
 import { Difficulty } from "./mdx/Problem";
@@ -8,26 +8,28 @@ import { TableOfContents } from "./TableOfContents";
 
 export function DocPage({
   doc,
-  basePath,
+  page,
   prev,
   next,
 }: {
   doc: Doc;
-  basePath: string;
-  prev: NavItem | null;
-  next: NavItem | null;
+  page: FlatPage;
+  prev: FlatPage | null;
+  next: FlatPage | null;
 }) {
   const { frontmatter } = doc;
+  const difficulty = page.difficulty ?? frontmatter.difficulty;
 
   return (
     <div className="flex gap-10">
       <article className="min-w-0 flex-1 py-10">
         <header className="mb-8 border-b border-slate-200 pb-8 dark:border-slate-800">
+          <div className="mb-2 text-sm font-semibold text-brand-600 dark:text-brand-400">{page.section.title}</div>
           <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{frontmatter.title}</h1>
           <p className="mt-3 text-lg text-slate-600 dark:text-slate-400">{frontmatter.description}</p>
-          {(frontmatter.difficulty || frontmatter.readingTime) && (
+          {(difficulty || frontmatter.readingTime) && (
             <div className="mt-4 flex items-center gap-3 text-sm text-slate-500 dark:text-slate-400">
-              {frontmatter.difficulty && <Difficulty level={frontmatter.difficulty} />}
+              {difficulty && <Difficulty level={difficulty} />}
               {frontmatter.readingTime && <span>{frontmatter.readingTime} read</span>}
             </div>
           )}
@@ -37,15 +39,15 @@ export function DocPage({
           <MDXContent source={doc.body} />
         </div>
 
-        <MarkComplete slug={doc.slug} />
+        <MarkComplete slug={page.id} />
 
         <nav className="mt-8 grid gap-4 border-t border-slate-200 pt-8 sm:grid-cols-2 dark:border-slate-800">
           {prev ? (
-            <PagerLink href={`${basePath}/${prev.slug}`} label="Previous" title={prev.title} />
+            <PagerLink href={prev.href} label="Previous" title={prev.title} />
           ) : (
             <span />
           )}
-          {next && <PagerLink href={`${basePath}/${next.slug}`} label="Next" title={next.title} alignRight />}
+          {next && <PagerLink href={next.href} label="Next" title={next.title} alignRight />}
         </nav>
       </article>
 

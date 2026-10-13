@@ -1,0 +1,102 @@
+---
+title: Insert Interval
+description: Copy the intervals before the new one, merge everything that overlaps it, then copy the rest.
+---
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/insert-interval/">
+
+You're given a list of non-overlapping `intervals` sorted by start time, and a `newInterval`. Insert `newInterval` so the list stays sorted and non-overlapping, merging intervals where needed.
+
+**Example:** `intervals = [[1, 2], [3, 5], [6, 7], [8, 10], [12, 16]]`, `newInterval = [4, 8]` returns `[[1, 2], [3, 10], [12, 16]]`.
+
+</Problem>
+
+## Approach
+
+The input is already sorted, so you don't need to sort again. Walk through it once, in three phases:
+
+1. **Before:** intervals that end before `newInterval` starts (`end < new.start`) can't touch it. Copy them as they are.
+2. **Overlapping:** intervals that start at or before `newInterval` ends (`start ≤ new.end`) overlap it. Absorb each one by widening `newInterval` to `[min(starts), max(ends)]`. Then add the merged interval once.
+3. **After:** everything left starts after `newInterval` ends. Copy it.
+
+Each interval is looked at once, so this is `O(n)`, better than appending and re-sorting.
+
+## Solution
+
+<CodeTabs>
+
+```python
+def insert(intervals: list[list[int]], new_interval: list[int]) -> list[list[int]]:
+    result = []
+    i, n = 0, len(intervals)
+    start, end = new_interval
+    while i < n and intervals[i][1] < start:        # 1. entirely before
+        result.append(intervals[i])
+        i += 1
+    while i < n and intervals[i][0] <= end:         # 2. overlapping: absorb
+        start = min(start, intervals[i][0])
+        end = max(end, intervals[i][1])
+        i += 1
+    result.append([start, end])
+    result.extend(intervals[i:])                    # 3. entirely after
+    return result
+```
+
+```java
+public int[][] insert(int[][] intervals, int[] newInterval) {
+    List<int[]> result = new ArrayList<>();
+    int i = 0, n = intervals.length;
+    int start = newInterval[0], end = newInterval[1];
+    while (i < n && intervals[i][1] < start) result.add(intervals[i++]);  // 1. entirely before
+    while (i < n && intervals[i][0] <= end) {                             // 2. overlapping: absorb
+        start = Math.min(start, intervals[i][0]);
+        end = Math.max(end, intervals[i][1]);
+        i++;
+    }
+    result.add(new int[] {start, end});
+    while (i < n) result.add(intervals[i++]);                             // 3. entirely after
+    return result.toArray(new int[0][]);
+}
+```
+
+```cpp
+vector<vector<int>> insert(const vector<vector<int>>& intervals, vector<int> newInterval) {
+    vector<vector<int>> result;
+    size_t i = 0, n = intervals.size();
+    int start = newInterval[0], end = newInterval[1];
+    while (i < n && intervals[i][1] < start) result.push_back(intervals[i++]);  // 1. entirely before
+    while (i < n && intervals[i][0] <= end) {                                   // 2. overlapping: absorb
+        start = min(start, intervals[i][0]);
+        end = max(end, intervals[i][1]);
+        i++;
+    }
+    result.push_back({start, end});
+    while (i < n) result.push_back(intervals[i++]);                             // 3. entirely after
+    return result;
+}
+```
+
+```javascript
+function insert(intervals, newInterval) {
+  const result = [];
+  let i = 0;
+  let [start, end] = newInterval;
+  while (i < intervals.length && intervals[i][1] < start) result.push(intervals[i++]); // 1. before
+  while (i < intervals.length && intervals[i][0] <= end) {                             // 2. overlap
+    start = Math.min(start, intervals[i][0]);
+    end = Math.max(end, intervals[i][1]);
+    i++;
+  }
+  result.push([start, end]);
+  while (i < intervals.length) result.push(intervals[i++]);                            // 3. after
+  return result;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(n)" space="O(n) for the output" />
+
+<Callout type="interview">
+Mention the edge cases before coding: the new interval goes at the very start, at the very end, into an empty list, or swallows every existing interval. The three-phase loop handles all of them without special cases, which is a good thing to point out.
+</Callout>

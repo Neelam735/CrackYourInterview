@@ -1,0 +1,39 @@
+---
+title: Stack
+description: Use last-in, first-out order to match pairs, handle nesting, and remember work you'll come back to.
+readingTime: 5 min
+---
+
+## The idea
+
+A stack is **last in, first out**: you only ever look at, add to, or remove from the **top**. Push and pop are both `O(1)`.
+
+| Language | Stack type | Push | Pop | Peek |
+|----------|-----------|------|-----|------|
+| Python | `list` | `append(x)` | `pop()` | `stack[-1]` |
+| Java | `ArrayDeque` | `push(x)` | `pop()` | `peek()` |
+| C++ | `std::stack` | `push(x)` | `pop()` | `top()` |
+| JavaScript | `Array` | `push(x)` | `pop()` | `stack[stack.length - 1]` |
+
+<Callout type="tip">
+In Java, prefer `ArrayDeque` over the old `Stack` class. `Stack` is synchronized and slower, and most style guides discourage it.
+</Callout>
+
+## When to use it
+
+A stack is the right tool whenever **the most recent unfinished thing is the one you need to deal with next**:
+
+- **Matching pairs.** Brackets, tags, quotes: a closer must match the most recent unmatched opener.
+- **Nesting.** Strings like `3[a2[c]]`, nested expressions, file paths with `..`: finish the inner level before returning to the outer one.
+- **Undo / backtracking state.** Save where you were, go deeper, then pop back.
+- **"Next greater" or "previous smaller" questions.** A [monotonic stack](/learn/code/stack/monotonic-stack) answers these for every element in one pass.
+
+<Visualizer id="valid-parentheses" />
+
+## Store indices, not just values
+
+Many stack problems need the **distance** between positions (how many days until a warmer one, how wide a rectangle is). Pushing **indices** lets you recover both: the value is `nums[i]`, and the distance is `j - i`.
+
+## Problems
+
+<ProblemList section="stack" />

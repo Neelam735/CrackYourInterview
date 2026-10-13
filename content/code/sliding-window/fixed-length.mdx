@@ -1,0 +1,41 @@
+---
+title: Fixed Length Sliding Window
+description: When every window has the same size k, add the element that enters and remove the one that leaves.
+readingTime: 5 min
+---
+
+## The idea
+
+Many problems ask about **contiguous** subarrays or substrings: "the maximum sum of `k` consecutive numbers", "every substring of length `k`". The brute-force approach recomputes each window from scratch, which costs `O(n · k)`.
+
+Neighbouring windows overlap almost completely. When the window slides one step right, exactly **one element enters** on the right and **one element leaves** on the left. If you keep a running summary of the window (a sum, a count, a hash map of frequencies), you can update it in `O(1)` per step, so the whole scan is `O(n)`.
+
+<Visualizer id="max-sum-fixed-window" />
+
+## When to use it
+
+- The problem says **subarray**, **substring** or **consecutive**, and gives a fixed length `k`.
+- The answer depends on something you can update incrementally: a sum, a count of each character, the number of distinct values.
+
+## Template
+
+```python nocheck
+def fixed_window(nums, k):
+    state = summary of nums[0:k]
+    best = evaluate(state)
+    for end in range(k, len(nums)):
+        add nums[end] to state             # enters on the right
+        remove nums[end - k] from state    # leaves on the left
+        best = better(best, evaluate(state))
+    return best
+```
+
+The window after each step is `nums[end - k + 1 .. end]`. Writing that range down is the easiest way to avoid off-by-one errors.
+
+<Callout type="tip">
+Some problems hide the fixed window. "Take `k` cards from either end" means the cards you leave behind form one contiguous window of size `n - k`. See [Max Points You Can Obtain From Cards](/learn/code/sliding-window/max-points-from-cards).
+</Callout>
+
+## Problems
+
+<ProblemList section="sliding-window" />

@@ -1,0 +1,97 @@
+---
+title: Longest Substring Without Repeating Characters
+description: Keep a window with no repeated characters, shrinking from the left whenever a duplicate enters.
+---
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/longest-substring-without-repeating-characters/">
+
+Given a string `s`, find the length of the longest substring that contains no repeated characters.
+
+**Example:** `s = "abcabcbb"` returns `3` (`"abc"`). For `s = "pwwkew"` the answer is `3` (`"wke"`).
+
+</Problem>
+
+## Approach
+
+Use the [variable-length window](/learn/code/sliding-window/variable-length) template. The window's state is the **set of characters** it contains, and the window is invalid when the new character is already in the set.
+
+1. Move `right` forward and look at `s[right]`.
+2. While `s[right]` is already in the window, remove `s[left]` and move `left` forward.
+3. Add `s[right]` and record the window's length.
+
+<Visualizer id="longest-substring-no-repeat" />
+
+## Solution
+
+<CodeTabs>
+
+```python
+def length_of_longest_substring(s: str) -> int:
+    seen = set()
+    left = best = 0
+    for right, char in enumerate(s):
+        while char in seen:          # shrink until the duplicate is gone
+            seen.remove(s[left])
+            left += 1
+        seen.add(char)
+        best = max(best, right - left + 1)
+    return best
+```
+
+```java
+public int lengthOfLongestSubstring(String s) {
+    Set<Character> seen = new HashSet<>();
+    int left = 0, best = 0;
+    for (int right = 0; right < s.length(); right++) {
+        char c = s.charAt(right);
+        while (seen.contains(c)) {  // shrink until the duplicate is gone
+            seen.remove(s.charAt(left));
+            left++;
+        }
+        seen.add(c);
+        best = Math.max(best, right - left + 1);
+    }
+    return best;
+}
+```
+
+```cpp
+int lengthOfLongestSubstring(const string& s) {
+    unordered_set<char> seen;
+    int left = 0, best = 0;
+    for (int right = 0; right < (int)s.size(); right++) {
+        while (seen.count(s[right])) {  // shrink until the duplicate is gone
+            seen.erase(s[left]);
+            left++;
+        }
+        seen.insert(s[right]);
+        best = max(best, right - left + 1);
+    }
+    return best;
+}
+```
+
+```javascript
+function lengthOfLongestSubstring(s) {
+  const seen = new Set();
+  let left = 0;
+  let best = 0;
+  for (let right = 0; right < s.length; right++) {
+    while (seen.has(s[right])) { // shrink until the duplicate is gone
+      seen.delete(s[left]);
+      left++;
+    }
+    seen.add(s[right]);
+    best = Math.max(best, right - left + 1);
+  }
+  return best;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(n)" space="O(min(n, alphabet size))" />
+
+<Callout type="tip" title="Jumping left directly">
+You can skip the inner loop by storing each character's **last index** in a map: when `s[right]` was last seen at index `j ≥ left`, jump straight to `left = j + 1`. Same `O(n)` complexity, fewer steps, but the set version is easier to get right under pressure.
+</Callout>

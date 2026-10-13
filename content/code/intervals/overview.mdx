@@ -1,0 +1,50 @@
+---
+title: Intervals
+description: Sort intervals by start or end time, then sweep through them once to merge, count or schedule.
+readingTime: 6 min
+---
+
+## The idea
+
+Interval problems give you ranges like `[start, end]`: meetings, bookings, time slots. Comparing every pair to see which ones overlap takes `O(n²)` time.
+
+The trick is to **sort first**. Once intervals are sorted by start time, anything that overlaps the current interval must come right after it, so a single left-to-right sweep is enough. The whole solution costs `O(n log n)` for the sort.
+
+<Visualizer id="merge-intervals" />
+
+## When do two intervals overlap?
+
+For `[a, b]` and `[c, d]` with `a ≤ c` (sorted by start), they overlap exactly when **the second one starts before the first one ends**:
+
+```text nocheck
+overlap  ⟺  c < b      (or c ≤ b if touching endpoints count as overlapping)
+```
+
+If they overlap, the merged interval is `[a, max(b, d)]`. Use `max`, because the second interval might sit entirely inside the first.
+
+<Callout type="interview">
+Always ask whether touching intervals like `[1, 2]` and `[2, 3]` overlap. A meeting that ends at 2 and one that starts at 2 can share a room, but two ranges of booked seats might not. The answer decides between `<` and `≤`.
+</Callout>
+
+## Sort by start or by end?
+
+| Goal | Sort by | Why |
+|------|---------|-----|
+| Merge, insert, find gaps, detect any overlap | Start | Overlapping intervals end up next to each other |
+| Keep the most non-overlapping intervals (or remove the fewest) | End | Finishing early leaves the most room for the rest (greedy) |
+
+## Template: sweep after sorting
+
+```python nocheck
+intervals.sort(key=lambda x: x[0])
+merged = []
+for start, end in intervals:
+    if not merged or merged[-1][1] < start:
+        merged.append([start, end])                # no overlap
+    else:
+        merged[-1][1] = max(merged[-1][1], end)    # overlap: extend
+```
+
+## Problems
+
+<ProblemList section="intervals" />

@@ -1,0 +1,141 @@
+---
+title: Decode String
+description: Push the partial string and repeat count when a bracket opens, and pop them to build the result when it closes.
+---
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/decode-string/">
+
+An encoded string uses the rule `k[text]`, meaning `text` repeated `k` times. Encodings can be nested. Decode the string.
+
+**Examples:** `"3[a]2[bc]"` → `"aaabcbc"`. `"3[a2[c]]"` → `"accaccacc"`. `"2[abc]3[cd]ef"` → `"abcabccdcdcdef"`.
+
+</Problem>
+
+## Approach
+
+Nesting means you must finish the **innermost** bracket before you can use its result, which is a job for a stack.
+
+Scan the string while building `current`, the text of the level you're in, and `count`, the number you're reading:
+
+- **Digit:** extend `count` (`count = count * 10 + digit`, since counts can have several digits).
+- **`[`:** a new level starts. Push the pair `(current, count)` so you can return to it, then reset both.
+- **`]`:** the level ends. Pop `(previous, k)` and set `current = previous + current * k`.
+- **Letter:** append it to `current`.
+
+## Walkthrough: `3[a2[c]]`
+
+| Read | Action | Stack | current |
+|------|--------|-------|---------|
+| `3` | count = 3 | | `""` |
+| `[` | push `("", 3)` | `("", 3)` | `""` |
+| `a` | append | `("", 3)` | `"a"` |
+| `2` | count = 2 | `("", 3)` | `"a"` |
+| `[` | push `("a", 2)` | `("", 3)`, `("a", 2)` | `""` |
+| `c` | append | same | `"c"` |
+| `]` | pop `("a", 2)` → `"a" + "c"×2` | `("", 3)` | `"acc"` |
+| `]` | pop `("", 3)` → `"" + "acc"×3` | | `"accaccacc"` |
+
+## Solution
+
+<CodeTabs>
+
+```python
+def decode_string(s: str) -> str:
+    stack = []           # (text before this bracket, repeat count)
+    current, count = "", 0
+    for char in s:
+        if char.isdigit():
+            count = count * 10 + int(char)
+        elif char == "[":
+            stack.append((current, count))
+            current, count = "", 0
+        elif char == "]":
+            previous, k = stack.pop()
+            current = previous + current * k
+        else:
+            current += char
+    return current
+```
+
+```java
+public String decodeString(String s) {
+    Deque<StringBuilder> texts = new ArrayDeque<>();
+    Deque<Integer> counts = new ArrayDeque<>();
+    StringBuilder current = new StringBuilder();
+    int count = 0;
+    for (char c : s.toCharArray()) {
+        if (Character.isDigit(c)) {
+            count = count * 10 + (c - '0');
+        } else if (c == '[') {
+            texts.push(current);
+            counts.push(count);
+            current = new StringBuilder();
+            count = 0;
+        } else if (c == ']') {
+            StringBuilder previous = texts.pop();
+            previous.append(current.toString().repeat(counts.pop()));
+            current = previous;
+        } else {
+            current.append(c);
+        }
+    }
+    return current.toString();
+}
+```
+
+```cpp
+string decodeString(const string& s) {
+    stack<pair<string, int>> st;  // (text before this bracket, repeat count)
+    string current;
+    int count = 0;
+    for (char c : s) {
+        if (isdigit(c)) {
+            count = count * 10 + (c - '0');
+        } else if (c == '[') {
+            st.push({current, count});
+            current.clear();
+            count = 0;
+        } else if (c == ']') {
+            auto [previous, k] = st.top();
+            st.pop();
+            string repeated;
+            for (int i = 0; i < k; i++) repeated += current;
+            current = previous + repeated;
+        } else {
+            current += c;
+        }
+    }
+    return current;
+}
+```
+
+```javascript
+function decodeString(s) {
+  const stack = []; // [text before this bracket, repeat count]
+  let current = "";
+  let count = 0;
+  for (const c of s) {
+    if (c >= "0" && c <= "9") {
+      count = count * 10 + Number(c);
+    } else if (c === "[") {
+      stack.push([current, count]);
+      current = "";
+      count = 0;
+    } else if (c === "]") {
+      const [previous, k] = stack.pop();
+      current = previous + current.repeat(k);
+    } else {
+      current += c;
+    }
+  }
+  return current;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(output length)" space="O(output length)" />
+
+<Callout type="warning">
+Don't forget multi-digit counts like `12[a]`. Reading digits one at a time with `count = count * 10 + digit` handles them.
+</Callout>

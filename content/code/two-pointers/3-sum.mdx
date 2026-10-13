@@ -1,0 +1,138 @@
+---
+title: 3-Sum
+description: Find every unique triplet that sums to zero by fixing one number and running Two Sum on the rest.
+---
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/3sum/">
+
+Given an integer array `nums`, return all **unique** triplets `[a, b, c]` taken from different positions such that `a + b + c = 0`. The answer must not contain duplicate triplets.
+
+**Example:** `nums = [-1, 0, 1, 2, -1, -4]` returns `[[-1, -1, 2], [-1, 0, 1]]`.
+
+</Problem>
+
+## Brute force
+
+Three nested loops try every triplet in `O(n³)`, and you still need a set to remove duplicates.
+
+## Approach
+
+**Sort first.** Then fix the first number `nums[i]` and you're left with a familiar problem: find two numbers in the rest of the array that add up to `-nums[i]`. That's [Two Sum on a sorted array](/learn/code/two-pointers/two-sum-sorted), solved with two pointers in `O(n)`.
+
+The tricky part is avoiding duplicate triplets. Sorting puts equal values next to each other, so:
+
+- **Skip repeated values of `i`.** If `nums[i] == nums[i - 1]`, every triplet starting with this value was already found.
+- **After finding a triplet, skip repeated values** of `left` (and `right`) before continuing.
+
+You can also stop early: once `nums[i] > 0`, every remaining number is positive too, so no triplet can sum to zero.
+
+## Solution
+
+<CodeTabs>
+
+```python
+def three_sum(nums: list[int]) -> list[list[int]]:
+    nums.sort()
+    result = []
+    for i in range(len(nums) - 2):
+        if nums[i] > 0:
+            break                      # all remaining numbers are positive
+        if i > 0 and nums[i] == nums[i - 1]:
+            continue                   # same first number as before
+        left, right = i + 1, len(nums) - 1
+        while left < right:
+            total = nums[i] + nums[left] + nums[right]
+            if total < 0:
+                left += 1
+            elif total > 0:
+                right -= 1
+            else:
+                result.append([nums[i], nums[left], nums[right]])
+                left += 1
+                right -= 1
+                while left < right and nums[left] == nums[left - 1]:
+                    left += 1          # skip duplicate second numbers
+    return result
+```
+
+```java
+public List<List<Integer>> threeSum(int[] nums) {
+    Arrays.sort(nums);
+    List<List<Integer>> result = new ArrayList<>();
+    for (int i = 0; i < nums.length - 2; i++) {
+        if (nums[i] > 0) break;                          // all remaining numbers are positive
+        if (i > 0 && nums[i] == nums[i - 1]) continue;   // same first number as before
+        int left = i + 1, right = nums.length - 1;
+        while (left < right) {
+            int total = nums[i] + nums[left] + nums[right];
+            if (total < 0) left++;
+            else if (total > 0) right--;
+            else {
+                result.add(List.of(nums[i], nums[left], nums[right]));
+                left++;
+                right--;
+                while (left < right && nums[left] == nums[left - 1]) left++;  // skip duplicates
+            }
+        }
+    }
+    return result;
+}
+```
+
+```cpp
+vector<vector<int>> threeSum(vector<int> nums) {
+    sort(nums.begin(), nums.end());
+    vector<vector<int>> result;
+    int n = nums.size();
+    for (int i = 0; i < n - 2; i++) {
+        if (nums[i] > 0) break;                          // all remaining numbers are positive
+        if (i > 0 && nums[i] == nums[i - 1]) continue;   // same first number as before
+        int left = i + 1, right = n - 1;
+        while (left < right) {
+            int total = nums[i] + nums[left] + nums[right];
+            if (total < 0) left++;
+            else if (total > 0) right--;
+            else {
+                result.push_back({nums[i], nums[left], nums[right]});
+                left++;
+                right--;
+                while (left < right && nums[left] == nums[left - 1]) left++;  // skip duplicates
+            }
+        }
+    }
+    return result;
+}
+```
+
+```javascript
+function threeSum(nums) {
+  nums.sort((a, b) => a - b);
+  const result = [];
+  for (let i = 0; i < nums.length - 2; i++) {
+    if (nums[i] > 0) break;                        // all remaining numbers are positive
+    if (i > 0 && nums[i] === nums[i - 1]) continue; // same first number as before
+    let left = i + 1;
+    let right = nums.length - 1;
+    while (left < right) {
+      const total = nums[i] + nums[left] + nums[right];
+      if (total < 0) left++;
+      else if (total > 0) right--;
+      else {
+        result.push([nums[i], nums[left], nums[right]]);
+        left++;
+        right--;
+        while (left < right && nums[left] === nums[left - 1]) left++; // skip duplicates
+      }
+    }
+  }
+  return result;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(n²)" space="O(1) besides the output and sorting" />
+
+<Callout type="interview">
+`O(n²)` is the best you can do here in general, so don't spend time hunting for something faster. Spend it on getting the duplicate handling right, since that's where most candidates slip.
+</Callout>

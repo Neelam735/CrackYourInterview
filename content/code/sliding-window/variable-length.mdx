@@ -1,0 +1,58 @@
+---
+title: Variable Length Sliding Window
+description: Grow the window on the right and shrink it on the left whenever it breaks the rule.
+readingTime: 6 min
+---
+
+## The idea
+
+Often the window size isn't given. Instead you're asked for the **longest** (or **shortest**) contiguous subarray or substring that satisfies a rule: no repeated characters, at most `k` changes, a sum of at least `target`.
+
+Checking every possible window costs `O(n²)`. A variable-length sliding window does it in `O(n)`:
+
+1. **Expand:** move `right` forward one step and add the new element to the window's state.
+2. **Shrink:** while the window breaks the rule, remove `nums[left]` from the state and move `left` forward.
+3. **Record:** the window is valid again, so update the answer with its length.
+
+<Visualizer id="longest-substring-no-repeat" />
+
+## Why it's O(n)
+
+The shrinking `while` loop sits inside the `for` loop, which looks like `O(n²)`. But `left` only ever moves **forward**, and it can't pass `right`. Across the whole run, `left` moves at most `n` times in total. So the total work is `O(n)` for `right` plus `O(n)` for `left`.
+
+## Template: longest valid window
+
+```python nocheck
+def longest_window(items):
+    state = ...                 # counter, set, sum...
+    left = 0
+    best = 0
+    for right, item in enumerate(items):
+        add item to state
+        while window is invalid:
+            remove items[left] from state
+            left += 1
+        best = max(best, right - left + 1)
+    return best
+```
+
+## Template: shortest valid window
+
+For "shortest window that satisfies the rule", flip the logic: shrink **while the window is valid**, recording the length each time before you shrink.
+
+```python nocheck
+for right, item in enumerate(items):
+    add item to state
+    while window is valid:
+        best = min(best, right - left + 1)
+        remove items[left] from state
+        left += 1
+```
+
+<Callout type="interview">
+Name the pattern out loud as soon as you spot it: "We want the longest contiguous substring with a constraint, so I'll use a variable-length sliding window." Then define exactly what makes the window invalid, since that check is the only part that changes between problems.
+</Callout>
+
+## Problems
+
+<ProblemList section="sliding-window" />

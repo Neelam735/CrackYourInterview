@@ -1,0 +1,47 @@
+---
+title: Monotonic Stack
+description: Keep the stack sorted so each element is pushed and popped once, answering "next greater" questions in O(n).
+readingTime: 6 min
+---
+
+## The idea
+
+A **monotonic stack** is a stack whose contents are always sorted: strictly decreasing from bottom to top, or increasing. Before pushing a new element, you pop everything that would break the order.
+
+That popping is the useful part. When element `x` pops element `y`, you've learned something about `y`: **`x` is the first element after `y` that is bigger (or smaller) than it.** So one pass answers "what's the next greater element?" for every position.
+
+<Visualizer id="daily-temperatures" />
+
+## Which kind of stack?
+
+| Question | Keep the stack | Pop while |
+|----------|----------------|-----------|
+| Next **greater** element | Decreasing | `nums[top] < nums[i]` |
+| Next **smaller** element | Increasing | `nums[top] > nums[i]` |
+
+The element doing the popping is the answer for each element it pops. Whatever is left on the stack at the end has no next greater (or smaller) element.
+
+## Template: next greater element
+
+```python nocheck
+def next_greater(nums):
+    answer = [-1] * len(nums)
+    stack = []                       # indices; their values are decreasing
+    for i, x in enumerate(nums):
+        while stack and nums[stack[-1]] < x:
+            answer[stack.pop()] = x  # x is the next greater for that index
+        stack.append(i)
+    return answer
+```
+
+## Why it's O(n)
+
+The `while` loop is inside the `for` loop, but every index is **pushed once and popped at most once**. Across the whole run there are at most `n` pops, so the total work is `O(n)`.
+
+<Callout type="interview">
+Signals for a monotonic stack: "next greater", "previous smaller", "how many days until", "how far can this bar extend", "stock span". If brute force scans forward from every element looking for the first bigger one, a monotonic stack almost always cuts it to `O(n)`.
+</Callout>
+
+## Problems
+
+<ProblemList section="stack" />

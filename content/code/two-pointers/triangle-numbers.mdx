@@ -1,0 +1,114 @@
+---
+title: Triangle Numbers
+description: Count triplets that can form a triangle by sorting and counting whole ranges of valid pairs at once.
+---
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/valid-triangle-number/">
+
+Given an array of non-negative integers `nums`, return how many triplets of different positions could be the side lengths of a triangle.
+
+Three lengths `a ≤ b ≤ c` form a triangle exactly when `a + b > c`.
+
+**Example:** `nums = [2, 2, 3, 4]` returns `3`: `(2, 3, 4)` twice (using either 2) and `(2, 2, 3)`.
+
+</Problem>
+
+## Brute force
+
+Check every triplet: `O(n³)`.
+
+## Approach
+
+Sort the array. Once sorted, you only need to check one condition: the two shorter sides must add up to more than the longest side.
+
+Fix the **longest** side `nums[k]`, going from the end of the array. Then look for pairs `i < j < k` with `nums[i] + nums[j] > nums[k]`, using two pointers starting at `i = 0` and `j = k - 1`:
+
+- If `nums[i] + nums[j] > nums[k]`, then **every** index from `i` to `j - 1` also works with `j`, since those numbers are even bigger than `nums[i]`. That's `j - i` triangles at once. Then move `j` down.
+- Otherwise `nums[i]` is too small to pair with `nums[j]`, or with any smaller number, so move `i` up.
+
+Counting a whole range at once is what makes this `O(n²)` instead of `O(n³)`.
+
+## Solution
+
+<CodeTabs>
+
+```python
+def triangle_number(nums: list[int]) -> int:
+    nums.sort()
+    count = 0
+    for k in range(len(nums) - 1, 1, -1):   # nums[k] is the longest side
+        i, j = 0, k - 1
+        while i < j:
+            if nums[i] + nums[j] > nums[k]:
+                count += j - i              # every i..j-1 works with j
+                j -= 1
+            else:
+                i += 1
+    return count
+```
+
+```java
+public int triangleNumber(int[] nums) {
+    Arrays.sort(nums);
+    int count = 0;
+    for (int k = nums.length - 1; k >= 2; k--) {  // nums[k] is the longest side
+        int i = 0, j = k - 1;
+        while (i < j) {
+            if (nums[i] + nums[j] > nums[k]) {
+                count += j - i;                   // every i..j-1 works with j
+                j--;
+            } else {
+                i++;
+            }
+        }
+    }
+    return count;
+}
+```
+
+```cpp
+int triangleNumber(vector<int> nums) {
+    sort(nums.begin(), nums.end());
+    int count = 0;
+    for (int k = (int)nums.size() - 1; k >= 2; k--) {  // nums[k] is the longest side
+        int i = 0, j = k - 1;
+        while (i < j) {
+            if (nums[i] + nums[j] > nums[k]) {
+                count += j - i;                        // every i..j-1 works with j
+                j--;
+            } else {
+                i++;
+            }
+        }
+    }
+    return count;
+}
+```
+
+```javascript
+function triangleNumber(nums) {
+  nums.sort((a, b) => a - b);
+  let count = 0;
+  for (let k = nums.length - 1; k >= 2; k--) { // nums[k] is the longest side
+    let i = 0;
+    let j = k - 1;
+    while (i < j) {
+      if (nums[i] + nums[j] > nums[k]) {
+        count += j - i;                         // every i..j-1 works with j
+        j--;
+      } else {
+        i++;
+      }
+    }
+  }
+  return count;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(n²)" space="O(1) besides sorting" />
+
+<Callout type="tip">
+"Count pairs" problems on sorted arrays often have this shape: when one pair works, a whole block of pairs works too, so you add `j - i` instead of `1`.
+</Callout>

@@ -1,0 +1,94 @@
+---
+title: Max Points You Can Obtain From Cards
+description: Taking cards from both ends is a fixed-size window that wraps around the end of the array.
+---
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/maximum-points-you-can-obtain-from-cards/">
+
+Cards are laid out in a row and `cardPoints[i]` is the value of card `i`. In one move you take a card from either the **start** or the **end** of the row. Take exactly `k` cards and return the maximum total value.
+
+**Example:** `cardPoints = [1, 2, 3, 4, 5, 6, 1]`, `k = 3` returns `12`: take the last three cards, `5 + 6 + 1`.
+
+</Problem>
+
+## Reframe the problem
+
+Whatever order you take cards in, you always end up with **some number `i` of cards from the start and `k - i` from the end**. So there are only `k + 1` possible hands:
+
+- all `k` from the start,
+- `k - 1` from the start and 1 from the end,
+- ...
+- all `k` from the end.
+
+## Approach
+
+Start with the hand "all `k` cards from the start". To move to the next hand, **give back** the last card from the start (`cardPoints[k - i]`) and **take** one more card from the end (`cardPoints[n - i]`). Each swap is `O(1)`, so you check all `k + 1` hands in `O(k)`.
+
+This is a fixed-size window of `k` cards that wraps around from the end of the array to the start.
+
+<Callout type="info" title="Another way to see it">
+The cards you **don't** take always form one contiguous block of `n - k` cards in the middle. Maximizing the cards taken is the same as minimizing that middle window's sum, which is a standard fixed sliding window.
+</Callout>
+
+## Solution
+
+<CodeTabs>
+
+```python
+def max_score(card_points: list[int], k: int) -> int:
+    n = len(card_points)
+    total = sum(card_points[:k])        # all k cards from the start
+    best = total
+    for i in range(1, k + 1):
+        total += card_points[n - i] - card_points[k - i]  # swap one start card for one end card
+        best = max(best, total)
+    return best
+```
+
+```java
+public int maxScore(int[] cardPoints, int k) {
+    int n = cardPoints.length, total = 0;
+    for (int i = 0; i < k; i++) total += cardPoints[i];  // all k cards from the start
+    int best = total;
+    for (int i = 1; i <= k; i++) {
+        total += cardPoints[n - i] - cardPoints[k - i];  // swap one start card for one end card
+        best = Math.max(best, total);
+    }
+    return best;
+}
+```
+
+```cpp
+int maxScore(const vector<int>& cardPoints, int k) {
+    int n = cardPoints.size();
+    int total = accumulate(cardPoints.begin(), cardPoints.begin() + k, 0);  // all k from the start
+    int best = total;
+    for (int i = 1; i <= k; i++) {
+        total += cardPoints[n - i] - cardPoints[k - i];  // swap one start card for one end card
+        best = max(best, total);
+    }
+    return best;
+}
+```
+
+```javascript
+function maxScore(cardPoints, k) {
+  const n = cardPoints.length;
+  let total = 0;
+  for (let i = 0; i < k; i++) total += cardPoints[i]; // all k cards from the start
+  let best = total;
+  for (let i = 1; i <= k; i++) {
+    total += cardPoints[n - i] - cardPoints[k - i];  // swap one start card for one end card
+    best = Math.max(best, total);
+  }
+  return best;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(k)" space="O(1)" />
+
+<Callout type="warning">
+A greedy "always take the bigger end" strategy fails. With `[1, 5, 1, 2, 2]` and `k = 2`, greedy takes the two 2s from the end for a total of 4, but taking 1 and 5 from the start gives 6. A small card can be worth taking to reach a big one behind it.
+</Callout>

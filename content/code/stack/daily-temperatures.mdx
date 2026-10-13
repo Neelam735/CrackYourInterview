@@ -1,0 +1,95 @@
+---
+title: Daily Temperatures
+description: Use a decreasing stack of days still waiting for a warmer one; each warmer day pops and answers them.
+---
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/daily-temperatures/">
+
+Given an array `temperatures` of daily temperatures, return an array `answer` where `answer[i]` is the number of days you have to wait after day `i` to get a warmer temperature. If there's no warmer day ahead, `answer[i] = 0`.
+
+**Example:** `[73, 74, 75, 71, 69, 72, 76, 73]` returns `[1, 1, 4, 2, 1, 1, 0, 0]`.
+
+</Problem>
+
+## Brute force
+
+For each day, scan forward until you find a warmer day: `O(n²)` in the worst case (a steadily falling temperature).
+
+## Approach
+
+Keep a stack of **days still waiting** for a warmer day. Their temperatures are decreasing from bottom to top, because any warmer day would already have resolved the colder days below it.
+
+For each new day `i`:
+
+1. While the day on top of the stack is **colder** than today, pop it. Today is its answer: `answer[j] = i - j`.
+2. Push today. It now waits for its own warmer day.
+
+Days left on the stack at the end never see a warmer day, so their answer stays `0`.
+
+<Visualizer id="daily-temperatures" />
+
+## Solution
+
+<CodeTabs>
+
+```python
+def daily_temperatures(temperatures: list[int]) -> list[int]:
+    answer = [0] * len(temperatures)
+    stack = []  # indices of days still waiting, temperatures decreasing
+    for i, temp in enumerate(temperatures):
+        while stack and temperatures[stack[-1]] < temp:
+            j = stack.pop()
+            answer[j] = i - j
+        stack.append(i)
+    return answer
+```
+
+```java
+public int[] dailyTemperatures(int[] temperatures) {
+    int[] answer = new int[temperatures.length];
+    Deque<Integer> stack = new ArrayDeque<>();  // days still waiting, temperatures decreasing
+    for (int i = 0; i < temperatures.length; i++) {
+        while (!stack.isEmpty() && temperatures[stack.peek()] < temperatures[i]) {
+            int j = stack.pop();
+            answer[j] = i - j;
+        }
+        stack.push(i);
+    }
+    return answer;
+}
+```
+
+```cpp
+vector<int> dailyTemperatures(const vector<int>& temperatures) {
+    vector<int> answer(temperatures.size(), 0);
+    stack<int> st;  // days still waiting, temperatures decreasing
+    for (int i = 0; i < (int)temperatures.size(); i++) {
+        while (!st.empty() && temperatures[st.top()] < temperatures[i]) {
+            int j = st.top();
+            st.pop();
+            answer[j] = i - j;
+        }
+        st.push(i);
+    }
+    return answer;
+}
+```
+
+```javascript
+function dailyTemperatures(temperatures) {
+  const answer = new Array(temperatures.length).fill(0);
+  const stack = []; // days still waiting, temperatures decreasing
+  for (let i = 0; i < temperatures.length; i++) {
+    while (stack.length && temperatures[stack[stack.length - 1]] < temperatures[i]) {
+      const j = stack.pop();
+      answer[j] = i - j;
+    }
+    stack.push(i);
+  }
+  return answer;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(n)" space="O(n)" />

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { codeNavigation } from "@/lib/navigation";
+import { CODE_BASE, codeNavigation } from "@/lib/navigation";
 
 const features = [
   {
@@ -17,7 +17,7 @@ const features = [
 ];
 
 export default function HomePage() {
-  const patterns = codeNavigation.find((section) => section.title === "Patterns")?.items ?? [];
+  const topics = codeNavigation.filter((section) => section.slug !== "introduction");
 
   return (
     <main>
@@ -44,7 +44,7 @@ export default function HomePage() {
               Start learning
             </Link>
             <Link
-              href="/learn/code/two-pointers"
+              href="/learn/code/two-pointers/two-sum-sorted"
               className="rounded-xl border border-slate-300 px-6 py-3 font-semibold hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-900"
             >
               Try a visualization
@@ -63,35 +63,30 @@ export default function HomePage() {
       </section>
 
       <section className="mx-auto max-w-6xl px-4 pb-24 sm:px-6">
-        <h2 className="text-2xl font-bold tracking-tight">Coding patterns</h2>
+        <h2 className="text-2xl font-bold tracking-tight">Topics</h2>
         <p className="mt-2 text-slate-600 dark:text-slate-400">Work through them in order, or jump to the one you need.</p>
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {patterns.map((pattern, index) =>
-            pattern.comingSoon ? (
-              <div
-                key={pattern.slug}
-                className="rounded-xl border border-dashed border-slate-300 p-5 text-slate-400 dark:border-slate-700 dark:text-slate-600"
-              >
-                <span className="font-mono text-xs">{String(index + 1).padStart(2, "0")}</span>
-                <h3 className="mt-1 font-semibold">{pattern.title}</h3>
-                <p className="mt-1 text-sm">Coming soon</p>
-              </div>
-            ) : (
+          {topics.map((topic, index) => {
+            const problems = topic.pages.filter((page) => page.kind === "problem").length;
+            return (
               <Link
-                key={pattern.slug}
-                href={`/learn/code/${pattern.slug}`}
+                key={topic.slug}
+                href={`${CODE_BASE}/${topic.slug}/${topic.pages[0].slug}`}
                 className="group rounded-xl border border-slate-200 p-5 transition hover:-translate-y-0.5 hover:border-brand-400 hover:shadow-md dark:border-slate-800 dark:hover:border-brand-600"
               >
                 <span className="font-mono text-xs text-brand-600 dark:text-brand-400">
                   {String(index + 1).padStart(2, "0")}
                 </span>
                 <h3 className="mt-1 font-semibold group-hover:text-brand-600 dark:group-hover:text-brand-400">
-                  {pattern.title}
+                  {topic.title}
                 </h3>
-                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Read the guide →</p>
+                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                  {problems} problem{problems === 1 ? "" : "s"} · {topic.pages.length - problems || "no"} guide
+                  {topic.pages.length - problems === 1 ? "" : "s"}
+                </p>
               </Link>
-            ),
-          )}
+            );
+          })}
         </div>
       </section>
 

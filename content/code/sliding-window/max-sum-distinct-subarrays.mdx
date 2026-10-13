@@ -1,0 +1,111 @@
+---
+title: Max Sum of Distinct Subarrays Length k
+description: Track counts in a hash map so a fixed window knows instantly whether all its elements are distinct.
+---
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/maximum-sum-of-distinct-subarrays-with-length-k/">
+
+Given an integer array `nums` and an integer `k`, find the maximum sum among subarrays of length `k` whose elements are **all distinct**. If no such subarray exists, return `0`.
+
+**Example:** `nums = [1, 5, 4, 2, 9, 9, 9]`, `k = 3` returns `15`: the valid windows are `[1, 5, 4]` (10), `[5, 4, 2]` (11) and `[4, 2, 9]` (15). Windows containing two 9s don't count.
+
+</Problem>
+
+## Approach
+
+This is a fixed-size window of length `k`, but each window must also pass a check: are all its elements different?
+
+Rechecking every element of every window would cost `O(k)` per step. Instead, keep a **hash map from value to count** for the current window, along with its sum:
+
+- When a value **enters**, increment its count and add it to the sum.
+- When a value **leaves**, decrement its count, delete it if the count reaches 0, and subtract it from the sum.
+
+The window has no duplicates exactly when the map has `k` keys, since `k` elements with `k` different values must all be distinct. That check is `O(1)`.
+
+## Solution
+
+<CodeTabs>
+
+```python
+from collections import defaultdict
+
+def maximum_subarray_sum(nums: list[int], k: int) -> int:
+    counts = defaultdict(int)
+    window = best = 0
+    for end, value in enumerate(nums):
+        counts[value] += 1                 # enters on the right
+        window += value
+        if end >= k:
+            old = nums[end - k]            # leaves on the left
+            counts[old] -= 1
+            if counts[old] == 0:
+                del counts[old]
+            window -= old
+        if end >= k - 1 and len(counts) == k:   # full window, all distinct
+            best = max(best, window)
+    return best
+```
+
+```java
+public long maximumSubarraySum(int[] nums, int k) {
+    Map<Integer, Integer> counts = new HashMap<>();
+    long window = 0, best = 0;
+    for (int end = 0; end < nums.length; end++) {
+        counts.merge(nums[end], 1, Integer::sum);  // enters on the right
+        window += nums[end];
+        if (end >= k) {
+            int old = nums[end - k];               // leaves on the left
+            if (counts.merge(old, -1, Integer::sum) == 0) counts.remove(old);
+            window -= old;
+        }
+        if (end >= k - 1 && counts.size() == k) best = Math.max(best, window);  // full and distinct
+    }
+    return best;
+}
+```
+
+```cpp
+long long maximumSubarraySum(const vector<int>& nums, int k) {
+    unordered_map<int, int> counts;
+    long long window = 0, best = 0;
+    for (int end = 0; end < (int)nums.size(); end++) {
+        counts[nums[end]]++;                    // enters on the right
+        window += nums[end];
+        if (end >= k) {
+            int old = nums[end - k];            // leaves on the left
+            if (--counts[old] == 0) counts.erase(old);
+            window -= old;
+        }
+        if (end >= k - 1 && (int)counts.size() == k) best = max(best, window);  // full and distinct
+    }
+    return best;
+}
+```
+
+```javascript
+function maximumSubarraySum(nums, k) {
+  const counts = new Map();
+  let window = 0;
+  let best = 0;
+  for (let end = 0; end < nums.length; end++) {
+    counts.set(nums[end], (counts.get(nums[end]) ?? 0) + 1); // enters on the right
+    window += nums[end];
+    if (end >= k) {
+      const old = nums[end - k];                             // leaves on the left
+      counts.set(old, counts.get(old) - 1);
+      if (counts.get(old) === 0) counts.delete(old);
+      window -= old;
+    }
+    if (end >= k - 1 && counts.size === k) best = Math.max(best, window); // full and distinct
+  }
+  return best;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(n)" space="O(k)" />
+
+<Callout type="warning">
+With up to 10⁵ values of up to 10⁵ each, a window sum can reach 10¹⁰, which overflows a 32-bit `int`. Java and C++ use `long` here.
+</Callout>

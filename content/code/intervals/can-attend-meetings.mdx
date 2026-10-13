@@ -1,0 +1,71 @@
+---
+title: Can Attend Meetings
+description: Sort meetings by start time and check whether any meeting starts before the previous one ends.
+---
+
+<Problem difficulty="Easy" link="https://leetcode.com/problems/meeting-rooms/">
+
+Given an array of meeting times `intervals` where `intervals[i] = [start, end]`, decide whether one person could attend all of them. A meeting ending at time `t` and another starting at `t` don't conflict.
+
+**Example:** `[[0, 30], [5, 10], [15, 20]]` returns `False` (the first meeting overlaps both others). `[[7, 10], [2, 4]]` returns `True`.
+
+</Problem>
+
+## Approach
+
+Comparing every pair of meetings takes `O(n²)`. Instead, **sort by start time**. In sorted order, if any two meetings overlap, then some meeting must overlap the one **right before it**. So one pass comparing neighbours is enough:
+
+- If `intervals[i].start < intervals[i - 1].end`, meeting `i` starts before the previous one finishes: return `False`.
+
+Since a meeting may end exactly when the next starts, the check is a strict `<`.
+
+## Solution
+
+<CodeTabs>
+
+```python
+def can_attend_meetings(intervals: list[list[int]]) -> bool:
+    intervals.sort(key=lambda x: x[0])
+    for i in range(1, len(intervals)):
+        if intervals[i][0] < intervals[i - 1][1]:   # starts before the previous ends
+            return False
+    return True
+```
+
+```java
+public boolean canAttendMeetings(int[][] intervals) {
+    Arrays.sort(intervals, (a, b) -> Integer.compare(a[0], b[0]));
+    for (int i = 1; i < intervals.length; i++) {
+        if (intervals[i][0] < intervals[i - 1][1]) return false;  // starts before the previous ends
+    }
+    return true;
+}
+```
+
+```cpp
+bool canAttendMeetings(vector<vector<int>> intervals) {
+    sort(intervals.begin(), intervals.end());
+    for (size_t i = 1; i < intervals.size(); i++) {
+        if (intervals[i][0] < intervals[i - 1][1]) return false;  // starts before the previous ends
+    }
+    return true;
+}
+```
+
+```javascript
+function canAttendMeetings(intervals) {
+  intervals.sort((a, b) => a[0] - b[0]);
+  for (let i = 1; i < intervals.length; i++) {
+    if (intervals[i][0] < intervals[i - 1][1]) return false; // starts before the previous ends
+  }
+  return true;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(n log n)" space="O(1) besides sorting" />
+
+<Callout type="tip">
+The natural follow-up is "how many rooms do we need?" ([Meeting Rooms II](https://leetcode.com/problems/meeting-rooms-ii/)). Sort start times and end times separately, then sweep: each start needs a room, each end frees one, and the answer is the peak number of rooms in use.
+</Callout>

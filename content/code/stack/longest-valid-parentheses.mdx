@@ -1,0 +1,116 @@
+---
+title: Longest Valid Parentheses
+description: Keep a stack of indices with the last unmatched position at the bottom, so every match tells you a valid length.
+---
+
+<Problem difficulty="Hard" link="https://leetcode.com/problems/longest-valid-parentheses/">
+
+Given a string of `(` and `)`, return the length of the longest substring of well-formed (properly matched) parentheses.
+
+**Examples:** `"(()"` → `2`. `")()())"` → `4` (`"()()"`). `""` → `0`.
+
+</Problem>
+
+## Approach
+
+Push **indices** onto the stack instead of characters. Keep one extra index at the bottom of the stack: the position **just before** the current valid run starts. Initialize the stack with `-1` for that purpose.
+
+- **`(`:** push its index.
+- **`)`:** pop the top.
+  - If the stack is now **empty**, this `)` had no partner. It breaks any valid run, so push its index as the new "just before" marker.
+  - Otherwise, the substring from just after the new top up to `i` is valid. Its length is `i - stack[-1]`. Update the answer.
+
+The bottom marker is what makes adjacent valid groups like `()()` count as one run: after the first pair is popped, the marker is still there, so the second pair measures its length all the way back to it.
+
+## Walkthrough: `)()())`
+
+| i | char | Stack (bottom → top) | Length found |
+|---|------|----------------------|--------------|
+| | | `-1` | |
+| 0 | `)` | pop → empty, push 0 → `0` | |
+| 1 | `(` | `0, 1` | |
+| 2 | `)` | pop → `0` | `2 - 0 = 2` |
+| 3 | `(` | `0, 3` | |
+| 4 | `)` | pop → `0` | `4 - 0 = 4` |
+| 5 | `)` | pop → empty, push 5 → `5` | |
+
+## Solution
+
+<CodeTabs>
+
+```python
+def longest_valid_parentheses(s: str) -> int:
+    stack = [-1]          # index just before the current valid run
+    best = 0
+    for i, char in enumerate(s):
+        if char == "(":
+            stack.append(i)
+        else:
+            stack.pop()
+            if not stack:
+                stack.append(i)   # unmatched ')': new boundary
+            else:
+                best = max(best, i - stack[-1])
+    return best
+```
+
+```java
+public int longestValidParentheses(String s) {
+    Deque<Integer> stack = new ArrayDeque<>();
+    stack.push(-1);  // index just before the current valid run
+    int best = 0;
+    for (int i = 0; i < s.length(); i++) {
+        if (s.charAt(i) == '(') {
+            stack.push(i);
+        } else {
+            stack.pop();
+            if (stack.isEmpty()) stack.push(i);  // unmatched ')': new boundary
+            else best = Math.max(best, i - stack.peek());
+        }
+    }
+    return best;
+}
+```
+
+```cpp
+int longestValidParentheses(const string& s) {
+    stack<int> st;
+    st.push(-1);  // index just before the current valid run
+    int best = 0;
+    for (int i = 0; i < (int)s.size(); i++) {
+        if (s[i] == '(') {
+            st.push(i);
+        } else {
+            st.pop();
+            if (st.empty()) st.push(i);  // unmatched ')': new boundary
+            else best = max(best, i - st.top());
+        }
+    }
+    return best;
+}
+```
+
+```javascript
+function longestValidParentheses(s) {
+  const stack = [-1]; // index just before the current valid run
+  let best = 0;
+  for (let i = 0; i < s.length; i++) {
+    if (s[i] === "(") {
+      stack.push(i);
+    } else {
+      stack.pop();
+      if (stack.length === 0) stack.push(i); // unmatched ')': new boundary
+      else best = Math.max(best, i - stack[stack.length - 1]);
+    }
+  }
+  return best;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(n)" space="O(n)" />
+
+<Callout type="tip" title="O(1) space alternative">
+Scan left to right counting `open` and `close`: when they're equal, record `2 × close`; when `close > open`, reset both. Then scan right to left with the roles swapped, to catch cases like `"(()"`. It's clever, but the stack version is easier to explain and justify.
+</Callout>

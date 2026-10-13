@@ -1,0 +1,111 @@
+---
+title: Longest Repeating Character Replacement
+description: A window is valid when everything except its most common letter can be replaced within k changes.
+---
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/longest-repeating-character-replacement/">
+
+Given a string `s` of uppercase English letters and an integer `k`, you may change any character to any other uppercase letter, at most `k` times. Return the length of the longest substring that can be made of one repeated letter.
+
+**Example:** `s = "AABABBA"`, `k = 1` returns `4`: in the substring `"BABB"`, change the `A` to get `"BBBB"`.
+
+</Problem>
+
+## When is a window valid?
+
+To turn a window into a single repeated letter, the cheapest plan is to keep its **most frequent** letter and change everything else. That needs
+
+```text nocheck
+changes = window length - count of the most frequent letter
+```
+
+So the window is valid exactly when `length - max_count ≤ k`.
+
+## Approach
+
+Use the variable-length window template. Keep a count of each letter in the window and `max_count`, the highest count seen.
+
+1. Add `s[right]` and update `max_count`.
+2. If `length - max_count > k`, the window is invalid: remove `s[left]` and move `left` forward by one.
+3. Record the window length.
+
+### Why `max_count` never has to go down
+
+When `left` moves, the true maximum count in the window might drop, but we don't update `max_count`. That's safe: the answer only improves when we find a window with a **higher** `max_count` than before. A stale, too-high `max_count` might keep a window around that's slightly too long, but it never lets the answer grow past a length we already achieved with a valid window. Because the window only shrinks by one step when invalid, its length never decreases either, so the final `best` is correct.
+
+## Solution
+
+<CodeTabs>
+
+```python
+def character_replacement(s: str, k: int) -> int:
+    counts = [0] * 26
+    left = max_count = best = 0
+    for right, char in enumerate(s):
+        counts[ord(char) - ord("A")] += 1
+        max_count = max(max_count, counts[ord(char) - ord("A")])
+        if (right - left + 1) - max_count > k:   # too many letters to change
+            counts[ord(s[left]) - ord("A")] -= 1
+            left += 1
+        best = max(best, right - left + 1)
+    return best
+```
+
+```java
+public int characterReplacement(String s, int k) {
+    int[] counts = new int[26];
+    int left = 0, maxCount = 0, best = 0;
+    for (int right = 0; right < s.length(); right++) {
+        maxCount = Math.max(maxCount, ++counts[s.charAt(right) - 'A']);
+        if ((right - left + 1) - maxCount > k) {  // too many letters to change
+            counts[s.charAt(left) - 'A']--;
+            left++;
+        }
+        best = Math.max(best, right - left + 1);
+    }
+    return best;
+}
+```
+
+```cpp
+int characterReplacement(const string& s, int k) {
+    int counts[26] = {0};
+    int left = 0, maxCount = 0, best = 0;
+    for (int right = 0; right < (int)s.size(); right++) {
+        maxCount = max(maxCount, ++counts[s[right] - 'A']);
+        if ((right - left + 1) - maxCount > k) {  // too many letters to change
+            counts[s[left] - 'A']--;
+            left++;
+        }
+        best = max(best, right - left + 1);
+    }
+    return best;
+}
+```
+
+```javascript
+function characterReplacement(s, k) {
+  const counts = new Array(26).fill(0);
+  const A = "A".charCodeAt(0);
+  let left = 0;
+  let maxCount = 0;
+  let best = 0;
+  for (let right = 0; right < s.length; right++) {
+    maxCount = Math.max(maxCount, ++counts[s.charCodeAt(right) - A]);
+    if (right - left + 1 - maxCount > k) { // too many letters to change
+      counts[s.charCodeAt(left) - A]--;
+      left++;
+    }
+    best = Math.max(best, right - left + 1);
+  }
+  return best;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(n)" space="O(1), 26 counters" />
+
+<Callout type="interview">
+If the "`max_count` never decreases" trick feels too clever, it's fine to recompute the maximum over the 26 counts each time you shrink. That's `O(26 · n)`, still linear, and much easier to defend in an interview.
+</Callout>

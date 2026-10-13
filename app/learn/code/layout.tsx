@@ -7,7 +7,7 @@ export default function CodeLayout({ children }: { children: React.ReactNode }) 
       <div className="flex gap-10">
         <aside className="hidden w-60 shrink-0 lg:block">
           <div className="sticky top-16 max-h-[calc(100vh-4rem)] overflow-y-auto py-10 pr-2">
-            <Sidebar basePath="/learn/code" sections={codeNavigation} />
+            <Sidebar sections={codeNavigation} />
           </div>
         </aside>
         <main className="min-w-0 flex-1">
@@ -17,7 +17,7 @@ export default function CodeLayout({ children }: { children: React.ReactNode }) 
               Coding patterns menu
             </summary>
             <div className="border-t border-slate-200 p-3 dark:border-slate-800">
-              <Sidebar basePath="/learn/code" sections={codeNavigation} />
+              <Sidebar sections={codeNavigation} />
             </div>
           </details>
           {children}

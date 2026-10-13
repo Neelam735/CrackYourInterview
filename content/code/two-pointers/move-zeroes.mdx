@@ -1,0 +1,82 @@
+---
+title: Move Zeroes
+description: Shift every zero to the end in place with a read pointer and a write pointer.
+---
+
+<Problem difficulty="Easy" link="https://leetcode.com/problems/move-zeroes/">
+
+Given an integer array `nums`, move all `0`s to the end while keeping the relative order of the non-zero elements. Do it **in place**, without making a copy of the array.
+
+**Example:** `nums = [0, 1, 0, 3, 12]` becomes `[1, 3, 12, 0, 0]`.
+
+</Problem>
+
+## Approach
+
+Use two pointers moving in the **same direction**:
+
+- `read` scans every element.
+- `write` marks the position where the next non-zero element belongs.
+
+Whenever `read` finds a non-zero value, swap it into position `write` and advance `write`. Everything before `write` is the non-zero elements in their original order. Everything between `write` and `read` is zeros that have been pushed back.
+
+Swapping (instead of copying and then filling zeros at the end) finishes in a single pass and never overwrites a value you still need.
+
+## Solution
+
+<CodeTabs>
+
+```python
+def move_zeroes(nums: list[int]) -> None:
+    write = 0
+    for read in range(len(nums)):
+        if nums[read] != 0:
+            nums[write], nums[read] = nums[read], nums[write]
+            write += 1
+```
+
+```java
+public void moveZeroes(int[] nums) {
+    int write = 0;
+    for (int read = 0; read < nums.length; read++) {
+        if (nums[read] != 0) {
+            int tmp = nums[write];
+            nums[write] = nums[read];
+            nums[read] = tmp;
+            write++;
+        }
+    }
+}
+```
+
+```cpp
+void moveZeroes(vector<int>& nums) {
+    int write = 0;
+    for (int read = 0; read < (int)nums.size(); read++) {
+        if (nums[read] != 0) {
+            swap(nums[write], nums[read]);
+            write++;
+        }
+    }
+}
+```
+
+```javascript
+function moveZeroes(nums) {
+  let write = 0;
+  for (let read = 0; read < nums.length; read++) {
+    if (nums[read] !== 0) {
+      [nums[write], nums[read]] = [nums[read], nums[write]];
+      write++;
+    }
+  }
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(n)" space="O(1)" />
+
+<Callout type="tip">
+The same read/write template removes duplicates from a sorted array, removes a given value, or filters any array in place. Only the "should I keep this element?" check changes.
+</Callout>

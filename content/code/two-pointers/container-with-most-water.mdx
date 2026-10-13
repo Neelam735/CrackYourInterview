@@ -1,0 +1,98 @@
+---
+title: Container With Most Water
+description: Find two lines that hold the most water by shrinking the container from its shorter side.
+---
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/container-with-most-water/">
+
+You're given an array `height` where `height[i]` is the height of a vertical line at position `i`. Choose two lines that, together with the x-axis, form a container. Return the most water such a container can hold.
+
+**Example:** `height = [1, 8, 6, 2, 5, 4, 8, 3, 7]` returns `49`: the lines at index 1 and 8 give `min(8, 7) × 7 = 49`.
+
+</Problem>
+
+## Brute force
+
+Try every pair of lines and compute `min(height[i], height[j]) × (j - i)`. That's `O(n²)` pairs.
+
+## Approach
+
+Start with the **widest** container: `left = 0`, `right = n - 1`. Its area is limited by the shorter of the two lines.
+
+Now decide which pointer to move. Moving either one makes the container narrower, so the only way to find a bigger area is to find a **taller** limiting line.
+
+- If you move the **taller** line inward, the height is still capped by the shorter line, and the width shrank. The area can only get worse.
+- If you move the **shorter** line inward, you might find a taller line that makes up for the lost width.
+
+So always move the pointer at the shorter line. Every container you skip used that short line with a smaller width, so none of them could beat the one you just measured.
+
+<Visualizer id="container-with-most-water" />
+
+## Solution
+
+<CodeTabs>
+
+```python
+def max_area(height: list[int]) -> int:
+    left, right = 0, len(height) - 1
+    best = 0
+    while left < right:
+        width = right - left
+        best = max(best, min(height[left], height[right]) * width)
+        if height[left] <= height[right]:
+            left += 1
+        else:
+            right -= 1
+    return best
+```
+
+```java
+public int maxArea(int[] height) {
+    int left = 0, right = height.length - 1;
+    int best = 0;
+    while (left < right) {
+        int width = right - left;
+        best = Math.max(best, Math.min(height[left], height[right]) * width);
+        if (height[left] <= height[right]) left++;
+        else right--;
+    }
+    return best;
+}
+```
+
+```cpp
+int maxArea(const vector<int>& height) {
+    int left = 0, right = (int)height.size() - 1;
+    int best = 0;
+    while (left < right) {
+        int width = right - left;
+        best = max(best, min(height[left], height[right]) * width);
+        if (height[left] <= height[right]) left++;
+        else right--;
+    }
+    return best;
+}
+```
+
+```javascript
+function maxArea(height) {
+  let left = 0;
+  let right = height.length - 1;
+  let best = 0;
+  while (left < right) {
+    const width = right - left;
+    best = Math.max(best, Math.min(height[left], height[right]) * width);
+    if (height[left] <= height[right]) left++;
+    else right--;
+  }
+  return best;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(n)" space="O(1)" />
+
+<Callout type="interview">
+Interviewers often ask "how do you know you didn't skip the best answer?" Answer with the argument above: every container you skip uses the shorter line with less width, so it can't hold more water.
+</Callout>

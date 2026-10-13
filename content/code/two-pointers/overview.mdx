@@ -1,0 +1,60 @@
+---
+title: Two Pointers
+description: Use two indices that move toward each other or in the same direction to turn O(n²) pair searches into O(n) scans.
+readingTime: 6 min
+---
+
+## The idea
+
+Many array and string problems ask you to find a pair, compare the two ends of something, or rearrange elements in place. The brute-force approach checks **every pair**, which is `O(n²)`.
+
+The two pointers pattern keeps two indices and moves **one of them per step**, based on what it sees. Each pointer only moves in one direction, so together they take at most `n` steps: `O(n)`.
+
+The key question for every two-pointer solution is: **why is it safe to move this pointer?** You need to be able to say that every pair you skip could never be the answer. When the input is sorted, one comparison usually tells you exactly that.
+
+<Visualizer id="two-sum-sorted" />
+
+## When to use it
+
+- The input is **sorted**, or sorting it doesn't change the answer.
+- You're looking for a **pair or triplet** that meets a condition (a target sum, a maximum area).
+- You need to compare the **two ends** of an array or string (palindromes).
+- You must rearrange an array **in place** with `O(1)` extra space (move zeroes, partitioning).
+
+## The two variants
+
+| Variant | Pointers start at | Each step | Examples |
+|---------|-------------------|-----------|----------|
+| Opposite ends | `0` and `n - 1` | Move the one that can't be part of a better answer | Two Sum (sorted), Container With Most Water, Trapping Rain Water |
+| Same direction | Both near the start | A fast pointer reads, a slow pointer marks where to write | Move Zeroes, Sort Colors, removing duplicates |
+
+### Opposite ends template
+
+```python nocheck
+left, right = 0, len(nums) - 1
+while left < right:
+    if found(nums[left], nums[right]):
+        return ...
+    if need_bigger:
+        left += 1   # nums[left] can't be part of any answer
+    else:
+        right -= 1  # nums[right] can't be part of any answer
+```
+
+### Same direction template
+
+```python nocheck
+write = 0
+for read in range(len(nums)):
+    if keep(nums[read]):
+        nums[write] = nums[read]
+        write += 1
+```
+
+<Callout type="interview">
+Always say *why* moving a pointer is safe, not just *that* you move it. "Every pair using this number is too small, so I can discard it" is the sentence that shows you understand the pattern rather than memorized it.
+</Callout>
+
+## Problems
+
+<ProblemList section="two-pointers" />

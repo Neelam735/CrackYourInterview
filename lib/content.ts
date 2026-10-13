@@ -25,17 +25,9 @@ export type Doc = {
   headings: Heading[];
 };
 
-export function getDocSlugs(track: string): string[] {
-  const dir = path.join(CONTENT_DIR, track);
-  return fs
-    .readdirSync(dir)
-    .filter((file) => file.endsWith(".mdx"))
-    .map((file) => file.replace(/\.mdx$/, ""));
-}
-
 export function getDoc(track: string, slug: string): Doc | null {
-  // Slugs come from the URL, so only allow simple kebab-case names.
-  if (!/^[a-z0-9-]+$/.test(slug)) return null;
+  // Slugs come from the URL, so only allow kebab-case path segments.
+  if (!/^[a-z0-9-]+(\/[a-z0-9-]+)*$/.test(slug)) return null;
   const file = path.join(CONTENT_DIR, track, `${slug}.mdx`);
   if (!fs.existsSync(file)) return null;
 
