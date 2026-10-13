@@ -33,6 +33,27 @@ The site runs without any configuration. To try accounts locally, copy `.env.exa
 
 Accounts only switch on when `AUTH_SECRET` and at least one provider are set. Until then the Sign in button is hidden and progress stays in the browser.
 
+## Deploying to Railway
+
+1. **Create the app service.** In a new Railway project choose *Deploy from GitHub repo* and pick this repo (pick your branch under *Settings → Source* if it isn't the default one). Railway detects Next.js and runs `npm run build` and `npm start`; `next start` listens on the `PORT` Railway provides, so no build or start settings are needed.
+2. **Add Postgres.** In the project canvas: *+ Create → Database → PostgreSQL*.
+3. **Connect the database.** On the app service's *Variables* tab add `DATABASE_URL` = `${{Postgres.DATABASE_URL}}` (a reference to the database service, using its private network).
+4. **Create the table** once from your machine, using the database's *public* URL (Postgres service → *Variables* → `DATABASE_PUBLIC_URL`):
+   ```bash
+   DATABASE_URL="<DATABASE_PUBLIC_URL>" npm run db:push
+   ```
+5. **Get a public URL.** App service → *Settings → Networking → Generate Domain*. You'll get something like `https://<name>.up.railway.app`.
+6. **Create OAuth apps** with that domain:
+   - GitHub callback: `https://<name>.up.railway.app/api/auth/callback/github`
+   - Google redirect URI: `https://<name>.up.railway.app/api/auth/callback/google`
+7. **Set the remaining variables** on the app service:
+   - `AUTH_SECRET` (generate with `npx auth secret`)
+   - `AUTH_TRUST_HOST` = `true` (required off Vercel: Railway's proxy forwards the host, and Auth.js only trusts it automatically on Vercel)
+   - `AUTH_GITHUB_ID` / `AUTH_GITHUB_SECRET` and/or `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET`
+8. **Deploy.** Railway redeploys when variables change, and on every push to the connected branch.
+
+If sign-in fails with `UntrustedHost`, check that `AUTH_TRUST_HOST` is set on the app service (not the database) and that the service was redeployed afterwards. Using a custom domain? Add it under *Networking*, then update the OAuth callback URLs to match.
+
 ## Project structure
 
 ```
