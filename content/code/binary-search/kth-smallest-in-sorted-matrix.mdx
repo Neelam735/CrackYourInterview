@@ -1,0 +1,143 @@
+---
+title: Kth Smallest Element in a Sorted Matrix
+description: Binary search on values, counting how many matrix entries are at most mid with a staircase walk.
+---
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/kth-smallest-element-in-a-sorted-matrix/">
+
+Given an `n × n` matrix where every row and every column is sorted in ascending order, return the `k`th smallest element (counting duplicates).
+
+**Example:** `matrix = [[1, 5, 9], [10, 11, 13], [12, 13, 15]]`, `k = 8` returns `13`.
+
+</Problem>
+
+## Approach: binary search on the value
+
+The matrix isn't one sorted list, so you can't index the `k`th element directly. But you can answer this question quickly: **how many entries are less than or equal to `x`?**
+
+That count grows as `x` grows, so binary search over **values** for the smallest `x` whose count is at least `k`. That `x` is the answer, and it's guaranteed to be an actual matrix entry: the smallest value with count ≥ k must be where the count jumps.
+
+### Counting entries ≤ x in O(n)
+
+Start at the **bottom-left** corner and walk a staircase:
+
+- If `matrix[row][col] <= x`, then everything above it in this column is also `≤ x` (columns are sorted). Add `row + 1` to the count and move **right**.
+- Otherwise this value is too big, and so is everything to its right in this row. Move **up**.
+
+Each step moves up or right, so the walk takes at most `2n` steps.
+
+## Solution
+
+<CodeTabs>
+
+```python
+def kth_smallest(matrix: list[list[int]], k: int) -> int:
+    n = len(matrix)
+
+    def count_at_most(x: int) -> int:
+        count, row, col = 0, n - 1, 0
+        while row >= 0 and col < n:
+            if matrix[row][col] <= x:
+                count += row + 1   # this cell and everything above it
+                col += 1
+            else:
+                row -= 1
+        return count
+
+    lo, hi = matrix[0][0], matrix[n - 1][n - 1]
+    while lo < hi:
+        mid = (lo + hi) // 2
+        if count_at_most(mid) >= k:
+            hi = mid
+        else:
+            lo = mid + 1
+    return lo
+```
+
+```java
+public int kthSmallest(int[][] matrix, int k) {
+    int n = matrix.length;
+    int lo = matrix[0][0], hi = matrix[n - 1][n - 1];
+    while (lo < hi) {
+        int mid = lo + (hi - lo) / 2;
+        if (countAtMost(matrix, mid) >= k) hi = mid;
+        else lo = mid + 1;
+    }
+    return lo;
+}
+
+private int countAtMost(int[][] matrix, int x) {
+    int n = matrix.length, count = 0, row = n - 1, col = 0;
+    while (row >= 0 && col < n) {
+        if (matrix[row][col] <= x) {
+            count += row + 1;  // this cell and everything above it
+            col++;
+        } else {
+            row--;
+        }
+    }
+    return count;
+}
+```
+
+```cpp
+int countAtMost(const vector<vector<int>>& matrix, int x) {
+    int n = matrix.size(), count = 0, row = n - 1, col = 0;
+    while (row >= 0 && col < n) {
+        if (matrix[row][col] <= x) {
+            count += row + 1;  // this cell and everything above it
+            col++;
+        } else {
+            row--;
+        }
+    }
+    return count;
+}
+
+int kthSmallest(const vector<vector<int>>& matrix, int k) {
+    int n = matrix.size();
+    int lo = matrix[0][0], hi = matrix[n - 1][n - 1];
+    while (lo < hi) {
+        int mid = lo + (hi - lo) / 2;
+        if (countAtMost(matrix, mid) >= k) hi = mid;
+        else lo = mid + 1;
+    }
+    return lo;
+}
+```
+
+```javascript
+function kthSmallest(matrix, k) {
+  const n = matrix.length;
+  const countAtMost = (x) => {
+    let count = 0;
+    let row = n - 1;
+    let col = 0;
+    while (row >= 0 && col < n) {
+      if (matrix[row][col] <= x) {
+        count += row + 1; // this cell and everything above it
+        col++;
+      } else {
+        row--;
+      }
+    }
+    return count;
+  };
+  let lo = matrix[0][0];
+  let hi = matrix[n - 1][n - 1];
+  while (lo < hi) {
+    const mid = Math.floor((lo + hi) / 2);
+    if (countAtMost(mid) >= k) hi = mid;
+    else lo = mid + 1;
+  }
+  return lo;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(n log(max - min))" space="O(1)" />
+
+<Callout type="tip" title="Heap alternative">
+Push the first element of each row into a min-heap, then pop `k` times, pushing the next element from the popped element's row each time. That's `O(k log n)`, simpler to explain, and often good enough. See the [Heap](/learn/code/heap/overview) section.
+</Callout>

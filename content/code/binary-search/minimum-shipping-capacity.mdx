@@ -1,0 +1,134 @@
+---
+title: Minimum Shipping Capacity
+description: Binary search the ship's capacity, checking each guess with one greedy pass over the packages.
+---
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/capacity-to-ship-packages-within-d-days/">
+
+Packages must be shipped in the given order, and `weights[i]` is the weight of package `i`. Each day the ship is loaded with packages in order until adding the next one would exceed its capacity. Return the **minimum capacity** that ships everything within `days` days.
+
+**Example:** `weights = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]`, `days = 5` returns `15`: days `[1–5]`, `[6, 7]`, `[8]`, `[9]`, `[10]`.
+
+</Problem>
+
+## Approach: binary search on the answer
+
+Feasibility question: **with capacity `c`, how many days does shipping take?** Simulate it greedily: keep loading packages until the next one won't fit, then start a new day. Bigger capacity never needs more days, so the answer is monotonic.
+
+Search range:
+
+- `lo = max(weights)`: the heaviest package must fit on the ship.
+- `hi = sum(weights)`: everything ships in one day.
+
+Binary search for the smallest capacity whose day count is at most `days`.
+
+## Solution
+
+<CodeTabs>
+
+```python
+def ship_within_days(weights: list[int], days: int) -> int:
+    def days_needed(capacity: int) -> int:
+        needed, load = 1, 0
+        for w in weights:
+            if load + w > capacity:
+                needed += 1      # ship the current load, start a new day
+                load = 0
+            load += w
+        return needed
+
+    lo, hi = max(weights), sum(weights)
+    while lo < hi:
+        mid = (lo + hi) // 2
+        if days_needed(mid) <= days:
+            hi = mid
+        else:
+            lo = mid + 1
+    return lo
+```
+
+```java
+public int shipWithinDays(int[] weights, int days) {
+    int lo = 0, hi = 0;
+    for (int w : weights) {
+        lo = Math.max(lo, w);
+        hi += w;
+    }
+    while (lo < hi) {
+        int mid = lo + (hi - lo) / 2;
+        if (daysNeeded(weights, mid) <= days) hi = mid;
+        else lo = mid + 1;
+    }
+    return lo;
+}
+
+private int daysNeeded(int[] weights, int capacity) {
+    int needed = 1, load = 0;
+    for (int w : weights) {
+        if (load + w > capacity) {
+            needed++;  // ship the current load, start a new day
+            load = 0;
+        }
+        load += w;
+    }
+    return needed;
+}
+```
+
+```cpp
+int daysNeeded(const vector<int>& weights, int capacity) {
+    int needed = 1, load = 0;
+    for (int w : weights) {
+        if (load + w > capacity) {
+            needed++;  // ship the current load, start a new day
+            load = 0;
+        }
+        load += w;
+    }
+    return needed;
+}
+
+int shipWithinDays(const vector<int>& weights, int days) {
+    int lo = *max_element(weights.begin(), weights.end());
+    int hi = accumulate(weights.begin(), weights.end(), 0);
+    while (lo < hi) {
+        int mid = lo + (hi - lo) / 2;
+        if (daysNeeded(weights, mid) <= days) hi = mid;
+        else lo = mid + 1;
+    }
+    return lo;
+}
+```
+
+```javascript
+function shipWithinDays(weights, days) {
+  const daysNeeded = (capacity) => {
+    let needed = 1;
+    let load = 0;
+    for (const w of weights) {
+      if (load + w > capacity) {
+        needed++; // ship the current load, start a new day
+        load = 0;
+      }
+      load += w;
+    }
+    return needed;
+  };
+  let lo = Math.max(...weights);
+  let hi = weights.reduce((a, b) => a + b, 0);
+  while (lo < hi) {
+    const mid = Math.floor((lo + hi) / 2);
+    if (daysNeeded(mid) <= days) hi = mid;
+    else lo = mid + 1;
+  }
+  return lo;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(n log S), S = sum(weights)" space="O(1)" />
+
+<Callout type="interview">
+Explain the bounds before writing the loop: the low end is the heaviest package, the high end is the total weight. Interviewers often probe whether you know why `lo` isn't simply `1`.
+</Callout>

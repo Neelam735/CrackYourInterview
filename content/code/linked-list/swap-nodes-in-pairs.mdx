@@ -1,0 +1,101 @@
+---
+title: Swap Nodes in Pairs
+description: Use a dummy node and rewire three pointers for each pair of adjacent nodes.
+---
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/swap-nodes-in-pairs/">
+
+Given a linked list, swap every two adjacent nodes and return the new head. Swap the nodes themselves, not their values. If the list has an odd length, the last node stays in place.
+
+**Example:** `1 → 2 → 3 → 4` becomes `2 → 1 → 4 → 3`. `1 → 2 → 3` becomes `2 → 1 → 3`.
+
+</Problem>
+
+## Approach
+
+Keep a pointer `prev` to the node **just before** the current pair. Start it at a dummy node, since the first pair has no real node before it.
+
+For each pair `first = prev.next`, `second = first.next`, rewire three links:
+
+```text nocheck
+before:  prev → first → second → rest
+after:   prev → second → first → rest
+```
+
+1. `first.next = second.next` (first now points to the rest)
+2. `second.next = first` (second points back to first)
+3. `prev.next = second` (the node before the pair now points to second)
+
+Then move `prev` to `first`, which is now the second node of the swapped pair, and repeat while a full pair remains.
+
+## Solution
+
+<CodeTabs>
+
+```python
+def swap_pairs(head: ListNode | None) -> ListNode | None:
+    dummy = ListNode(0, head)
+    prev = dummy
+    while prev.next and prev.next.next:
+        first, second = prev.next, prev.next.next
+        first.next = second.next
+        second.next = first
+        prev.next = second
+        prev = first          # first is now the back of the pair
+    return dummy.next
+```
+
+```java
+public ListNode swapPairs(ListNode head) {
+    ListNode dummy = new ListNode(0, head);
+    ListNode prev = dummy;
+    while (prev.next != null && prev.next.next != null) {
+        ListNode first = prev.next, second = prev.next.next;
+        first.next = second.next;
+        second.next = first;
+        prev.next = second;
+        prev = first;  // first is now the back of the pair
+    }
+    return dummy.next;
+}
+```
+
+```cpp
+ListNode* swapPairs(ListNode* head) {
+    ListNode dummy(0, head);
+    ListNode* prev = &dummy;
+    while (prev->next && prev->next->next) {
+        ListNode* first = prev->next;
+        ListNode* second = prev->next->next;
+        first->next = second->next;
+        second->next = first;
+        prev->next = second;
+        prev = first;  // first is now the back of the pair
+    }
+    return dummy.next;
+}
+```
+
+```javascript
+function swapPairs(head) {
+  const dummy = new ListNode(0, head);
+  let prev = dummy;
+  while (prev.next && prev.next.next) {
+    const first = prev.next;
+    const second = prev.next.next;
+    first.next = second.next;
+    second.next = first;
+    prev.next = second;
+    prev = first; // first is now the back of the pair
+  }
+  return dummy.next;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(n)" space="O(1)" />
+
+<Callout type="tip" title="Recursive version">
+`swap(head)`: if fewer than two nodes remain, return `head`. Otherwise let `second = head.next`, set `head.next = swap(second.next)`, then `second.next = head` and return `second`. It's elegant, but uses `O(n)` stack space.
+</Callout>

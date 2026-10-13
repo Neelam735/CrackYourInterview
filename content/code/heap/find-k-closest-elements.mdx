@@ -1,0 +1,88 @@
+---
+title: Find K Closest Elements
+description: Rank numbers by distance to x with value as a tie-breaker, and keep the k best in a max-heap.
+---
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/find-k-closest-elements/">
+
+Given a **sorted** integer array `arr`, and integers `k` and `x`, return the `k` integers in `arr` closest to `x`, sorted in ascending order. Number `a` is closer than `b` if `|a - x| < |b - x|`, or if the distances are equal and `a < b`.
+
+**Example:** `arr = [1, 2, 3, 4, 5]`, `k = 4`, `x = 3` returns `[1, 2, 3, 4]` (5 and 1 tie at distance 2, and 1 wins because it's smaller).
+
+</Problem>
+
+## Approach: max-heap of size k
+
+Rank each number by the pair `(|a - x|, a)`. A smaller pair means closer, and comparing `a` second applies the tie-break rule for free.
+
+Keep a **max-heap** of the `k` best numbers by that pair. When it grows past `k`, pop the **worst** one: the farthest, or on a tie, the larger value. At the end, sort what's left.
+
+## Solution
+
+<CodeTabs>
+
+```python
+import heapq
+
+def find_closest_elements(arr: list[int], k: int, x: int) -> list[int]:
+    heap = []  # max-heap via negation: worst (farthest, then largest) on top
+    for a in arr:
+        heapq.heappush(heap, (-abs(a - x), -a))
+        if len(heap) > k:
+            heapq.heappop(heap)
+    return sorted(-neg_a for _, neg_a in heap)
+```
+
+```java
+public List<Integer> findClosestElements(int[] arr, int k, int x) {
+    // worst element on top: larger distance, or equal distance and larger value
+    PriorityQueue<Integer> heap = new PriorityQueue<>((a, b) -> {
+        int da = Math.abs(a - x), db = Math.abs(b - x);
+        return da != db ? Integer.compare(db, da) : Integer.compare(b, a);
+    });
+    for (int a : arr) {
+        heap.offer(a);
+        if (heap.size() > k) heap.poll();
+    }
+    List<Integer> result = new ArrayList<>(heap);
+    Collections.sort(result);
+    return result;
+}
+```
+
+```cpp
+vector<int> findClosestElements(const vector<int>& arr, int k, int x) {
+    priority_queue<pair<int, int>> heap;  // max-heap of (distance, value): worst on top
+    for (int a : arr) {
+        heap.push({abs(a - x), a});
+        if ((int)heap.size() > k) heap.pop();
+    }
+    vector<int> result;
+    while (!heap.empty()) {
+        result.push_back(heap.top().second);
+        heap.pop();
+    }
+    sort(result.begin(), result.end());
+    return result;
+}
+```
+
+```javascript
+function findClosestElements(arr, k, x) {
+  // worst element on top: larger distance, or equal distance and larger value
+  const heap = new Heap((a, b) => Math.abs(b - x) - Math.abs(a - x) || b - a);
+  for (const a of arr) {
+    heap.push(a);
+    if (heap.size > k) heap.pop();
+  }
+  return heap.items.sort((a, b) => a - b);
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(n log k)" space="O(k)" />
+
+<Callout type="interview" title="Using the sorted input">
+Because `arr` is sorted, the answer is always a **contiguous window** of length `k`. You can binary search for its left edge in `O(log(n - k))`: for a candidate start `mid`, if `x - arr[mid] > arr[mid + k] - x`, the window should move right; otherwise left. Mention this as the optimal follow-up after presenting the heap.
+</Callout>

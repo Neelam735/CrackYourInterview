@@ -1,0 +1,104 @@
+---
+title: Apple Harvest (Koko Eating Bananas)
+description: Binary search over possible speeds for the slowest one that still finishes on time.
+---
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/koko-eating-bananas/">
+
+An orchard has `n` apple trees, and `apples[i]` is the number of apples on tree `i`. Each hour you pick one tree and harvest up to `k` apples from it. If a tree has fewer than `k` apples left, you finish it and wait out the rest of that hour. Return the **minimum** rate `k` that lets you harvest every tree within `h` hours.
+
+**Example:** `apples = [3, 6, 7, 11]`, `h = 8` returns `4`. At rate 4 the trees take 1 + 2 + 2 + 3 = 8 hours.
+
+This is the same problem as LeetCode's Koko Eating Bananas.
+
+</Problem>
+
+## Brute force
+
+Try `k = 1, 2, 3, …` until one finishes in time. The answer can be as large as `max(apples)`, so this is `O(n · max)`.
+
+## Approach: binary search on the answer
+
+Ask a yes/no question about a rate: **can we finish within `h` hours at rate `k`?** Each tree takes `ceil(apples[i] / k)` hours, so add those up and compare with `h`.
+
+The answer is monotonic: if rate `k` is fast enough, every faster rate is too. So binary search for the **first** rate that works:
+
+- `lo = 1`: the slowest possible rate.
+- `hi = max(apples)`: at this rate every tree takes exactly one hour, the fastest any rate can be.
+
+## Solution
+
+<CodeTabs>
+
+```python
+def min_harvest_rate(apples: list[int], h: int) -> int:
+    def can_finish(k: int) -> bool:
+        return sum((a + k - 1) // k for a in apples) <= h   # ceil(a / k) hours per tree
+
+    lo, hi = 1, max(apples)
+    while lo < hi:
+        mid = (lo + hi) // 2
+        if can_finish(mid):
+            hi = mid        # mid works; maybe something slower does too
+        else:
+            lo = mid + 1    # mid is too slow
+    return lo
+```
+
+```java
+public int minHarvestRate(int[] apples, int h) {
+    int lo = 1, hi = Arrays.stream(apples).max().getAsInt();
+    while (lo < hi) {
+        int mid = lo + (hi - lo) / 2;
+        if (canFinish(apples, h, mid)) hi = mid;  // mid works; maybe slower does too
+        else lo = mid + 1;                        // mid is too slow
+    }
+    return lo;
+}
+
+private boolean canFinish(int[] apples, int h, int k) {
+    long hours = 0;
+    for (int a : apples) hours += (a + k - 1) / k;  // ceil(a / k)
+    return hours <= h;
+}
+```
+
+```cpp
+bool canFinish(const vector<int>& apples, int h, int k) {
+    long long hours = 0;
+    for (int a : apples) hours += (a + k - 1) / k;  // ceil(a / k)
+    return hours <= h;
+}
+
+int minHarvestRate(const vector<int>& apples, int h) {
+    int lo = 1, hi = *max_element(apples.begin(), apples.end());
+    while (lo < hi) {
+        int mid = lo + (hi - lo) / 2;
+        if (canFinish(apples, h, mid)) hi = mid;  // mid works; maybe slower does too
+        else lo = mid + 1;                        // mid is too slow
+    }
+    return lo;
+}
+```
+
+```javascript
+function minHarvestRate(apples, h) {
+  const canFinish = (k) => apples.reduce((hours, a) => hours + Math.ceil(a / k), 0) <= h;
+  let lo = 1;
+  let hi = Math.max(...apples);
+  while (lo < hi) {
+    const mid = Math.floor((lo + hi) / 2);
+    if (canFinish(mid)) hi = mid; // mid works; maybe slower does too
+    else lo = mid + 1;            // mid is too slow
+  }
+  return lo;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(n log m), m = max(apples)" space="O(1)" />
+
+<Callout type="tip">
+`(a + k - 1) // k` is integer ceiling division. It avoids floating-point rounding issues with `math.ceil(a / k)` when the numbers are large.
+</Callout>

@@ -1,0 +1,81 @@
+---
+title: Kth Largest Element in an Array
+description: Keep a min-heap of the k largest numbers seen so far; its root is the answer.
+---
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/kth-largest-element-in-an-array/">
+
+Given an integer array `nums` and an integer `k`, return the `k`th largest element (in sorted order, not the `k`th distinct element).
+
+**Example:** `nums = [3, 2, 1, 5, 6, 4]`, `k = 2` returns `5`.
+
+</Problem>
+
+## Brute force
+
+Sort and return `nums[n - k]`: `O(n log n)`.
+
+## Approach: min-heap of size k
+
+Keep a **min-heap** holding the `k` largest numbers seen so far. Push each number; if the heap grows past `k`, pop the smallest, since it can't be among the `k` largest. After the scan, the root is the smallest of the `k` largest: the `k`th largest.
+
+It sounds backwards to use a *min*-heap to find *large* numbers, but the heap's job is to throw away small numbers quickly.
+
+<Visualizer id="kth-largest" />
+
+## Solution
+
+<CodeTabs>
+
+```python
+import heapq
+
+def find_kth_largest(nums: list[int], k: int) -> int:
+    heap = []  # min-heap of the k largest so far
+    for num in nums:
+        heapq.heappush(heap, num)
+        if len(heap) > k:
+            heapq.heappop(heap)  # drop the smallest
+    return heap[0]
+```
+
+```java
+public int findKthLargest(int[] nums, int k) {
+    PriorityQueue<Integer> heap = new PriorityQueue<>();  // min-heap of the k largest so far
+    for (int num : nums) {
+        heap.offer(num);
+        if (heap.size() > k) heap.poll();  // drop the smallest
+    }
+    return heap.peek();
+}
+```
+
+```cpp
+int findKthLargest(const vector<int>& nums, int k) {
+    priority_queue<int, vector<int>, greater<int>> heap;  // min-heap of the k largest so far
+    for (int num : nums) {
+        heap.push(num);
+        if ((int)heap.size() > k) heap.pop();  // drop the smallest
+    }
+    return heap.top();
+}
+```
+
+```javascript
+function findKthLargest(nums, k) {
+  const heap = new Heap(); // min-heap of the k largest so far
+  for (const num of nums) {
+    heap.push(num);
+    if (heap.size > k) heap.pop(); // drop the smallest
+  }
+  return heap.peek();
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(n log k)" space="O(k)" />
+
+<Callout type="interview">
+Mention the alternatives: sorting is `O(n log n)`; **quickselect** is `O(n)` on average but `O(n²)` in the worst case. The heap is the simple, reliable choice unless the interviewer specifically asks for linear time.
+</Callout>

@@ -1,0 +1,82 @@
+---
+title: Linked List
+description: Pointer manipulation techniques that solve most linked list questions, from dummy nodes to fast and slow pointers.
+readingTime: 8 min
+---
+
+## The idea
+
+A linked list is a chain of nodes where each node stores a value and a pointer to the next node. You can't jump to the middle like you can with an array: reaching node `k` takes `k` steps. Most linked list questions are really about **rewiring pointers carefully** without losing track of any part of the list.
+
+<CodeTabs>
+
+```python nocheck
+class ListNode:
+    def __init__(self, val=0, next=None):
+        self.val = val
+        self.next = next
+```
+
+```java nocheck
+class ListNode {
+    int val;
+    ListNode next;
+    ListNode(int val) { this.val = val; }
+}
+```
+
+```cpp nocheck
+struct ListNode {
+    int val;
+    ListNode* next;
+    ListNode(int v) : val(v), next(nullptr) {}
+};
+```
+
+```javascript nocheck
+class ListNode {
+  constructor(val = 0, next = null) {
+    this.val = val;
+    this.next = next;
+  }
+}
+```
+
+</CodeTabs>
+
+All solutions in this section use this `ListNode` definition.
+
+## Technique 1: fast and slow pointers
+
+Move two pointers at different speeds: `slow` one step at a time, `fast` two steps. This is also called **Floyd's tortoise and hare**.
+
+- **Find the middle:** when `fast` reaches the end, `slow` is halfway.
+- **Detect a cycle:** in a cycle, `fast` gains one node on `slow` per step, so they must meet.
+- **Find the kth node from the end:** give one pointer a head start of `k` nodes, then move both together.
+
+<Visualizer id="middle-of-list" />
+
+## Technique 2: reversing a list
+
+Reversing in place comes up constantly, often as one step of a larger problem. Walk the list, pointing each node back at the previous one:
+
+```python nocheck
+prev, curr = None, head
+while curr:
+    nxt = curr.next     # save the rest of the list
+    curr.next = prev    # point this node backwards
+    prev, curr = curr, nxt
+return prev             # new head
+```
+
+## Technique 3: the dummy node
+
+When the head itself might be removed or replaced, create a **dummy node** that points to the head. Then every real node, including the first, has a node before it, so you don't need special cases. Return `dummy.next` at the end.
+
+<Callout type="interview">
+Draw the list and the pointers before writing code, and say out loud which pointer you save before you overwrite it. Losing the rest of the list by overwriting `curr.next` too early is the most common linked list bug.
+</Callout>
+
+## Problems
+
+<ProblemList section="linked-list" />

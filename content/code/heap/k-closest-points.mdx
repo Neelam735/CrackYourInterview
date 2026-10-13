@@ -1,0 +1,86 @@
+---
+title: K Closest Points to Origin
+description: Keep a max-heap of the k closest points by squared distance, evicting the farthest when it overflows.
+---
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/k-closest-points-to-origin/">
+
+Given an array of `points` where `points[i] = [x, y]`, return the `k` points closest to the origin `(0, 0)`, in any order. Distance is the usual Euclidean distance.
+
+**Example:** `points = [[3, 3], [5, -1], [-2, 4]]`, `k = 2` returns `[[3, 3], [-2, 4]]`.
+
+</Problem>
+
+## Approach
+
+This is "top k" again, but for the **smallest** distances. Flip the size-k trick: keep a **max**-heap of the `k` closest points seen so far, keyed by distance. When it grows past `k`, pop the **farthest**, since it can't be among the `k` closest.
+
+Compare **squared** distances, `x² + y²`. Squaring preserves the order and avoids slow, imprecise square roots.
+
+In Python, `heapq` is a min-heap, so push `-distance` to make it behave like a max-heap.
+
+## Solution
+
+<CodeTabs>
+
+```python
+import heapq
+
+def k_closest(points: list[list[int]], k: int) -> list[list[int]]:
+    heap = []  # max-heap via negated distances: (-dist, x, y)
+    for x, y in points:
+        heapq.heappush(heap, (-(x * x + y * y), x, y))
+        if len(heap) > k:
+            heapq.heappop(heap)  # drop the farthest
+    return [[x, y] for _, x, y in heap]
+```
+
+```java
+public int[][] kClosest(int[][] points, int k) {
+    // max-heap by squared distance: farthest point on top
+    PriorityQueue<int[]> heap = new PriorityQueue<>(
+        (a, b) -> Integer.compare(b[0] * b[0] + b[1] * b[1], a[0] * a[0] + a[1] * a[1]));
+    for (int[] p : points) {
+        heap.offer(p);
+        if (heap.size() > k) heap.poll();  // drop the farthest
+    }
+    return heap.toArray(new int[0][]);
+}
+```
+
+```cpp
+vector<vector<int>> kClosest(const vector<vector<int>>& points, int k) {
+    priority_queue<pair<int, int>> heap;  // max-heap of (squared distance, index)
+    for (int i = 0; i < (int)points.size(); i++) {
+        int d = points[i][0] * points[i][0] + points[i][1] * points[i][1];
+        heap.push({d, i});
+        if ((int)heap.size() > k) heap.pop();  // drop the farthest
+    }
+    vector<vector<int>> result;
+    while (!heap.empty()) {
+        result.push_back(points[heap.top().second]);
+        heap.pop();
+    }
+    return result;
+}
+```
+
+```javascript
+function kClosest(points, k) {
+  const dist = ([x, y]) => x * x + y * y;
+  const heap = new Heap((a, b) => dist(b) - dist(a)); // farthest point on top
+  for (const p of points) {
+    heap.push(p);
+    if (heap.size > k) heap.pop(); // drop the farthest
+  }
+  return heap.items;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(n log k)" space="O(k)" />
+
+<Callout type="tip">
+"Closest" means you throw away the **largest** distances, so you need a **max**-heap. A good habit: decide which items you're evicting, then put those on top.
+</Callout>

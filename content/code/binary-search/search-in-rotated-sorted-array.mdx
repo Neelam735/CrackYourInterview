@@ -1,0 +1,108 @@
+---
+title: Search in Rotated Sorted Array
+description: At least one half around mid is always sorted; check whether the target lies in it to decide where to go.
+---
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/search-in-rotated-sorted-array/">
+
+A sorted array of distinct integers was rotated at an unknown pivot, so `[0, 1, 2, 4, 5, 6, 7]` might have become `[4, 5, 6, 7, 0, 1, 2]`. Given `target`, return its index or `-1`, in `O(log n)` time.
+
+**Example:** `nums = [4, 5, 6, 7, 0, 1, 2]`, `target = 0` returns `4`.
+
+</Problem>
+
+## Approach
+
+A rotated array is two sorted runs glued together. Split it at `mid`, and **at least one of the two halves is still fully sorted**. Tell which by comparing the ends:
+
+- If `nums[lo] <= nums[mid]`, the **left half** `[lo, mid]` is sorted.
+- Otherwise, the **right half** `[mid, hi]` is sorted.
+
+In a sorted half you can check for the target with a range test. If the target is inside that range, search there; otherwise it must be in the other half.
+
+## Solution
+
+<CodeTabs>
+
+```python
+def search_rotated(nums: list[int], target: int) -> int:
+    lo, hi = 0, len(nums) - 1
+    while lo <= hi:
+        mid = (lo + hi) // 2
+        if nums[mid] == target:
+            return mid
+        if nums[lo] <= nums[mid]:                  # left half is sorted
+            if nums[lo] <= target < nums[mid]:
+                hi = mid - 1
+            else:
+                lo = mid + 1
+        else:                                      # right half is sorted
+            if nums[mid] < target <= nums[hi]:
+                lo = mid + 1
+            else:
+                hi = mid - 1
+    return -1
+```
+
+```java
+public int searchRotated(int[] nums, int target) {
+    int lo = 0, hi = nums.length - 1;
+    while (lo <= hi) {
+        int mid = lo + (hi - lo) / 2;
+        if (nums[mid] == target) return mid;
+        if (nums[lo] <= nums[mid]) {                    // left half is sorted
+            if (nums[lo] <= target && target < nums[mid]) hi = mid - 1;
+            else lo = mid + 1;
+        } else {                                        // right half is sorted
+            if (nums[mid] < target && target <= nums[hi]) lo = mid + 1;
+            else hi = mid - 1;
+        }
+    }
+    return -1;
+}
+```
+
+```cpp
+int searchRotated(const vector<int>& nums, int target) {
+    int lo = 0, hi = (int)nums.size() - 1;
+    while (lo <= hi) {
+        int mid = lo + (hi - lo) / 2;
+        if (nums[mid] == target) return mid;
+        if (nums[lo] <= nums[mid]) {                    // left half is sorted
+            if (nums[lo] <= target && target < nums[mid]) hi = mid - 1;
+            else lo = mid + 1;
+        } else {                                        // right half is sorted
+            if (nums[mid] < target && target <= nums[hi]) lo = mid + 1;
+            else hi = mid - 1;
+        }
+    }
+    return -1;
+}
+```
+
+```javascript
+function searchRotated(nums, target) {
+  let lo = 0;
+  let hi = nums.length - 1;
+  while (lo <= hi) {
+    const mid = Math.floor((lo + hi) / 2);
+    if (nums[mid] === target) return mid;
+    if (nums[lo] <= nums[mid]) {                   // left half is sorted
+      if (nums[lo] <= target && target < nums[mid]) hi = mid - 1;
+      else lo = mid + 1;
+    } else {                                       // right half is sorted
+      if (nums[mid] < target && target <= nums[hi]) lo = mid + 1;
+      else hi = mid - 1;
+    }
+  }
+  return -1;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(log n)" space="O(1)" />
+
+<Callout type="warning">
+The `<=` in `nums[lo] <= nums[mid]` matters. When the range has two elements, `lo == mid`, and that half (a single element) counts as sorted. With `<`, the code would look in the wrong half.
+</Callout>

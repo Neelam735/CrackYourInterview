@@ -1,0 +1,90 @@
+---
+title: Remove Nth Node From End of List
+description: Give one pointer an n-step head start so the other stops right before the node to remove.
+---
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/remove-nth-node-from-end-of-list/">
+
+Given the `head` of a linked list, remove the `n`th node from the **end** of the list and return its head. Try to do it in one pass.
+
+**Example:** `1 → 2 → 3 → 4 → 5`, `n = 2` returns `1 → 2 → 3 → 5`.
+
+</Problem>
+
+## Approach
+
+The two-pass solution counts the length `L` first, then walks to node `L - n`. To do it in one pass, use **two pointers with a gap of `n` nodes**:
+
+1. Start both pointers at a **dummy node** placed before `head`. The dummy handles the case where the head itself is removed.
+2. Move `fast` forward `n` steps.
+3. Move both pointers together until `fast` is on the last node. Now `slow` is just **before** the node to remove.
+4. Skip it: `slow.next = slow.next.next`.
+
+## Solution
+
+<CodeTabs>
+
+```python
+def remove_nth_from_end(head: ListNode | None, n: int) -> ListNode | None:
+    dummy = ListNode(0, head)
+    slow = fast = dummy
+    for _ in range(n):
+        fast = fast.next          # head start of n nodes
+    while fast.next:
+        slow = slow.next
+        fast = fast.next
+    slow.next = slow.next.next    # slow is just before the target
+    return dummy.next
+```
+
+```java
+public ListNode removeNthFromEnd(ListNode head, int n) {
+    ListNode dummy = new ListNode(0, head);
+    ListNode slow = dummy, fast = dummy;
+    for (int i = 0; i < n; i++) fast = fast.next;  // head start of n nodes
+    while (fast.next != null) {
+        slow = slow.next;
+        fast = fast.next;
+    }
+    slow.next = slow.next.next;                    // slow is just before the target
+    return dummy.next;
+}
+```
+
+```cpp
+ListNode* removeNthFromEnd(ListNode* head, int n) {
+    ListNode dummy(0, head);
+    ListNode* slow = &dummy;
+    ListNode* fast = &dummy;
+    for (int i = 0; i < n; i++) fast = fast->next;  // head start of n nodes
+    while (fast->next) {
+        slow = slow->next;
+        fast = fast->next;
+    }
+    slow->next = slow->next->next;                  // slow is just before the target
+    return dummy.next;
+}
+```
+
+```javascript
+function removeNthFromEnd(head, n) {
+  const dummy = new ListNode(0, head);
+  let slow = dummy;
+  let fast = dummy;
+  for (let i = 0; i < n; i++) fast = fast.next; // head start of n nodes
+  while (fast.next) {
+    slow = slow.next;
+    fast = fast.next;
+  }
+  slow.next = slow.next.next;                   // slow is just before the target
+  return dummy.next;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(L)" space="O(1)" />
+
+<Callout type="tip">
+Without the dummy node, removing the first node (`n` equal to the list length) needs a special case. The dummy gives every real node a predecessor, so the same line works for all of them.
+</Callout>

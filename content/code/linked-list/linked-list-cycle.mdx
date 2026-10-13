@@ -1,0 +1,83 @@
+---
+title: Linked List Cycle
+description: Move a fast pointer two steps for every one step of a slow pointer; they meet only if the list loops.
+---
+
+<Problem difficulty="Easy" link="https://leetcode.com/problems/linked-list-cycle/">
+
+Given the `head` of a linked list, return `True` if the list has a cycle: some node's `next` pointer leads back to an earlier node, so following `next` never reaches the end.
+
+**Example:** `3 → 2 → 0 → -4`, with `-4` pointing back to `2`, returns `True`.
+
+</Problem>
+
+## Approach
+
+A hash set of visited nodes works, but it uses `O(n)` space. The two-pointer version needs `O(1)`:
+
+- `slow` moves one step at a time, `fast` moves two.
+- If there's no cycle, `fast` reaches the end (`null`) and we return `False`.
+- If there is a cycle, both pointers end up inside it. From then on `fast` gains exactly **one node** on `slow` with every step, so the gap shrinks by one each time until it's zero: they meet. They can't jump past each other.
+
+<Visualizer id="linked-list-cycle" />
+
+## Solution
+
+<CodeTabs>
+
+```python
+def has_cycle(head: ListNode | None) -> bool:
+    slow = fast = head
+    while fast and fast.next:
+        slow = slow.next
+        fast = fast.next.next
+        if slow is fast:
+            return True
+    return False
+```
+
+```java
+public boolean hasCycle(ListNode head) {
+    ListNode slow = head, fast = head;
+    while (fast != null && fast.next != null) {
+        slow = slow.next;
+        fast = fast.next.next;
+        if (slow == fast) return true;
+    }
+    return false;
+}
+```
+
+```cpp
+bool hasCycle(ListNode* head) {
+    ListNode* slow = head;
+    ListNode* fast = head;
+    while (fast && fast->next) {
+        slow = slow->next;
+        fast = fast->next->next;
+        if (slow == fast) return true;
+    }
+    return false;
+}
+```
+
+```javascript
+function hasCycle(head) {
+  let slow = head;
+  let fast = head;
+  while (fast && fast.next) {
+    slow = slow.next;
+    fast = fast.next.next;
+    if (slow === fast) return true;
+  }
+  return false;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(n)" space="O(1)" />
+
+<Callout type="tip" title="Follow-up: where does the cycle start?">
+After the pointers meet, move one of them back to `head` and advance both **one** step at a time. They meet again exactly at the first node of the cycle ([Linked List Cycle II](https://leetcode.com/problems/linked-list-cycle-ii/)).
+</Callout>

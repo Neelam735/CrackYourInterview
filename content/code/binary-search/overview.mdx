@@ -1,0 +1,111 @@
+---
+title: Binary Search
+description: Halve the search space on every step, on sorted arrays and on any yes/no question whose answer flips once.
+readingTime: 8 min
+---
+
+## The idea
+
+If an array is sorted, one comparison with the **middle** element tells you which half can't contain the answer. Throw that half away and repeat. Each step halves the range, so a million elements take about 20 steps: `O(log n)`.
+
+<Visualizer id="binary-search" />
+
+## Template 1: find an exact value
+
+Keep the range `[lo, hi]` where the target could still be, **inclusive** on both ends.
+
+<CodeTabs>
+
+```python
+def search(nums: list[int], target: int) -> int:
+    lo, hi = 0, len(nums) - 1
+    while lo <= hi:
+        mid = (lo + hi) // 2
+        if nums[mid] == target:
+            return mid
+        if nums[mid] < target:
+            lo = mid + 1   # target is to the right
+        else:
+            hi = mid - 1   # target is to the left
+    return -1
+```
+
+```java
+public int search(int[] nums, int target) {
+    int lo = 0, hi = nums.length - 1;
+    while (lo <= hi) {
+        int mid = lo + (hi - lo) / 2;  // avoids int overflow
+        if (nums[mid] == target) return mid;
+        if (nums[mid] < target) lo = mid + 1;  // target is to the right
+        else hi = mid - 1;                     // target is to the left
+    }
+    return -1;
+}
+```
+
+```cpp
+int search(const vector<int>& nums, int target) {
+    int lo = 0, hi = (int)nums.size() - 1;
+    while (lo <= hi) {
+        int mid = lo + (hi - lo) / 2;  // avoids int overflow
+        if (nums[mid] == target) return mid;
+        if (nums[mid] < target) lo = mid + 1;  // target is to the right
+        else hi = mid - 1;                     // target is to the left
+    }
+    return -1;
+}
+```
+
+```javascript
+function search(nums, target) {
+  let lo = 0;
+  let hi = nums.length - 1;
+  while (lo <= hi) {
+    const mid = Math.floor((lo + hi) / 2);
+    if (nums[mid] === target) return mid;
+    if (nums[mid] < target) lo = mid + 1; // target is to the right
+    else hi = mid - 1;                    // target is to the left
+  }
+  return -1;
+}
+```
+
+</CodeTabs>
+
+## Template 2: binary search on the answer
+
+Binary search isn't only for sorted arrays. It works whenever you can ask a **yes/no question about a candidate answer `x`** whose result is **monotonic**: false, false, …, false, true, true, …, true. Binary search finds the first `true`.
+
+> "What's the **minimum** speed / capacity / largest sum such that the task is still possible?"
+
+If speed `x` is fast enough, every faster speed is too. So the answers line up as `false … false true … true`, and you want the first `true`:
+
+```python nocheck
+lo, hi = smallest possible answer, largest possible answer
+while lo < hi:
+    mid = (lo + hi) // 2
+    if feasible(mid):
+        hi = mid          # mid works; maybe something smaller does too
+    else:
+        lo = mid + 1      # mid fails; the answer is bigger
+return lo
+```
+
+Each `feasible` check usually costs `O(n)`, so the total is `O(n log(range))`.
+
+## Avoiding off-by-one bugs
+
+| Template | Loop | Moves | Ends with |
+|----------|------|-------|-----------|
+| Exact value | `while lo <= hi` | `lo = mid + 1`, `hi = mid - 1` | `lo > hi` (not found) |
+| First true | `while lo < hi` | `hi = mid`, `lo = mid + 1` | `lo == hi` (the answer) |
+
+Pick one template per problem and don't mix their update rules. Mixing them is how infinite loops happen.
+
+<Callout type="warning">
+In Java and C++, `(lo + hi) / 2` can overflow when both are large. Write `lo + (hi - lo) / 2` instead.
+</Callout>
+
+## Problems
+
+<ProblemList section="binary-search" />

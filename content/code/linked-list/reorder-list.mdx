@@ -1,0 +1,148 @@
+---
+title: Reorder List
+description: Split the list in half, reverse the second half, then weave the two halves together.
+---
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/reorder-list/">
+
+Given a list `L0 → L1 → … → Ln-1 → Ln`, reorder it **in place** to `L0 → Ln → L1 → Ln-1 → L2 → Ln-2 → …`. Change the nodes' links, not their values.
+
+**Example:** `1 → 2 → 3 → 4 → 5` becomes `1 → 5 → 2 → 4 → 3`.
+
+</Problem>
+
+## Approach
+
+The reordered list alternates between the **front** of the list and the **back**, walking inward. You can't walk a singly linked list backwards, so make the back half walkable from the end. It takes three steps, each a standard technique:
+
+1. **Find the middle** with fast and slow pointers, and cut the list into two halves.
+2. **Reverse the second half**, so its first node is the original last node.
+3. **Merge** the halves by alternating nodes: one from the first half, one from the reversed second half.
+
+For `1 → 2 → 3 → 4 → 5`: the halves are `1 → 2 → 3` and `4 → 5`; reversed, the second is `5 → 4`; weaving gives `1 → 5 → 2 → 4 → 3`.
+
+## Solution
+
+<CodeTabs>
+
+```python
+def reorder_list(head: ListNode | None) -> None:
+    if not head or not head.next:
+        return
+    # 1. find the middle and cut the list
+    slow, fast = head, head.next
+    while fast and fast.next:
+        slow = slow.next
+        fast = fast.next.next
+    second, slow.next = slow.next, None
+    # 2. reverse the second half
+    prev = None
+    while second:
+        second.next, prev, second = prev, second, second.next
+    # 3. weave the halves together
+    first, second = head, prev
+    while second:
+        first_next, second_next = first.next, second.next
+        first.next = second
+        second.next = first_next
+        first, second = first_next, second_next
+```
+
+```java
+public void reorderList(ListNode head) {
+    if (head == null || head.next == null) return;
+    ListNode slow = head, fast = head.next;
+    while (fast != null && fast.next != null) {  // 1. find the middle
+        slow = slow.next;
+        fast = fast.next.next;
+    }
+    ListNode second = slow.next;
+    slow.next = null;                            // cut the list
+    ListNode prev = null;
+    while (second != null) {                     // 2. reverse the second half
+        ListNode next = second.next;
+        second.next = prev;
+        prev = second;
+        second = next;
+    }
+    ListNode first = head;
+    second = prev;
+    while (second != null) {                     // 3. weave the halves together
+        ListNode firstNext = first.next, secondNext = second.next;
+        first.next = second;
+        second.next = firstNext;
+        first = firstNext;
+        second = secondNext;
+    }
+}
+```
+
+```cpp
+void reorderList(ListNode* head) {
+    if (!head || !head->next) return;
+    ListNode* slow = head;
+    ListNode* fast = head->next;
+    while (fast && fast->next) {  // 1. find the middle
+        slow = slow->next;
+        fast = fast->next->next;
+    }
+    ListNode* second = slow->next;
+    slow->next = nullptr;         // cut the list
+    ListNode* prev = nullptr;
+    while (second) {              // 2. reverse the second half
+        ListNode* next = second->next;
+        second->next = prev;
+        prev = second;
+        second = next;
+    }
+    ListNode* first = head;
+    second = prev;
+    while (second) {              // 3. weave the halves together
+        ListNode* firstNext = first->next;
+        ListNode* secondNext = second->next;
+        first->next = second;
+        second->next = firstNext;
+        first = firstNext;
+        second = secondNext;
+    }
+}
+```
+
+```javascript
+function reorderList(head) {
+  if (!head || !head.next) return;
+  let slow = head;
+  let fast = head.next;
+  while (fast && fast.next) { // 1. find the middle
+    slow = slow.next;
+    fast = fast.next.next;
+  }
+  let second = slow.next;
+  slow.next = null;           // cut the list
+  let prev = null;
+  while (second) {            // 2. reverse the second half
+    const next = second.next;
+    second.next = prev;
+    prev = second;
+    second = next;
+  }
+  let first = head;
+  second = prev;
+  while (second) {            // 3. weave the halves together
+    const firstNext = first.next;
+    const secondNext = second.next;
+    first.next = second;
+    second.next = firstNext;
+    first = firstNext;
+    second = secondNext;
+  }
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(n)" space="O(1)" />
+
+<Callout type="interview">
+Present it as three small, separately testable helpers: middle, reverse, merge. Interviewers like seeing a hard-looking problem broken into pieces you already know.
+</Callout>

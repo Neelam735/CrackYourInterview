@@ -1,0 +1,102 @@
+---
+title: Merge K Sorted Lists
+description: Keep the current head of every list in a min-heap and repeatedly take the smallest.
+---
+
+<Problem difficulty="Hard" link="https://leetcode.com/problems/merge-k-sorted-lists/">
+
+You're given an array of `k` linked lists, each sorted in ascending order. Merge them into one sorted linked list and return its head.
+
+**Example:** `[1 → 4 → 5, 1 → 3 → 4, 2 → 6]` becomes `1 → 1 → 2 → 3 → 4 → 4 → 5 → 6`.
+
+</Problem>
+
+## Approach
+
+The next node of the merged list is always the **smallest of the current heads** of the `k` lists. Scanning all `k` heads each time costs `O(k)` per node. A min-heap finds the smallest in `O(log k)`:
+
+1. Push the head of every non-empty list into a min-heap, keyed by value.
+2. Pop the smallest node and append it to the result.
+3. If that node has a `next`, push it: it's now the head of its list.
+4. Repeat until the heap is empty.
+
+The heap never holds more than `k` nodes, one per list.
+
+## Solution
+
+<CodeTabs>
+
+```python
+import heapq
+
+def merge_k_lists(lists: list[ListNode | None]) -> ListNode | None:
+    heap = []  # (value, list index, node); the index breaks ties between equal values
+    for i, node in enumerate(lists):
+        if node:
+            heapq.heappush(heap, (node.val, i, node))
+    dummy = tail = ListNode(0)
+    while heap:
+        _, i, node = heapq.heappop(heap)
+        tail.next = node
+        tail = node
+        if node.next:
+            heapq.heappush(heap, (node.next.val, i, node.next))
+    return dummy.next
+```
+
+```java
+public ListNode mergeKLists(ListNode[] lists) {
+    PriorityQueue<ListNode> heap = new PriorityQueue<>((a, b) -> Integer.compare(a.val, b.val));
+    for (ListNode node : lists) if (node != null) heap.offer(node);
+    ListNode dummy = new ListNode(0), tail = dummy;
+    while (!heap.isEmpty()) {
+        ListNode node = heap.poll();
+        tail.next = node;
+        tail = node;
+        if (node.next != null) heap.offer(node.next);
+    }
+    return dummy.next;
+}
+```
+
+```cpp
+ListNode* mergeKLists(const vector<ListNode*>& lists) {
+    auto cmp = [](ListNode* a, ListNode* b) { return a->val > b->val; };  // min-heap by value
+    priority_queue<ListNode*, vector<ListNode*>, decltype(cmp)> heap(cmp);
+    for (ListNode* node : lists) if (node) heap.push(node);
+    ListNode dummy(0);
+    ListNode* tail = &dummy;
+    while (!heap.empty()) {
+        ListNode* node = heap.top();
+        heap.pop();
+        tail->next = node;
+        tail = node;
+        if (node->next) heap.push(node->next);
+    }
+    return dummy.next;
+}
+```
+
+```javascript
+function mergeKLists(lists) {
+  const heap = new Heap((a, b) => a.val - b.val);
+  for (const node of lists) if (node) heap.push(node);
+  const dummy = new ListNode(0);
+  let tail = dummy;
+  while (heap.size > 0) {
+    const node = heap.pop();
+    tail.next = node;
+    tail = node;
+    if (node.next) heap.push(node.next);
+  }
+  return dummy.next;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(N log k), N = total nodes" space="O(k)" />
+
+<Callout type="warning" title="Python tie-breaking">
+`ListNode` objects can't be compared with `<`. If two heap entries have the same value, Python compares the next tuple element. Putting the list index there means it never reaches the nodes.
+</Callout>

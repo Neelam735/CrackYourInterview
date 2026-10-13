@@ -1,0 +1,138 @@
+---
+title: Split Array Largest Sum
+description: Binary search the largest allowed piece sum, using a greedy pass to check whether k pieces are enough.
+---
+
+<Problem difficulty="Hard" link="https://leetcode.com/problems/split-array-largest-sum/">
+
+Given an array of non-negative integers `nums` and an integer `k`, split `nums` into `k` non-empty contiguous subarrays so that the **largest** subarray sum is as small as possible. Return that minimized largest sum.
+
+**Example:** `nums = [7, 2, 5, 10, 8]`, `k = 2` returns `18`: split into `[7, 2, 5]` and `[10, 8]`.
+
+</Problem>
+
+## Flip the question
+
+Instead of choosing where to split, guess the answer. For a limit `x`, ask: **can we split the array into at most `k` pieces so that no piece sums to more than `x`?**
+
+That check is easy with a greedy pass: walk left to right adding numbers to the current piece, and start a new piece whenever adding the next number would exceed `x`. Packing each piece as full as possible uses the fewest pieces, so if greedy needs more than `k` pieces, nothing works.
+
+The check is monotonic: if limit `x` works, any bigger limit works too. So binary search for the smallest `x` that works.
+
+- `lo = max(nums)`: every piece must hold at least the biggest single number.
+- `hi = sum(nums)`: one piece holding everything always works.
+
+Using fewer than `k` pieces is fine, since you could always split a piece further without increasing the largest sum (each piece has at least one element as long as `k ≤ n`).
+
+## Solution
+
+<CodeTabs>
+
+```python
+def split_array(nums: list[int], k: int) -> int:
+    def pieces_needed(limit: int) -> int:
+        pieces, current = 1, 0
+        for x in nums:
+            if current + x > limit:
+                pieces += 1        # start a new piece
+                current = 0
+            current += x
+        return pieces
+
+    lo, hi = max(nums), sum(nums)
+    while lo < hi:
+        mid = (lo + hi) // 2
+        if pieces_needed(mid) <= k:
+            hi = mid               # limit works; try smaller
+        else:
+            lo = mid + 1           # too many pieces; allow bigger sums
+    return lo
+```
+
+```java
+public int splitArray(int[] nums, int k) {
+    long lo = 0, hi = 0;
+    for (int x : nums) {
+        lo = Math.max(lo, x);
+        hi += x;
+    }
+    while (lo < hi) {
+        long mid = lo + (hi - lo) / 2;
+        if (piecesNeeded(nums, mid) <= k) hi = mid;  // limit works; try smaller
+        else lo = mid + 1;                           // too many pieces
+    }
+    return (int) lo;
+}
+
+private int piecesNeeded(int[] nums, long limit) {
+    int pieces = 1;
+    long current = 0;
+    for (int x : nums) {
+        if (current + x > limit) {
+            pieces++;  // start a new piece
+            current = 0;
+        }
+        current += x;
+    }
+    return pieces;
+}
+```
+
+```cpp
+int piecesNeeded(const vector<int>& nums, long long limit) {
+    int pieces = 1;
+    long long current = 0;
+    for (int x : nums) {
+        if (current + x > limit) {
+            pieces++;  // start a new piece
+            current = 0;
+        }
+        current += x;
+    }
+    return pieces;
+}
+
+int splitArray(const vector<int>& nums, int k) {
+    long long lo = *max_element(nums.begin(), nums.end());
+    long long hi = accumulate(nums.begin(), nums.end(), 0LL);
+    while (lo < hi) {
+        long long mid = lo + (hi - lo) / 2;
+        if (piecesNeeded(nums, mid) <= k) hi = mid;  // limit works; try smaller
+        else lo = mid + 1;                           // too many pieces
+    }
+    return (int)lo;
+}
+```
+
+```javascript
+function splitArray(nums, k) {
+  const piecesNeeded = (limit) => {
+    let pieces = 1;
+    let current = 0;
+    for (const x of nums) {
+      if (current + x > limit) {
+        pieces++; // start a new piece
+        current = 0;
+      }
+      current += x;
+    }
+    return pieces;
+  };
+  let lo = Math.max(...nums);
+  let hi = nums.reduce((a, b) => a + b, 0);
+  while (lo < hi) {
+    const mid = Math.floor((lo + hi) / 2);
+    if (piecesNeeded(mid) <= k) hi = mid; // limit works; try smaller
+    else lo = mid + 1;                    // too many pieces
+  }
+  return lo;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(n log S), S = sum(nums)" space="O(1)" />
+
+<Callout type="interview">
+This is the same shape as [Minimum Shipping Capacity](/learn/code/binary-search/minimum-shipping-capacity): "split into at most k groups, minimize the biggest group". Recognizing the shared shape is more valuable than memorizing either solution.
+</Callout>

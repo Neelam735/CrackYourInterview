@@ -1,0 +1,119 @@
+---
+title: Palindrome Linked List
+description: Find the middle, reverse the second half, and compare the two halves node by node.
+---
+
+<Problem difficulty="Easy" link="https://leetcode.com/problems/palindrome-linked-list/">
+
+Given the `head` of a singly linked list, return `True` if its values read the same forward and backward.
+
+**Example:** `1 → 2 → 2 → 1` returns `True`. `1 → 2` returns `False`.
+
+</Problem>
+
+## Approach
+
+Copying the values into an array and checking it with two pointers works, but uses `O(n)` space. To use `O(1)` space, combine two linked list techniques:
+
+1. **Find the middle** with fast and slow pointers.
+2. **Reverse the second half** in place.
+3. **Compare** the first half with the reversed second half, node by node.
+
+For an odd-length list such as `1 → 2 → 3 → 2 → 1`, `slow` stops on the middle `3`. Reversing from there gives `1 → 2 → 3`, and comparing stops when the reversed half runs out, so the middle node is compared with itself, which is fine.
+
+## Solution
+
+<CodeTabs>
+
+```python
+def is_palindrome(head: ListNode | None) -> bool:
+    # 1. find the middle
+    slow = fast = head
+    while fast and fast.next:
+        slow = slow.next
+        fast = fast.next.next
+    # 2. reverse the second half
+    prev = None
+    while slow:
+        slow.next, prev, slow = prev, slow, slow.next
+    # 3. compare the halves
+    left, right = head, prev
+    while right:
+        if left.val != right.val:
+            return False
+        left, right = left.next, right.next
+    return True
+```
+
+```java
+public boolean isPalindrome(ListNode head) {
+    ListNode slow = head, fast = head;
+    while (fast != null && fast.next != null) {  // 1. find the middle
+        slow = slow.next;
+        fast = fast.next.next;
+    }
+    ListNode prev = null;
+    while (slow != null) {                       // 2. reverse the second half
+        ListNode next = slow.next;
+        slow.next = prev;
+        prev = slow;
+        slow = next;
+    }
+    for (ListNode left = head, right = prev; right != null; left = left.next, right = right.next) {
+        if (left.val != right.val) return false; // 3. compare the halves
+    }
+    return true;
+}
+```
+
+```cpp
+bool isPalindrome(ListNode* head) {
+    ListNode* slow = head;
+    ListNode* fast = head;
+    while (fast && fast->next) {  // 1. find the middle
+        slow = slow->next;
+        fast = fast->next->next;
+    }
+    ListNode* prev = nullptr;
+    while (slow) {                // 2. reverse the second half
+        ListNode* next = slow->next;
+        slow->next = prev;
+        prev = slow;
+        slow = next;
+    }
+    for (ListNode *left = head, *right = prev; right; left = left->next, right = right->next) {
+        if (left->val != right->val) return false;  // 3. compare the halves
+    }
+    return true;
+}
+```
+
+```javascript
+function isPalindrome(head) {
+  let slow = head;
+  let fast = head;
+  while (fast && fast.next) { // 1. find the middle
+    slow = slow.next;
+    fast = fast.next.next;
+  }
+  let prev = null;
+  while (slow) {              // 2. reverse the second half
+    const next = slow.next;
+    slow.next = prev;
+    prev = slow;
+    slow = next;
+  }
+  for (let left = head, right = prev; right; left = left.next, right = right.next) {
+    if (left.val !== right.val) return false; // 3. compare the halves
+  }
+  return true;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(n)" space="O(1)" />
+
+<Callout type="interview">
+This solution modifies the input list. Mention it, and offer to reverse the second half back before returning if the caller needs the list unchanged.
+</Callout>
