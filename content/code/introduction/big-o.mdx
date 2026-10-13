@@ -55,7 +55,7 @@ If each step cuts the remaining work in half, the number of steps is `O(log n)`.
 
 ### Amortized cost
 
-Some loops look nested but aren't. In the [sliding window](/learn/code/sliding-window) pattern, the inner `while` loop moves the left pointer, but the left pointer only ever moves forward, at most `n` times in total. So the whole algorithm is `O(n)`, not `O(n²)`.
+Some loops look nested but aren't. In the [sliding window](/learn/code/sliding-window/variable-length) pattern, the inner `while` loop moves the left pointer, but the left pointer only ever moves forward, at most `n` times in total. So the whole algorithm is `O(n)`, not `O(n²)`.
 
 <Callout type="warning">
 Don't forget hidden costs. Slicing a list (`nums[1:]`), `in` on a list, and string concatenation in a loop are all `O(n)` each time they run.

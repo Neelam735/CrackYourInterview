@@ -1,0 +1,99 @@
+---
+title: Partition Labels
+description: Extend the current part until it reaches the last occurrence of every letter inside it, then cut.
+---
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/partition-labels/">
+
+Split string `s` into as many parts as possible so that **each letter appears in at most one part**. Return the sizes of the parts, in order.
+
+**Example:** `s = "ababcbacadefegdehijhklij"` returns `[9, 7, 8]`: the parts are `"ababcbaca"`, `"defegde"` and `"hijhklij"`.
+
+</Problem>
+
+## Approach
+
+A part that contains a letter must extend at least to that letter's **last occurrence** in `s`. So:
+
+1. First pass: record the last index of every letter.
+2. Second pass: grow the current part. For each character, push the part's required end out to `max(end, last[char])`.
+3. When the index reaches `end`, every letter in the part has no occurrences after it, so **cut** here. Record the size and start a new part.
+
+Cutting as early as possible is the greedy choice, and it's safe: no valid partition can cut earlier, since some letter inside would also appear later.
+
+## Solution
+
+<CodeTabs>
+
+```python
+def partition_labels(s: str) -> list[int]:
+    last = {char: i for i, char in enumerate(s)}   # last occurrence of each letter
+    sizes = []
+    start = end = 0
+    for i, char in enumerate(s):
+        end = max(end, last[char])                 # this part must reach here
+        if i == end:                               # nothing in the part appears later
+            sizes.append(end - start + 1)
+            start = i + 1
+    return sizes
+```
+
+```java
+public List<Integer> partitionLabels(String s) {
+    int[] last = new int[26];
+    for (int i = 0; i < s.length(); i++) last[s.charAt(i) - 'a'] = i;  // last occurrence
+    List<Integer> sizes = new ArrayList<>();
+    int start = 0, end = 0;
+    for (int i = 0; i < s.length(); i++) {
+        end = Math.max(end, last[s.charAt(i) - 'a']);  // this part must reach here
+        if (i == end) {                                // nothing in the part appears later
+            sizes.add(end - start + 1);
+            start = i + 1;
+        }
+    }
+    return sizes;
+}
+```
+
+```cpp
+vector<int> partitionLabels(const string& s) {
+    int last[26] = {0};
+    for (int i = 0; i < (int)s.size(); i++) last[s[i] - 'a'] = i;  // last occurrence
+    vector<int> sizes;
+    int start = 0, end = 0;
+    for (int i = 0; i < (int)s.size(); i++) {
+        end = max(end, last[s[i] - 'a']);  // this part must reach here
+        if (i == end) {                    // nothing in the part appears later
+            sizes.push_back(end - start + 1);
+            start = i + 1;
+        }
+    }
+    return sizes;
+}
+```
+
+```javascript
+function partitionLabels(s) {
+  const last = {};
+  for (let i = 0; i < s.length; i++) last[s[i]] = i; // last occurrence of each letter
+  const sizes = [];
+  let start = 0;
+  let end = 0;
+  for (let i = 0; i < s.length; i++) {
+    end = Math.max(end, last[s[i]]); // this part must reach here
+    if (i === end) {                 // nothing in the part appears later
+      sizes.push(end - start + 1);
+      start = i + 1;
+    }
+  }
+  return sizes;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(n)" space="O(1), 26 letters" />
+
+<Callout type="tip">
+This is [Merge Intervals](/learn/code/intervals/merge-intervals) in disguise: each letter defines an interval from its first to its last occurrence, and the parts are the merged groups.
+</Callout>

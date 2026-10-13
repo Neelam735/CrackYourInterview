@@ -1,0 +1,94 @@
+---
+title: Jump Game II
+description: Treat each jump as a BFS level and find how far the next level can reach.
+---
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/jump-game-ii/">
+
+As in [Jump Game](/learn/code/greedy/jump-game), `nums[i]` is the maximum jump length from index `i`. This time you're guaranteed to be able to reach the last index. Return the **minimum number of jumps** needed.
+
+**Example:** `nums = [2, 3, 1, 1, 4]` returns `2` (0 → 1 → 4).
+
+</Problem>
+
+## Approach
+
+Think of it as [BFS](/learn/code/breadth-first-search/introduction) where each jump is one level, but without a queue:
+
+- With 0 jumps you can stand only at index 0.
+- With 1 jump you can reach any index up to `nums[0]`. That range is level 1.
+- With 2 jumps you can reach anything that some index in level 1 can reach. That's level 2.
+
+Track two numbers:
+
+- `current_end`: the last index reachable with the jumps taken so far,
+- `farthest`: the farthest index reachable with **one more** jump, from any index seen so far.
+
+Scan left to right. When you reach `current_end`, you've explored the whole current level and must jump again: increase the count and set `current_end = farthest`.
+
+## Solution
+
+<CodeTabs>
+
+```python
+def jump(nums: list[int]) -> int:
+    jumps = current_end = farthest = 0
+    for i in range(len(nums) - 1):          # no jump needed from the last index
+        farthest = max(farthest, i + nums[i])
+        if i == current_end:                # finished this level: jump again
+            jumps += 1
+            current_end = farthest
+    return jumps
+```
+
+```java
+public int jump(int[] nums) {
+    int jumps = 0, currentEnd = 0, farthest = 0;
+    for (int i = 0; i < nums.length - 1; i++) {  // no jump needed from the last index
+        farthest = Math.max(farthest, i + nums[i]);
+        if (i == currentEnd) {                   // finished this level: jump again
+            jumps++;
+            currentEnd = farthest;
+        }
+    }
+    return jumps;
+}
+```
+
+```cpp
+int jump(const vector<int>& nums) {
+    int jumps = 0, currentEnd = 0, farthest = 0;
+    for (int i = 0; i < (int)nums.size() - 1; i++) {  // no jump needed from the last index
+        farthest = max(farthest, i + nums[i]);
+        if (i == currentEnd) {                        // finished this level: jump again
+            jumps++;
+            currentEnd = farthest;
+        }
+    }
+    return jumps;
+}
+```
+
+```javascript
+function jump(nums) {
+  let jumps = 0;
+  let currentEnd = 0;
+  let farthest = 0;
+  for (let i = 0; i < nums.length - 1; i++) { // no jump needed from the last index
+    farthest = Math.max(farthest, i + nums[i]);
+    if (i === currentEnd) {                    // finished this level: jump again
+      jumps++;
+      currentEnd = farthest;
+    }
+  }
+  return jumps;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(n)" space="O(1)" />
+
+<Callout type="warning">
+The loop stops **before** the last index. If it included the last index and `current_end` happened to equal it, you'd count one extra jump you don't need.
+</Callout>

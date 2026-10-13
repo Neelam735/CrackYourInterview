@@ -1,0 +1,178 @@
+---
+title: Implement Trie Methods
+description: Walk the trie one character at a time, creating nodes on insert and following them on search.
+---
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/implement-trie-prefix-tree/">
+
+Implement a `Trie` class with three methods:
+
+- `insert(word)`: add `word` to the trie.
+- `search(word)`: return `True` if `word` was inserted.
+- `startsWith(prefix)`: return `True` if any inserted word starts with `prefix`.
+
+All strings contain only lowercase English letters.
+
+**Example:** insert `"apple"`; `search("apple")` → `True`; `search("app")` → `False`; `startsWith("app")` → `True`; insert `"app"`; `search("app")` → `True`.
+
+</Problem>
+
+## Approach
+
+All three operations walk down the trie from the root, one character at a time.
+
+- **insert:** for each character, move to the matching child, **creating it** if it doesn't exist. Mark the final node as the end of a word.
+- **search:** follow the characters. If a child is missing, the word isn't there. If you reach the end, the word exists only if the final node is marked as a word end.
+- **startsWith:** the same walk, but any node you reach means some word has this prefix, so the end-of-word flag doesn't matter.
+
+`search` and `startsWith` share the walk, so put it in one helper that returns the node for a prefix (or nothing).
+
+## Solution
+
+<CodeTabs>
+
+```python
+class Trie:
+    def __init__(self):
+        self.root = {}                   # each node: dict of children, "$" marks a word end
+
+    def insert(self, word: str) -> None:
+        node = self.root
+        for char in word:
+            node = node.setdefault(char, {})   # create the child if needed
+        node["$"] = True
+
+    def _find(self, prefix: str):
+        node = self.root
+        for char in prefix:
+            if char not in node:
+                return None
+            node = node[char]
+        return node
+
+    def search(self, word: str) -> bool:
+        node = self._find(word)
+        return node is not None and "$" in node
+
+    def starts_with(self, prefix: str) -> bool:
+        return self._find(prefix) is not None
+```
+
+```java
+class Trie {
+    private static class Node {
+        Node[] children = new Node[26];
+        boolean isWord;
+    }
+
+    private final Node root = new Node();
+
+    public void insert(String word) {
+        Node node = root;
+        for (char c : word.toCharArray()) {
+            if (node.children[c - 'a'] == null) node.children[c - 'a'] = new Node();  // create if needed
+            node = node.children[c - 'a'];
+        }
+        node.isWord = true;
+    }
+
+    public boolean search(String word) {
+        Node node = find(word);
+        return node != null && node.isWord;
+    }
+
+    public boolean startsWith(String prefix) {
+        return find(prefix) != null;
+    }
+
+    private Node find(String prefix) {
+        Node node = root;
+        for (char c : prefix.toCharArray()) {
+            node = node.children[c - 'a'];
+            if (node == null) return null;
+        }
+        return node;
+    }
+}
+```
+
+```cpp
+class Trie {
+    struct Node {
+        Node* children[26] = {};
+        bool isWord = false;
+    };
+    Node* root = new Node();
+
+    Node* find(const string& prefix) {
+        Node* node = root;
+        for (char c : prefix) {
+            node = node->children[c - 'a'];
+            if (!node) return nullptr;
+        }
+        return node;
+    }
+
+public:
+    void insert(const string& word) {
+        Node* node = root;
+        for (char c : word) {
+            if (!node->children[c - 'a']) node->children[c - 'a'] = new Node();  // create if needed
+            node = node->children[c - 'a'];
+        }
+        node->isWord = true;
+    }
+
+    bool search(const string& word) {
+        Node* node = find(word);
+        return node && node->isWord;
+    }
+
+    bool startsWith(const string& prefix) {
+        return find(prefix) != nullptr;
+    }
+};
+```
+
+```javascript
+class Trie {
+  constructor() {
+    this.root = { children: new Map(), isWord: false };
+  }
+
+  insert(word) {
+    let node = this.root;
+    for (const c of word) {
+      if (!node.children.has(c)) node.children.set(c, { children: new Map(), isWord: false }); // create
+      node = node.children.get(c);
+    }
+    node.isWord = true;
+  }
+
+  find(prefix) {
+    let node = this.root;
+    for (const c of prefix) {
+      node = node.children.get(c);
+      if (!node) return null;
+    }
+    return node;
+  }
+
+  search(word) {
+    const node = this.find(word);
+    return node !== null && node.isWord;
+  }
+
+  startsWith(prefix) {
+    return this.find(prefix) !== null;
+  }
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(L) per operation" space="O(total characters inserted)" />
+
+<Callout type="tip">
+The Python version uses plain dictionaries as nodes, with a special `"$"` key marking word ends. It's compact and idiomatic. A `TrieNode` class works just as well and is easier to extend with extra fields, such as a count of words passing through each node.
+</Callout>

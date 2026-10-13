@@ -4,8 +4,8 @@ A coding interview prep site that teaches algorithm patterns with step-by-step v
 
 Built with **Next.js (App Router)**, **MDX**, **Tailwind CSS v4**, **Auth.js** and **Postgres (Drizzle ORM)**.
 
-- 13 lessons: Big-O plus 11 patterns (two pointers through dynamic programming)
-- Step-through visualizations for arrays, linked lists, stacks, trees, heaps, grids, graphs, intervals and DP tables
+- 122 pages in 17 sections: 30 concept guides and 92 problem walkthroughs, from Two Pointers to Dynamic Programming, Greedy, Trie, Prefix Sum and Matrices
+- 30 step-through visualizations for arrays, linked lists, stacks, trees, heaps, grids, graphs, intervals and DP tables
 - Every solution in Python, Java, C++ and JavaScript; the chosen language is remembered
 - Progress tracking: in the browser when signed out, synced to your account when signed in
 
@@ -66,15 +66,14 @@ If sign-in fails with `UntrustedHost`, check that `AUTH_TRUST_HOST` is set on th
 app/
   page.tsx                   Landing page
   learn/code/layout.tsx      Docs layout: sidebar + content
-  learn/code/page.tsx        /learn/code (renders the introduction)
-  learn/code/[slug]/page.tsx One page per lesson
+  learn/code/[section]/[page]/page.tsx   One page per concept or problem
 components/
   DocPage.tsx                Article header, MDX body, prev/next, table of contents
   Sidebar.tsx, TableOfContents.tsx
   mdx/                       Components usable inside MDX (Callout, Problem, Complexity, Difficulty)
   visualizer/                Step-through algorithm visualizer
-content/code/*.mdx           Lesson content
-lib/navigation.ts            Sidebar order (add new lessons here)
+content/code/<section>/<page>.mdx   Page content
+lib/navigation.ts            Sections, page order and redirects (add new pages here)
 lib/content.ts               Reads MDX files and extracts headings
 auth.ts                      Auth.js config (GitHub, Google, local dev login)
 lib/db/                      Drizzle schema and connection (progress table)
@@ -83,12 +82,17 @@ app/api/progress/route.ts    Progress API: GET, POST one lesson, PUT to merge br
 
 ## Adding a lesson
 
-1. Create `content/code/<slug>.mdx` with `title` and `description` frontmatter.
-2. Add `{ slug, title }` to `lib/navigation.ts` (remove `comingSoon` if it was a placeholder).
+1. Create `content/code/<section>/<page>.mdx` with `title` and `description` frontmatter.
+2. Add the page to its section in `lib/navigation.ts`: `concept(slug, title)` for guides, `problem(slug, title, difficulty)` for problems. Problems are indented under the concept page before them in the sidebar.
+3. Overview pages can list their section's problems with `<ProblemList section="<section>" />`.
+
+Code blocks marked `nocheck` (for example ` ```python nocheck `) are pseudocode or definitions; every other solution block is real code in Python, Java, C++ or JavaScript.
 
 ### MDX components
 
 ````mdx
+<ProblemList section="two-pointers" />
+
 <Problem difficulty="Medium" link="https://leetcode.com/problems/...">
 
 Problem statement in **markdown**.

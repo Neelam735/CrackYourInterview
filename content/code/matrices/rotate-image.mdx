@@ -1,0 +1,87 @@
+---
+title: Rotate Image
+description: A clockwise rotation is a transpose followed by reversing each row, both done in place.
+---
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/rotate-image/">
+
+Given an `n × n` matrix, rotate it **90 degrees clockwise**, **in place** (don't allocate another matrix).
+
+**Example:** `[[1, 2, 3], [4, 5, 6], [7, 8, 9]]` becomes `[[7, 4, 1], [8, 5, 2], [9, 6, 3]]`.
+
+</Problem>
+
+## Approach
+
+Under a clockwise rotation, the element at `(r, c)` moves to `(c, n - 1 - r)`. Doing that move directly needs careful four-way swaps. A cleaner way is to split the rotation into two simple in-place steps:
+
+1. **Transpose:** swap `matrix[r][c]` with `matrix[c][r]` for every `c > r`. Rows become columns: `(r, c) → (c, r)`.
+2. **Reverse each row:** `(c, r) → (c, n - 1 - r)`.
+
+Together they give exactly `(r, c) → (c, n - 1 - r)`.
+
+```text nocheck
+1 2 3     transpose     1 4 7     reverse rows     7 4 1
+4 5 6    ──────────►    2 5 8    ─────────────►    8 5 2
+7 8 9                   3 6 9                      9 6 3
+```
+
+## Solution
+
+<CodeTabs>
+
+```python
+def rotate(matrix: list[list[int]]) -> None:
+    n = len(matrix)
+    for r in range(n):                       # 1. transpose
+        for c in range(r + 1, n):
+            matrix[r][c], matrix[c][r] = matrix[c][r], matrix[r][c]
+    for row in matrix:                       # 2. reverse each row
+        row.reverse()
+```
+
+```java
+public void rotate(int[][] matrix) {
+    int n = matrix.length;
+    for (int r = 0; r < n; r++) {  // 1. transpose
+        for (int c = r + 1; c < n; c++) {
+            int tmp = matrix[r][c];
+            matrix[r][c] = matrix[c][r];
+            matrix[c][r] = tmp;
+        }
+    }
+    for (int[] row : matrix) {     // 2. reverse each row
+        for (int lo = 0, hi = n - 1; lo < hi; lo++, hi--) {
+            int tmp = row[lo];
+            row[lo] = row[hi];
+            row[hi] = tmp;
+        }
+    }
+}
+```
+
+```cpp
+void rotate(vector<vector<int>>& matrix) {
+    int n = matrix.size();
+    for (int r = 0; r < n; r++)                       // 1. transpose
+        for (int c = r + 1; c < n; c++) swap(matrix[r][c], matrix[c][r]);
+    for (auto& row : matrix) reverse(row.begin(), row.end());  // 2. reverse each row
+}
+```
+
+```javascript
+function rotate(matrix) {
+  const n = matrix.length;
+  for (let r = 0; r < n; r++) // 1. transpose
+    for (let c = r + 1; c < n; c++) [matrix[r][c], matrix[c][r]] = [matrix[c][r], matrix[r][c]];
+  for (const row of matrix) row.reverse(); // 2. reverse each row
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(n²)" space="O(1)" />
+
+<Callout type="tip" title="Other rotations">
+Counter-clockwise: transpose, then reverse each **column** (or reverse each row first, then transpose). 180 degrees: reverse the order of the rows, then reverse each row.
+</Callout>

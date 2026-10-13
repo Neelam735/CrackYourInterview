@@ -1,0 +1,79 @@
+---
+title: Best Time to Buy and Sell Stock
+description: Scan the prices once, remembering the cheapest price so far and the best profit from selling today.
+---
+
+<Problem difficulty="Easy" link="https://leetcode.com/problems/best-time-to-buy-and-sell-stock/">
+
+`prices[i]` is a stock's price on day `i`. Choose one day to buy and a **later** day to sell. Return the maximum profit, or `0` if no profit is possible.
+
+**Example:** `prices = [7, 1, 5, 3, 6, 4]` returns `5`: buy at 1, sell at 6. `prices = [7, 6, 4, 3, 1]` returns `0`.
+
+</Problem>
+
+## Approach
+
+Checking every buy/sell pair is `O(n²)`. Instead, think about each day as a possible **selling** day. The best buying day for it is simply the **cheapest day before it**.
+
+So scan once, keeping:
+
+- `lowest`: the cheapest price seen so far,
+- `best`: the best profit so far.
+
+For each price, first update `best` with `price - lowest` (selling today), then update `lowest`.
+
+## Solution
+
+<CodeTabs>
+
+```python
+def max_profit(prices: list[int]) -> int:
+    lowest = float("inf")
+    best = 0
+    for price in prices:
+        best = max(best, price - lowest)   # sell today, bought at the cheapest day so far
+        lowest = min(lowest, price)
+    return best
+```
+
+```java
+public int maxProfit(int[] prices) {
+    int lowest = Integer.MAX_VALUE, best = 0;
+    for (int price : prices) {
+        if (price < lowest) lowest = price;
+        else best = Math.max(best, price - lowest);  // sell today, bought at the cheapest day so far
+    }
+    return best;
+}
+```
+
+```cpp
+int maxProfit(const vector<int>& prices) {
+    int lowest = INT_MAX, best = 0;
+    for (int price : prices) {
+        if (price < lowest) lowest = price;
+        else best = max(best, price - lowest);  // sell today, bought at the cheapest day so far
+    }
+    return best;
+}
+```
+
+```javascript
+function maxProfit(prices) {
+  let lowest = Infinity;
+  let best = 0;
+  for (const price of prices) {
+    best = Math.max(best, price - lowest); // sell today, bought at the cheapest day so far
+    lowest = Math.min(lowest, price);
+  }
+  return best;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(n)" space="O(1)" />
+
+<Callout type="tip">
+This "best so far" scan is the simplest form of greedy, and it's also a tiny DP: `best_ending_today = price - min(prices before today)`. Variants allow unlimited transactions (add every upward step) or a limited number of them (DP over transactions).
+</Callout>

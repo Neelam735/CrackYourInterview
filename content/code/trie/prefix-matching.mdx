@@ -1,0 +1,133 @@
+---
+title: Prefix Matching
+description: Store the best few suggestions at every trie node, then answer each prefix of the search word with one step down the trie.
+---
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/search-suggestions-system/">
+
+You're given a list of `products` and a `searchWord`. After each character of `searchWord` is typed, suggest up to **three** products that start with the typed prefix, choosing the **lexicographically smallest** ones. Return the list of suggestions after each character.
+
+**Example:** `products = ["mobile", "mouse", "moneypot", "monitor", "mousepad"]`, `searchWord = "mouse"` returns
+
+```text nocheck
+[["mobile", "moneypot", "monitor"],    # "m"
+ ["mobile", "moneypot", "monitor"],    # "mo"
+ ["mouse", "mousepad"],                # "mou"
+ ["mouse", "mousepad"],                # "mous"
+ ["mouse", "mousepad"]]                # "mouse"
+```
+
+</Problem>
+
+## Approach
+
+This is autocomplete. Build a [trie](/learn/code/trie/overview) of the products, and at **every node** store up to three suggestions: the smallest products passing through that node.
+
+1. **Sort** the products first. Then, when you insert them in order, the first three products to pass through a node are exactly its three smallest. Each node just appends while it has fewer than three.
+2. **Answer** the queries by walking down the trie along `searchWord`. After each character, the current node's list is the answer. If the walk falls off the trie, every later prefix has no suggestions.
+
+Each query step is `O(1)` once the trie is built.
+
+## Solution
+
+<CodeTabs>
+
+```python
+def suggested_products(products: list[str], search_word: str) -> list[list[str]]:
+    root = {"words": []}
+    for product in sorted(products):
+        node = root
+        for char in product:
+            node = node.setdefault(char, {"words": []})
+            if len(node["words"]) < 3:
+                node["words"].append(product)   # sorted insert: first three are the smallest
+
+    result, node = [], root
+    for char in search_word:
+        node = node.get(char) if node else None
+        result.append(node["words"] if node else [])
+    return result
+```
+
+```java
+public List<List<String>> suggestedProducts(String[] products, String searchWord) {
+    class Node {
+        Node[] children = new Node[26];
+        List<String> words = new ArrayList<>();
+    }
+    Node root = new Node();
+    String[] sorted = products.clone();
+    Arrays.sort(sorted);
+    for (String product : sorted) {
+        Node node = root;
+        for (char c : product.toCharArray()) {
+            if (node.children[c - 'a'] == null) node.children[c - 'a'] = new Node();
+            node = node.children[c - 'a'];
+            if (node.words.size() < 3) node.words.add(product);  // first three are the smallest
+        }
+    }
+    List<List<String>> result = new ArrayList<>();
+    Node node = root;
+    for (char c : searchWord.toCharArray()) {
+        node = node == null ? null : node.children[c - 'a'];
+        result.add(node == null ? new ArrayList<>() : node.words);
+    }
+    return result;
+}
+```
+
+```cpp
+struct SuggestNode {
+    SuggestNode* children[26] = {};
+    vector<string> words;
+};
+
+vector<vector<string>> suggestedProducts(vector<string> products, const string& searchWord) {
+    sort(products.begin(), products.end());
+    SuggestNode* root = new SuggestNode();
+    for (const string& product : products) {
+        SuggestNode* node = root;
+        for (char c : product) {
+            if (!node->children[c - 'a']) node->children[c - 'a'] = new SuggestNode();
+            node = node->children[c - 'a'];
+            if (node->words.size() < 3) node->words.push_back(product);  // first three are the smallest
+        }
+    }
+    vector<vector<string>> result;
+    SuggestNode* node = root;
+    for (char c : searchWord) {
+        node = node ? node->children[c - 'a'] : nullptr;
+        result.push_back(node ? node->words : vector<string>{});
+    }
+    return result;
+}
+```
+
+```javascript
+function suggestedProducts(products, searchWord) {
+  const root = { children: new Map(), words: [] };
+  for (const product of [...products].sort()) {
+    let node = root;
+    for (const c of product) {
+      if (!node.children.has(c)) node.children.set(c, { children: new Map(), words: [] });
+      node = node.children.get(c);
+      if (node.words.length < 3) node.words.push(product); // first three are the smallest
+    }
+  }
+  const result = [];
+  let node = root;
+  for (const c of searchWord) {
+    node = node ? node.children.get(c) : undefined;
+    result.push(node ? node.words : []);
+  }
+  return result;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(N log N · L) to sort and build, O(|searchWord|) to answer" space="O(N · L)" />
+
+<Callout type="tip" title="Without a trie">
+Because the products are sorted, all products with a given prefix form a contiguous block. Binary search for where the prefix would be inserted, then check the next three products. It's a neat `O(N log N + |searchWord| · log N)` alternative to mention.
+</Callout>

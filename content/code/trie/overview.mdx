@@ -1,0 +1,88 @@
+---
+title: Trie
+description: A tree of characters where every path from the root spells a prefix, making prefix lookups as fast as the word is long.
+readingTime: 6 min
+---
+
+## The idea
+
+A **trie** (pronounced "try", short for re*trie*val; also called a prefix tree) stores a set of strings as a tree of characters:
+
+- The root represents the empty string.
+- Each edge adds one character, so every node represents the **prefix** spelled by the path to it.
+- A flag on a node marks that the prefix ending there is a **complete word**.
+
+Words that share a prefix share the nodes for it. Storing `car`, `cat` and `cart` uses a single `c → a` path that then branches.
+
+```text nocheck
+(root)
+  └─ c
+     └─ a
+        ├─ r*   ← "car" ends here
+        │  └─ t*   ← "cart"
+        └─ t*   ← "cat"
+```
+
+## Why use one
+
+| Operation | Hash set of words | Trie |
+|-----------|-------------------|------|
+| Is `w` a word? | `O(L)` (hashing) | `O(L)` |
+| Does any word start with `p`? | `O(n · L)`: check every word | `O(L)`: walk the prefix |
+| List all words starting with `p` | `O(n · L)` | `O(L + size of the answer)` |
+| Words sorted alphabetically | Needs a sort | DFS visits children in order |
+
+Here `L` is the length of the word or prefix, and `n` is the number of words. Tries win whenever the question is about **prefixes**: autocomplete, spell checking, word games, IP routing.
+
+## The node
+
+Each node holds its children and an end-of-word flag. Children can be a hash map (any characters) or a fixed array of 26 slots (lowercase letters only: faster, but uses more memory).
+
+<CodeTabs>
+
+```python nocheck
+class TrieNode:
+    def __init__(self):
+        self.children = {}      # char -> TrieNode
+        self.is_word = False
+```
+
+```java nocheck
+class TrieNode {
+    TrieNode[] children = new TrieNode[26];
+    boolean isWord;
+}
+```
+
+```cpp nocheck
+struct TrieNode {
+    TrieNode* children[26] = {};
+    bool isWord = false;
+};
+```
+
+```javascript nocheck
+class TrieNode {
+  constructor() {
+    this.children = new Map(); // char -> TrieNode
+    this.isWord = false;
+  }
+}
+```
+
+</CodeTabs>
+
+## When to reach for a trie
+
+- Many lookups of **prefixes** against one fixed set of words.
+- Autocomplete or "search suggestions".
+- Searching for many words at once in a grid or text ([Word Search II](https://leetcode.com/problems/word-search-ii/)): build a trie of the words and walk it during the search.
+- Problems on the bits of numbers (a binary trie for maximum XOR).
+
+<Callout type="interview">
+If an interviewer asks you to "design autocomplete", start with a trie, then discuss storing the top few suggestions at each node so answering a prefix doesn't need a full subtree search.
+</Callout>
+
+## Problems
+
+<ProblemList section="trie" />

@@ -1,0 +1,103 @@
+---
+title: Gas Station
+description: If the total gas covers the total cost, a start exists; whenever the tank goes negative, the start must be after that point.
+---
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/gas-station/">
+
+There are `n` gas stations on a circular route. Station `i` gives `gas[i]` fuel, and driving from station `i` to station `i + 1` costs `cost[i]` fuel. Starting with an empty tank, return the index of the station from which you can drive around the whole circuit once, or `-1` if it's impossible. If a solution exists, it's unique.
+
+**Example:** `gas = [1, 2, 3, 4, 5]`, `cost = [3, 4, 5, 1, 2]` returns `3`.
+
+</Problem>
+
+## Two facts make it greedy
+
+1. **If total gas ≥ total cost, some start works.** If total gas is less, no start can work.
+2. **If you start at `i` and run out before reaching station `j`, then no station between `i` and `j` works as a start either.** You arrived at each of them with a tank of at least 0, so starting there with an empty tank can only be worse.
+
+## Approach
+
+Scan the stations once, tracking:
+
+- `total`: the overall `gas - cost` balance, to check fact 1.
+- `tank`: the fuel left since the current candidate `start`.
+
+Whenever `tank` drops below 0 after station `i`, fact 2 says no start up to `i` works, so set `start = i + 1` and reset `tank` to 0.
+
+At the end, return `start` if `total ≥ 0`, otherwise `-1`.
+
+## Solution
+
+<CodeTabs>
+
+```python
+def can_complete_circuit(gas: list[int], cost: list[int]) -> int:
+    total = tank = start = 0
+    for i in range(len(gas)):
+        gain = gas[i] - cost[i]
+        total += gain
+        tank += gain
+        if tank < 0:            # can't reach i + 1 from start: no start up to i works
+            start = i + 1
+            tank = 0
+    return start if total >= 0 else -1
+```
+
+```java
+public int canCompleteCircuit(int[] gas, int[] cost) {
+    int total = 0, tank = 0, start = 0;
+    for (int i = 0; i < gas.length; i++) {
+        int gain = gas[i] - cost[i];
+        total += gain;
+        tank += gain;
+        if (tank < 0) {  // can't reach i + 1 from start: no start up to i works
+            start = i + 1;
+            tank = 0;
+        }
+    }
+    return total >= 0 ? start : -1;
+}
+```
+
+```cpp
+int canCompleteCircuit(const vector<int>& gas, const vector<int>& cost) {
+    int total = 0, tank = 0, start = 0;
+    for (int i = 0; i < (int)gas.size(); i++) {
+        int gain = gas[i] - cost[i];
+        total += gain;
+        tank += gain;
+        if (tank < 0) {  // can't reach i + 1 from start: no start up to i works
+            start = i + 1;
+            tank = 0;
+        }
+    }
+    return total >= 0 ? start : -1;
+}
+```
+
+```javascript
+function canCompleteCircuit(gas, cost) {
+  let total = 0;
+  let tank = 0;
+  let start = 0;
+  for (let i = 0; i < gas.length; i++) {
+    const gain = gas[i] - cost[i];
+    total += gain;
+    tank += gain;
+    if (tank < 0) { // can't reach i + 1 from start: no start up to i works
+      start = i + 1;
+      tank = 0;
+    }
+  }
+  return total >= 0 ? start : -1;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(n)" space="O(1)" />
+
+<Callout type="interview">
+The brute force tries every start and simulates the trip: `O(n²)`. Explain fact 2 clearly when you present the `O(n)` version, since it's the whole reason the single pass is correct.
+</Callout>

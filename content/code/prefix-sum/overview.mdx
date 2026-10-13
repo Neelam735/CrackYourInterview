@@ -1,0 +1,84 @@
+---
+title: Prefix Sum
+description: Precompute running totals once, then answer any range-sum question by subtracting two of them.
+readingTime: 6 min
+---
+
+## The idea
+
+If you need the sum of many different ranges `nums[l..r]`, adding each range up costs `O(n)` per query. A **prefix sum** array makes every query `O(1)` after one `O(n)` pass.
+
+Define `prefix[i]` as the sum of the **first `i` elements**:
+
+```text nocheck
+nums   =    [3,  1,  4,  1,  5]
+prefix = [0, 3,  4,  8,  9, 14]
+```
+
+Then the sum of `nums[l..r]` (inclusive) is everything up to `r` minus everything before `l`:
+
+```text nocheck
+sum(l, r) = prefix[r + 1] - prefix[l]
+```
+
+The leading `0` means you never need a special case for ranges that start at index 0.
+
+<CodeTabs>
+
+```python
+def range_sums(nums: list[int], queries: list[list[int]]) -> list[int]:
+    prefix = [0] * (len(nums) + 1)
+    for i, x in enumerate(nums):
+        prefix[i + 1] = prefix[i] + x          # sum of the first i + 1 elements
+    return [prefix[r + 1] - prefix[l] for l, r in queries]
+```
+
+```java
+public int[] rangeSums(int[] nums, int[][] queries) {
+    int[] prefix = new int[nums.length + 1];
+    for (int i = 0; i < nums.length; i++) prefix[i + 1] = prefix[i] + nums[i];  // first i + 1 elements
+    int[] result = new int[queries.length];
+    for (int q = 0; q < queries.length; q++) result[q] = prefix[queries[q][1] + 1] - prefix[queries[q][0]];
+    return result;
+}
+```
+
+```cpp
+vector<int> rangeSums(const vector<int>& nums, const vector<vector<int>>& queries) {
+    vector<int> prefix(nums.size() + 1, 0);
+    for (size_t i = 0; i < nums.size(); i++) prefix[i + 1] = prefix[i] + nums[i];  // first i + 1 elements
+    vector<int> result;
+    for (const auto& q : queries) result.push_back(prefix[q[1] + 1] - prefix[q[0]]);
+    return result;
+}
+```
+
+```javascript
+function rangeSums(nums, queries) {
+  const prefix = new Array(nums.length + 1).fill(0);
+  for (let i = 0; i < nums.length; i++) prefix[i + 1] = prefix[i] + nums[i]; // first i + 1 elements
+  return queries.map(([l, r]) => prefix[r + 1] - prefix[l]);
+}
+```
+
+</CodeTabs>
+
+## Beyond sums
+
+The same trick works for anything you can **add up and subtract**:
+
+- **Counts:** how many vowels, ones or matching items in a range ([Count Vowels in Substrings](/learn/code/prefix-sum/count-vowels-in-substrings)).
+- **XOR:** `xor(l, r) = prefix[r + 1] ^ prefix[l]`.
+- **2D grids:** `prefix[r][c]` = the sum of the rectangle from `(0, 0)` to `(r - 1, c - 1)`, combined with inclusion-exclusion.
+
+## Prefix sums plus a hash map
+
+A powerful combination: to count subarrays with sum exactly `k`, note that `nums[l..r]` sums to `k` exactly when `prefix[r + 1] - prefix[l] = k`. So while scanning, count how many earlier prefix sums equal `current - k`, using a hash map. See [Subarray Sum Equals K](/learn/code/prefix-sum/subarray-sum-equals-k).
+
+<Callout type="tip">
+Prefix sums work with negative numbers, unlike [sliding windows](/learn/code/sliding-window/variable-length), which need the window sum to grow when you add an element. When a "subarray sum" problem allows negatives, think prefix sums.
+</Callout>
+
+## Problems
+
+<ProblemList section="prefix-sum" />

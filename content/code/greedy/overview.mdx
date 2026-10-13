@@ -1,0 +1,38 @@
+---
+title: Greedy Algorithms
+description: Make the locally best choice at every step, and prove it never shuts out a better overall answer.
+readingTime: 6 min
+---
+
+## The idea
+
+A greedy algorithm builds the answer one step at a time, always taking the choice that looks **best right now**, and never revisiting it. When it works, it's usually the simplest and fastest solution: often one pass, `O(n)` or `O(n log n)` with a sort.
+
+The catch: greedy only works when the locally best choice is **guaranteed** to be part of some optimal answer. For many problems it isn't. Choosing the richest house in [House Robber](/learn/code/dynamic-programming/solving-a-question) or the biggest coin in some coin systems gives the wrong answer.
+
+## How to convince yourself greedy works
+
+Before coding a greedy solution, try to argue one of these:
+
+- **Exchange argument.** Take any optimal answer that doesn't make the greedy choice. Show you can swap in the greedy choice without making it worse. Then some optimal answer makes the greedy choice. ([Non-Overlapping Intervals](/learn/code/intervals/non-overlapping-intervals) uses this.)
+- **Stays ahead.** Show that after every step, the greedy solution is at least as good as any other solution after the same number of steps.
+- **Invariant.** Track a quantity, like "the farthest index reachable so far", that the greedy step maintains correctly.
+
+If you can't find an argument, try to break the greedy idea with a small counterexample. If you find one, the problem probably needs [dynamic programming](/learn/code/dynamic-programming/fundamentals).
+
+## Common greedy shapes
+
+| Shape | Greedy choice | Examples |
+|-------|---------------|----------|
+| Running best | Keep the best value seen so far | Best Time to Buy and Sell Stock |
+| Farthest reach | Track how far you can get | Jump Game, Jump Game II |
+| Reset on failure | When a running total goes negative, start over | Gas Station, maximum subarray (Kadane) |
+| Sort then sweep | Process items in a clever order | Interval scheduling, Partition Labels |
+
+<Callout type="interview">
+Interviewers often ask "why does greedy work here?" Have a one-sentence argument ready, such as: "If we can't reach station `j` from `i`, we can't reach it from anywhere between them either, so it's safe to restart after `j`."
+</Callout>
+
+## Problems
+
+<ProblemList section="greedy" />

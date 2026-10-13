@@ -1,0 +1,96 @@
+---
+title: Subarray Sum Equals K
+description: Count earlier prefix sums equal to the current prefix minus k, using a hash map as you scan.
+---
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/subarray-sum-equals-k/">
+
+Given an integer array `nums` (which may contain negative numbers) and an integer `k`, return the number of **contiguous subarrays** whose sum equals `k`.
+
+**Example:** `nums = [1, 1, 1]`, `k = 2` returns `2`. `nums = [1, 2, 3]`, `k = 3` returns `2` (`[1, 2]` and `[3]`).
+
+</Problem>
+
+## Why not a sliding window?
+
+A sliding window assumes that adding an element makes the sum bigger and removing one makes it smaller. With negative numbers that's false, so you can't tell which way to move the window.
+
+## Approach
+
+Use [prefix sums](/learn/code/prefix-sum/overview). The subarray `nums[l..r]` sums to `k` exactly when
+
+```text nocheck
+prefix[r + 1] - prefix[l] = k    ⟺    prefix[l] = prefix[r + 1] - k
+```
+
+So scan the array keeping a running sum. At each position, the number of subarrays **ending here** with sum `k` is the number of **earlier** prefix sums equal to `running - k`. A hash map from prefix sum to how many times it has occurred answers that in `O(1)`.
+
+Start the map with `{0: 1}`: the empty prefix, which lets subarrays that start at index 0 be counted.
+
+## Solution
+
+<CodeTabs>
+
+```python
+from collections import defaultdict
+
+def subarray_sum(nums: list[int], k: int) -> int:
+    seen = defaultdict(int)
+    seen[0] = 1                         # the empty prefix
+    running = count = 0
+    for x in nums:
+        running += x
+        count += seen[running - k]      # earlier prefixes that leave exactly k
+        seen[running] += 1
+    return count
+```
+
+```java
+public int subarraySum(int[] nums, int k) {
+    Map<Integer, Integer> seen = new HashMap<>();
+    seen.put(0, 1);  // the empty prefix
+    int running = 0, count = 0;
+    for (int x : nums) {
+        running += x;
+        count += seen.getOrDefault(running - k, 0);  // earlier prefixes that leave exactly k
+        seen.merge(running, 1, Integer::sum);
+    }
+    return count;
+}
+```
+
+```cpp
+int subarraySum(const vector<int>& nums, int k) {
+    unordered_map<int, int> seen{{0, 1}};  // the empty prefix
+    int running = 0, count = 0;
+    for (int x : nums) {
+        running += x;
+        auto it = seen.find(running - k);
+        if (it != seen.end()) count += it->second;  // earlier prefixes that leave exactly k
+        seen[running]++;
+    }
+    return count;
+}
+```
+
+```javascript
+function subarraySum(nums, k) {
+  const seen = new Map([[0, 1]]); // the empty prefix
+  let running = 0;
+  let count = 0;
+  for (const x of nums) {
+    running += x;
+    count += seen.get(running - k) ?? 0; // earlier prefixes that leave exactly k
+    seen.set(running, (seen.get(running) ?? 0) + 1);
+  }
+  return count;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(n)" space="O(n)" />
+
+<Callout type="warning">
+Look up `running - k` **before** adding `running` to the map. Otherwise, with `k = 0`, every position would count itself as an empty subarray.
+</Callout>

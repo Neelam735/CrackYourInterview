@@ -1,0 +1,76 @@
+---
+title: Count Vowels in Substrings
+description: Build a prefix count of vowels so every substring query is a single subtraction.
+---
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/count-vowel-strings-in-ranges/">
+
+Given a string `word` and a list of `queries` where `queries[i] = [l, r]`, return a list where the `i`th entry is the number of vowels (`a`, `e`, `i`, `o`, `u`) in the substring `word[l..r]`, inclusive.
+
+**Example:** `word = "prefixsum"`, `queries = [[0, 2], [1, 5], [3, 8]]` returns `[1, 2, 2]`: `"pre"` has 1 vowel, `"refix"` has 2, `"fixsum"` has 2.
+
+(The linked LeetCode problem applies the same idea to a list of words, counting words that start and end with a vowel.)
+
+</Problem>
+
+## Approach
+
+Counting vowels in each substring separately costs `O(n)` per query. With `q` queries that's `O(n · q)`.
+
+Instead, build a [prefix count](/learn/code/prefix-sum/overview): `prefix[i]` = the number of vowels among the first `i` characters. Then each query is a subtraction:
+
+```text nocheck
+vowels(l, r) = prefix[r + 1] - prefix[l]
+```
+
+## Solution
+
+<CodeTabs>
+
+```python
+def count_vowels(word: str, queries: list[list[int]]) -> list[int]:
+    prefix = [0] * (len(word) + 1)
+    for i, char in enumerate(word):
+        prefix[i + 1] = prefix[i] + (char in "aeiou")
+    return [prefix[r + 1] - prefix[l] for l, r in queries]
+```
+
+```java
+public int[] countVowels(String word, int[][] queries) {
+    int[] prefix = new int[word.length() + 1];
+    for (int i = 0; i < word.length(); i++) {
+        prefix[i + 1] = prefix[i] + ("aeiou".indexOf(word.charAt(i)) >= 0 ? 1 : 0);
+    }
+    int[] result = new int[queries.length];
+    for (int q = 0; q < queries.length; q++) result[q] = prefix[queries[q][1] + 1] - prefix[queries[q][0]];
+    return result;
+}
+```
+
+```cpp
+vector<int> countVowels(const string& word, const vector<vector<int>>& queries) {
+    vector<int> prefix(word.size() + 1, 0);
+    for (size_t i = 0; i < word.size(); i++) {
+        prefix[i + 1] = prefix[i] + (string("aeiou").find(word[i]) != string::npos ? 1 : 0);
+    }
+    vector<int> result;
+    for (const auto& q : queries) result.push_back(prefix[q[1] + 1] - prefix[q[0]]);
+    return result;
+}
+```
+
+```javascript
+function countVowels(word, queries) {
+  const prefix = new Array(word.length + 1).fill(0);
+  for (let i = 0; i < word.length; i++) prefix[i + 1] = prefix[i] + ("aeiou".includes(word[i]) ? 1 : 0);
+  return queries.map(([l, r]) => prefix[r + 1] - prefix[l]);
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(n + q)" space="O(n)" />
+
+<Callout type="interview">
+Whenever a problem has **many queries over ranges of a fixed array**, ask yourself what you could precompute once. A prefix sum is the simplest answer and often all you need.
+</Callout>

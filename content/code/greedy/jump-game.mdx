@@ -1,0 +1,85 @@
+---
+title: Jump Game
+description: Track the farthest index you can reach; you're stuck only if you arrive at an index beyond it.
+---
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/jump-game/">
+
+You start at index 0 of an array `nums`. Each element `nums[i]` is the **maximum** jump length from that position. Return `True` if you can reach the last index.
+
+**Example:** `nums = [2, 3, 1, 1, 4]` returns `True` (0 → 1 → 4). `nums = [3, 2, 1, 0, 4]` returns `False`: every path lands on index 3, whose jump length is 0.
+
+</Problem>
+
+## Approach
+
+You don't need to track which path you take, only **how far you could get**. Keep `farthest`, the largest index reachable so far.
+
+Walk through the array:
+
+- If the current index `i` is beyond `farthest`, you can't even get here: return `False`.
+- Otherwise, from `i` you can reach `i + nums[i]`, so update `farthest`.
+
+If you make it through the loop (or `farthest` reaches the last index), the answer is `True`.
+
+Why is this enough? Every index up to `farthest` is reachable, because you can always jump **shorter** than the maximum. So the set of reachable indices is always a prefix of the array, fully described by `farthest`.
+
+## Solution
+
+<CodeTabs>
+
+```python
+def can_jump(nums: list[int]) -> bool:
+    farthest = 0
+    for i, jump in enumerate(nums):
+        if i > farthest:
+            return False                   # can't reach index i
+        farthest = max(farthest, i + jump)
+        if farthest >= len(nums) - 1:
+            return True
+    return True
+```
+
+```java
+public boolean canJump(int[] nums) {
+    int farthest = 0;
+    for (int i = 0; i < nums.length; i++) {
+        if (i > farthest) return false;  // can't reach index i
+        farthest = Math.max(farthest, i + nums[i]);
+        if (farthest >= nums.length - 1) return true;
+    }
+    return true;
+}
+```
+
+```cpp
+bool canJump(const vector<int>& nums) {
+    int farthest = 0;
+    for (int i = 0; i < (int)nums.size(); i++) {
+        if (i > farthest) return false;  // can't reach index i
+        farthest = max(farthest, i + nums[i]);
+        if (farthest >= (int)nums.size() - 1) return true;
+    }
+    return true;
+}
+```
+
+```javascript
+function canJump(nums) {
+  let farthest = 0;
+  for (let i = 0; i < nums.length; i++) {
+    if (i > farthest) return false; // can't reach index i
+    farthest = Math.max(farthest, i + nums[i]);
+    if (farthest >= nums.length - 1) return true;
+  }
+  return true;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(n)" space="O(1)" />
+
+<Callout type="tip">
+A DP solution (`reachable[i]` = can I reach index `i`?) also works but takes `O(n²)` time. The greedy version collapses all of that state into one number.
+</Callout>
