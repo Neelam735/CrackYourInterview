@@ -1,0 +1,82 @@
+---
+title: Return Values
+description: Solve each subtree, return its answer, and combine the children's answers at the parent.
+readingTime: 6 min
+---
+
+## Bottom-up thinking
+
+Many tree problems have answers that can be **built from the answers for the subtrees**. The height of a tree is one more than its taller subtree. The size of a tree is its left size plus its right size plus one. The sum of a tree is its value plus the two subtree sums.
+
+For these problems, write a DFS that **returns** the answer for the subtree rooted at `node`:
+
+```python nocheck
+def solve(node):
+    if node is None:
+        return BASE              # answer for an empty tree
+    left = solve(node.left)      # trust the recursion
+    right = solve(node.right)
+    return combine(node.val, left, right)
+```
+
+Because the children are processed before the parent can combine them, this is a **post-order** traversal.
+
+## The recursive leap of faith
+
+Don't try to trace the whole recursion in your head. Instead:
+
+1. **Define** exactly what `solve(node)` returns, in one sentence. For example: "the number of nodes in the subtree rooted at `node`".
+2. **Trust** that the calls on `node.left` and `node.right` return exactly that, for their subtrees.
+3. **Combine:** given those two answers, what's the answer for `node`?
+4. **Base case:** what's the answer for an empty tree?
+
+If each step is right, the whole thing is right.
+
+## Example: count the nodes
+
+1. `count(node)` = the number of nodes in `node`'s subtree.
+2. Assume `count(node.left)` and `count(node.right)` are correct.
+3. `count(node) = count(node.left) + count(node.right) + 1`.
+4. `count(None) = 0`.
+
+<CodeTabs>
+
+```python
+def count_nodes(root: TreeNode | None) -> int:
+    if root is None:
+        return 0
+    return count_nodes(root.left) + count_nodes(root.right) + 1
+```
+
+```java
+public int countNodes(TreeNode root) {
+    if (root == null) return 0;
+    return countNodes(root.left) + countNodes(root.right) + 1;
+}
+```
+
+```cpp
+int countNodes(TreeNode* root) {
+    if (!root) return 0;
+    return countNodes(root->left) + countNodes(root->right) + 1;
+}
+```
+
+```javascript
+function countNodes(root) {
+  if (root === null) return 0;
+  return countNodes(root.left) + countNodes(root.right) + 1;
+}
+```
+
+</CodeTabs>
+
+## Returning more than one value
+
+Sometimes the parent needs two facts about each child, for example "the height" **and** "is it balanced?". Return a pair (a tuple, a small array or object), or return a special value such as `-1` to mean "not balanced".
+
+And sometimes the value you **return** isn't the answer you're looking for. In [Diameter of a Binary Tree](/learn/code/depth-first-search/diameter-of-binary-tree), each call returns a height, while the best diameter is tracked in a separate variable along the way.
+
+<Callout type="tip">
+When the answer for a node depends only on its subtree, think "return values". When it depends on the path from the root down to the node, think [passing values down](/learn/code/depth-first-search/passing-values-down).
+</Callout>

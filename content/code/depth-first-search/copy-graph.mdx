@@ -1,0 +1,104 @@
+---
+title: Copy Graph
+description: DFS through the original graph while a hash map remembers which nodes have already been copied.
+---
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/clone-graph/">
+
+Given a reference to a node in a connected undirected graph, return a **deep copy** of the graph. Each node has a value `val` and a list of `neighbors`.
+
+```python nocheck
+class Node:
+    def __init__(self, val=0, neighbors=None):
+        self.val = val
+        self.neighbors = neighbors if neighbors is not None else []
+```
+
+**Example:** a 4-cycle `1 - 2 - 3 - 4 - 1` must come back as a new 4-cycle made of brand-new node objects.
+
+</Problem>
+
+## Approach
+
+Walk the original graph with DFS, creating a copy of each node the first time you see it. The graph has cycles, so you'll reach some nodes more than once. Use a **hash map from original node to its copy**. It does two jobs:
+
+1. It's the **visited set**: if a node is already in the map, don't copy it again.
+2. It lets you **connect the copies**: when wiring up a neighbour, look up its copy in the map.
+
+`clone(node)`:
+
+1. If `node` is already in the map, return its copy.
+2. Create the copy and put it in the map **before** visiting neighbours. This is what stops cycles from looping forever.
+3. For each neighbour, append `clone(neighbor)` to the copy's neighbour list.
+
+## Solution
+
+<CodeTabs>
+
+```python
+def clone_graph(node: Node | None) -> Node | None:
+    copies = {}  # original node -> its copy
+
+    def clone(original):
+        if original in copies:
+            return copies[original]
+        copy = Node(original.val)
+        copies[original] = copy          # register before recursing (handles cycles)
+        for neighbor in original.neighbors:
+            copy.neighbors.append(clone(neighbor))
+        return copy
+
+    return clone(node) if node else None
+```
+
+```java
+public Node cloneGraph(Node node) {
+    return node == null ? null : clone(node, new HashMap<>());
+}
+
+private Node clone(Node original, Map<Node, Node> copies) {
+    if (copies.containsKey(original)) return copies.get(original);
+    Node copy = new Node(original.val);
+    copies.put(original, copy);  // register before recursing (handles cycles)
+    for (Node neighbor : original.neighbors) copy.neighbors.add(clone(neighbor, copies));
+    return copy;
+}
+```
+
+```cpp
+Node* clone(Node* original, unordered_map<Node*, Node*>& copies) {
+    if (copies.count(original)) return copies[original];
+    Node* copy = new Node(original->val);
+    copies[original] = copy;  // register before recursing (handles cycles)
+    for (Node* neighbor : original->neighbors) copy->neighbors.push_back(clone(neighbor, copies));
+    return copy;
+}
+
+Node* cloneGraph(Node* node) {
+    if (!node) return nullptr;
+    unordered_map<Node*, Node*> copies;
+    return clone(node, copies);
+}
+```
+
+```javascript
+function cloneGraph(node) {
+  const copies = new Map(); // original node -> its copy
+  const clone = (original) => {
+    if (copies.has(original)) return copies.get(original);
+    const copy = new Node(original.val);
+    copies.set(original, copy); // register before recursing (handles cycles)
+    for (const neighbor of original.neighbors) copy.neighbors.push(clone(neighbor));
+    return copy;
+  };
+  return node ? clone(node) : null;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(V + E)" space="O(V)" />
+
+<Callout type="warning">
+If you add the copy to the map **after** cloning the neighbours, a cycle sends the recursion back to the same node before it's registered, and it never terminates.
+</Callout>

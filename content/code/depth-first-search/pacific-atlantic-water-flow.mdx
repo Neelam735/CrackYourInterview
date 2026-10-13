@@ -1,0 +1,167 @@
+---
+title: Pacific Atlantic Water Flow
+description: Run DFS uphill from each ocean's coastline, then return the cells both searches reached.
+---
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/pacific-atlantic-water-flow/">
+
+An island is an `m × n` grid of heights. The **Pacific** ocean touches the top and left edges; the **Atlantic** touches the bottom and right edges. Rain flows from a cell to a neighbouring cell (up, down, left or right) if the neighbour's height is **less than or equal to** the current height. Water flows into an ocean from any cell next to it.
+
+Return every cell `[r, c]` from which water can reach **both** oceans, in row-major order.
+
+**Example:**
+
+```text nocheck
+heights = [[1, 2, 2, 3, 5],
+           [3, 2, 3, 4, 4],
+           [2, 4, 5, 3, 1],
+           [6, 7, 1, 4, 5],
+           [5, 1, 1, 2, 4]]
+```
+
+returns `[[0, 4], [1, 3], [1, 4], [2, 2], [3, 0], [3, 1], [4, 0]]`.
+
+</Problem>
+
+## Think in reverse
+
+Simulating rain from every cell repeats a lot of work: `O((m·n)²)`. Instead, start at the **oceans** and walk **uphill**.
+
+Water can flow from cell `A` down to an ocean exactly when, starting from that ocean's coast, you can climb to `A` by moving to neighbours that are **at least as high**. So:
+
+1. DFS from every Pacific coast cell (top row and left column), moving only to neighbours with height `≥` the current one. Everything reached can drain into the Pacific.
+2. Do the same from the Atlantic coast (bottom row and right column).
+3. The answer is the cells reached by **both** searches.
+
+Each search visits every cell at most once, so the whole thing is `O(m·n)`.
+
+## Solution
+
+<CodeTabs>
+
+```python
+def pacific_atlantic(heights: list[list[int]]) -> list[list[int]]:
+    rows, cols = len(heights), len(heights[0])
+    pacific, atlantic = set(), set()
+
+    def climb(r, c, reached):
+        reached.add((r, c))
+        for nr, nc in ((r + 1, c), (r - 1, c), (r, c + 1), (r, c - 1)):
+            if (0 <= nr < rows and 0 <= nc < cols and (nr, nc) not in reached
+                    and heights[nr][nc] >= heights[r][c]):     # only move uphill
+                climb(nr, nc, reached)
+
+    for r in range(rows):
+        climb(r, 0, pacific)              # left edge
+        climb(r, cols - 1, atlantic)      # right edge
+    for c in range(cols):
+        climb(0, c, pacific)              # top edge
+        climb(rows - 1, c, atlantic)      # bottom edge
+
+    return [[r, c] for r in range(rows) for c in range(cols)
+            if (r, c) in pacific and (r, c) in atlantic]
+```
+
+```java
+public List<List<Integer>> pacificAtlantic(int[][] heights) {
+    int rows = heights.length, cols = heights[0].length;
+    boolean[][] pacific = new boolean[rows][cols], atlantic = new boolean[rows][cols];
+    for (int r = 0; r < rows; r++) {
+        climb(heights, r, 0, pacific);          // left edge
+        climb(heights, r, cols - 1, atlantic);  // right edge
+    }
+    for (int c = 0; c < cols; c++) {
+        climb(heights, 0, c, pacific);          // top edge
+        climb(heights, rows - 1, c, atlantic);  // bottom edge
+    }
+    List<List<Integer>> result = new ArrayList<>();
+    for (int r = 0; r < rows; r++)
+        for (int c = 0; c < cols; c++)
+            if (pacific[r][c] && atlantic[r][c]) result.add(List.of(r, c));
+    return result;
+}
+
+private void climb(int[][] heights, int r, int c, boolean[][] reached) {
+    reached[r][c] = true;
+    int[][] dirs = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+    for (int[] d : dirs) {
+        int nr = r + d[0], nc = c + d[1];
+        if (nr >= 0 && nr < heights.length && nc >= 0 && nc < heights[0].length
+                && !reached[nr][nc] && heights[nr][nc] >= heights[r][c]) {  // only move uphill
+            climb(heights, nr, nc, reached);
+        }
+    }
+}
+```
+
+```cpp
+void climb(const vector<vector<int>>& heights, int r, int c, vector<vector<bool>>& reached) {
+    reached[r][c] = true;
+    int dirs[4][2] = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+    for (auto& d : dirs) {
+        int nr = r + d[0], nc = c + d[1];
+        if (nr >= 0 && nr < (int)heights.size() && nc >= 0 && nc < (int)heights[0].size()
+                && !reached[nr][nc] && heights[nr][nc] >= heights[r][c]) {  // only move uphill
+            climb(heights, nr, nc, reached);
+        }
+    }
+}
+
+vector<vector<int>> pacificAtlantic(const vector<vector<int>>& heights) {
+    int rows = heights.size(), cols = heights[0].size();
+    vector<vector<bool>> pacific(rows, vector<bool>(cols)), atlantic(rows, vector<bool>(cols));
+    for (int r = 0; r < rows; r++) {
+        climb(heights, r, 0, pacific);          // left edge
+        climb(heights, r, cols - 1, atlantic);  // right edge
+    }
+    for (int c = 0; c < cols; c++) {
+        climb(heights, 0, c, pacific);          // top edge
+        climb(heights, rows - 1, c, atlantic);  // bottom edge
+    }
+    vector<vector<int>> result;
+    for (int r = 0; r < rows; r++)
+        for (int c = 0; c < cols; c++)
+            if (pacific[r][c] && atlantic[r][c]) result.push_back({r, c});
+    return result;
+}
+```
+
+```javascript
+function pacificAtlantic(heights) {
+  const rows = heights.length;
+  const cols = heights[0].length;
+  const grid = () => Array.from({ length: rows }, () => new Array(cols).fill(false));
+  const pacific = grid();
+  const atlantic = grid();
+  const climb = (r, c, reached) => {
+    reached[r][c] = true;
+    for (const [nr, nc] of [[r + 1, c], [r - 1, c], [r, c + 1], [r, c - 1]]) {
+      if (nr >= 0 && nr < rows && nc >= 0 && nc < cols &&
+          !reached[nr][nc] && heights[nr][nc] >= heights[r][c]) { // only move uphill
+        climb(nr, nc, reached);
+      }
+    }
+  };
+  for (let r = 0; r < rows; r++) {
+    climb(r, 0, pacific);         // left edge
+    climb(r, cols - 1, atlantic); // right edge
+  }
+  for (let c = 0; c < cols; c++) {
+    climb(0, c, pacific);         // top edge
+    climb(rows - 1, c, atlantic); // bottom edge
+  }
+  const result = [];
+  for (let r = 0; r < rows; r++)
+    for (let c = 0; c < cols; c++)
+      if (pacific[r][c] && atlantic[r][c]) result.push([r, c]);
+  return result;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(rows × cols)" space="O(rows × cols)" />
+
+<Callout type="interview">
+The "reverse the direction of flow" insight is the whole problem. Say it explicitly: "rather than asking where rain from each cell goes, I'll ask which cells each ocean can be reached from, by climbing uphill from the coast."
+</Callout>

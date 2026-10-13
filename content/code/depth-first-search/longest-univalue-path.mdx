@@ -1,0 +1,108 @@
+---
+title: Longest Univalue Path
+description: Return the longest same-value arm going down from each node, and join two arms at the node to update the answer.
+---
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/longest-univalue-path/">
+
+Given the `root` of a binary tree, return the number of **edges** in the longest path where every node has the same value. The path may or may not pass through the root.
+
+**Example:** `root = [5, 4, 5, 1, 1, null, 5]` returns `2`: the path `5 → 5 → 5` down the right side. `root = [1, 4, 5, 4, 4, null, 5]` returns `2`: the path `4 → 4 → 4` through the left child.
+
+</Problem>
+
+## Approach
+
+This has the same shape as [Diameter of a Binary Tree](/learn/code/depth-first-search/diameter-of-binary-tree), with one extra rule: a path can only continue into a child that has the **same value**.
+
+Define `arm(node)` = the number of edges in the longest same-value path that **starts at `node` and goes down** into one subtree.
+
+For each node:
+
+1. Get `left_arm = arm(node.left)` and `right_arm = arm(node.right)`.
+2. If the left child has the same value, the path can extend into it: `left = left_arm + 1`. Otherwise `left = 0`. Same for the right.
+3. A path can **turn** at this node, using both sides: update `best` with `left + right`.
+4. A path continuing up to the parent can only use **one** side: return `max(left, right)`.
+
+## Solution
+
+<CodeTabs>
+
+```python
+def longest_univalue_path(root: TreeNode | None) -> int:
+    best = 0
+
+    def arm(node):
+        nonlocal best
+        if node is None:
+            return 0
+        left_arm, right_arm = arm(node.left), arm(node.right)
+        left = left_arm + 1 if node.left and node.left.val == node.val else 0
+        right = right_arm + 1 if node.right and node.right.val == node.val else 0
+        best = max(best, left + right)    # path turning at this node
+        return max(left, right)           # parent can extend only one side
+
+    arm(root)
+    return best
+```
+
+```java
+private int best;
+
+public int longestUnivaluePath(TreeNode root) {
+    best = 0;
+    arm(root);
+    return best;
+}
+
+private int arm(TreeNode node) {
+    if (node == null) return 0;
+    int leftArm = arm(node.left), rightArm = arm(node.right);
+    int left = node.left != null && node.left.val == node.val ? leftArm + 1 : 0;
+    int right = node.right != null && node.right.val == node.val ? rightArm + 1 : 0;
+    best = Math.max(best, left + right);  // path turning at this node
+    return Math.max(left, right);         // parent can extend only one side
+}
+```
+
+```cpp
+int arm(TreeNode* node, int& best) {
+    if (!node) return 0;
+    int leftArm = arm(node->left, best), rightArm = arm(node->right, best);
+    int left = node->left && node->left->val == node->val ? leftArm + 1 : 0;
+    int right = node->right && node->right->val == node->val ? rightArm + 1 : 0;
+    best = max(best, left + right);  // path turning at this node
+    return max(left, right);         // parent can extend only one side
+}
+
+int longestUnivaluePath(TreeNode* root) {
+    int best = 0;
+    arm(root, best);
+    return best;
+}
+```
+
+```javascript
+function longestUnivaluePath(root) {
+  let best = 0;
+  const arm = (node) => {
+    if (node === null) return 0;
+    const leftArm = arm(node.left);
+    const rightArm = arm(node.right);
+    const left = node.left && node.left.val === node.val ? leftArm + 1 : 0;
+    const right = node.right && node.right.val === node.val ? rightArm + 1 : 0;
+    best = Math.max(best, left + right); // path turning at this node
+    return Math.max(left, right);        // parent can extend only one side
+  };
+  arm(root);
+  return best;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(n)" space="O(h)" />
+
+<Callout type="interview">
+Call out the pattern: "the value I return to my parent is different from the value I use to update the answer". It appears in diameter, maximum path sum, longest univalue path and many more. Recognizing it is half the solution.
+</Callout>

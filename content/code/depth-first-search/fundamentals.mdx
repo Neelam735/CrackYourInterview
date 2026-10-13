@@ -1,0 +1,260 @@
+---
+title: DFS Fundamentals
+description: Traversal orders, base cases, and how recursive and iterative DFS relate.
+readingTime: 7 min
+---
+
+## Three traversal orders
+
+A binary tree DFS visits a node and both of its subtrees. The only difference between the classic orders is **when** you process the node itself:
+
+| Order | Sequence | Typical use |
+|-------|----------|-------------|
+| Pre-order | node, left, right | Copying or serializing a tree, passing values down |
+| In-order | left, node, right | Visiting a binary search tree in sorted order |
+| Post-order | left, right, node | Computing answers from children (heights, sizes, sums) |
+
+For the tree `[1, 2, 3, 4, 5]` (2 and 3 are children of 1; 4 and 5 are children of 2):
+
+- pre-order: `1, 2, 4, 5, 3`
+- in-order: `4, 2, 5, 1, 3`
+- post-order: `4, 5, 2, 3, 1`
+
+<CodeTabs>
+
+```python
+def preorder(root: TreeNode | None) -> list[int]:
+    result = []
+
+    def dfs(node):
+        if node is None:
+            return
+        result.append(node.val)   # node first
+        dfs(node.left)
+        dfs(node.right)
+
+    dfs(root)
+    return result
+
+
+def inorder(root: TreeNode | None) -> list[int]:
+    result = []
+
+    def dfs(node):
+        if node is None:
+            return
+        dfs(node.left)
+        result.append(node.val)   # node in the middle
+        dfs(node.right)
+
+    dfs(root)
+    return result
+
+
+def postorder(root: TreeNode | None) -> list[int]:
+    result = []
+
+    def dfs(node):
+        if node is None:
+            return
+        dfs(node.left)
+        dfs(node.right)
+        result.append(node.val)   # node last
+
+    dfs(root)
+    return result
+```
+
+```java
+public List<Integer> preorder(TreeNode root) {
+    List<Integer> result = new ArrayList<>();
+    pre(root, result);
+    return result;
+}
+
+private void pre(TreeNode node, List<Integer> result) {
+    if (node == null) return;
+    result.add(node.val);  // node first
+    pre(node.left, result);
+    pre(node.right, result);
+}
+
+public List<Integer> inorder(TreeNode root) {
+    List<Integer> result = new ArrayList<>();
+    in(root, result);
+    return result;
+}
+
+private void in(TreeNode node, List<Integer> result) {
+    if (node == null) return;
+    in(node.left, result);
+    result.add(node.val);  // node in the middle
+    in(node.right, result);
+}
+
+public List<Integer> postorder(TreeNode root) {
+    List<Integer> result = new ArrayList<>();
+    post(root, result);
+    return result;
+}
+
+private void post(TreeNode node, List<Integer> result) {
+    if (node == null) return;
+    post(node.left, result);
+    post(node.right, result);
+    result.add(node.val);  // node last
+}
+```
+
+```cpp
+void pre(TreeNode* node, vector<int>& result) {
+    if (!node) return;
+    result.push_back(node->val);  // node first
+    pre(node->left, result);
+    pre(node->right, result);
+}
+
+void in(TreeNode* node, vector<int>& result) {
+    if (!node) return;
+    in(node->left, result);
+    result.push_back(node->val);  // node in the middle
+    in(node->right, result);
+}
+
+void post(TreeNode* node, vector<int>& result) {
+    if (!node) return;
+    post(node->left, result);
+    post(node->right, result);
+    result.push_back(node->val);  // node last
+}
+
+vector<int> preorder(TreeNode* root) { vector<int> r; pre(root, r); return r; }
+vector<int> inorder(TreeNode* root) { vector<int> r; in(root, r); return r; }
+vector<int> postorder(TreeNode* root) { vector<int> r; post(root, r); return r; }
+```
+
+```javascript
+function preorder(root) {
+  const result = [];
+  const dfs = (node) => {
+    if (!node) return;
+    result.push(node.val); // node first
+    dfs(node.left);
+    dfs(node.right);
+  };
+  dfs(root);
+  return result;
+}
+
+function inorder(root) {
+  const result = [];
+  const dfs = (node) => {
+    if (!node) return;
+    dfs(node.left);
+    result.push(node.val); // node in the middle
+    dfs(node.right);
+  };
+  dfs(root);
+  return result;
+}
+
+function postorder(root) {
+  const result = [];
+  const dfs = (node) => {
+    if (!node) return;
+    dfs(node.left);
+    dfs(node.right);
+    result.push(node.val); // node last
+  };
+  dfs(root);
+  return result;
+}
+```
+
+</CodeTabs>
+
+## The base case
+
+Every recursive DFS needs a **base case** that stops the recursion. For trees it's almost always "the node is empty":
+
+```python nocheck
+if node is None:
+    return <answer for an empty tree>
+```
+
+Choosing what an empty tree returns is often the key decision: `0` for a height or a sum, `True` for "is this valid?", `-infinity` for a maximum. If you get it right, leaves need no special case, because a leaf is just a node whose two children are empty.
+
+## Iterative DFS with a stack
+
+Recursion uses the call stack. You can manage the stack yourself instead, which avoids stack overflow on very deep trees (for example a tree shaped like a linked list with 100,000 nodes).
+
+<CodeTabs>
+
+```python
+def preorder_iterative(root: TreeNode | None) -> list[int]:
+    result = []
+    stack = [root] if root else []
+    while stack:
+        node = stack.pop()
+        result.append(node.val)
+        if node.right:
+            stack.append(node.right)   # pushed first, so processed after the left
+        if node.left:
+            stack.append(node.left)
+    return result
+```
+
+```java
+public List<Integer> preorderIterative(TreeNode root) {
+    List<Integer> result = new ArrayList<>();
+    Deque<TreeNode> stack = new ArrayDeque<>();
+    if (root != null) stack.push(root);
+    while (!stack.isEmpty()) {
+        TreeNode node = stack.pop();
+        result.add(node.val);
+        if (node.right != null) stack.push(node.right);  // processed after the left
+        if (node.left != null) stack.push(node.left);
+    }
+    return result;
+}
+```
+
+```cpp
+vector<int> preorderIterative(TreeNode* root) {
+    vector<int> result;
+    stack<TreeNode*> st;
+    if (root) st.push(root);
+    while (!st.empty()) {
+        TreeNode* node = st.top();
+        st.pop();
+        result.push_back(node->val);
+        if (node->right) st.push(node->right);  // processed after the left
+        if (node->left) st.push(node->left);
+    }
+    return result;
+}
+```
+
+```javascript
+function preorderIterative(root) {
+  const result = [];
+  const stack = root ? [root] : [];
+  while (stack.length) {
+    const node = stack.pop();
+    result.push(node.val);
+    if (node.right) stack.push(node.right); // processed after the left
+    if (node.left) stack.push(node.left);
+  }
+  return result;
+}
+```
+
+</CodeTabs>
+
+## Complexity
+
+Every node is visited once, so DFS is `O(n)` time. The extra space is the depth of the recursion: `O(h)` for a tree of height `h`. That's `O(log n)` for a balanced tree but `O(n)` for a skewed one.
+
+<Callout type="interview">
+When you state the space complexity of a recursive solution, include the call stack. "`O(1)` extra space" is wrong for recursive DFS; it's `O(h)`.
+</Callout>

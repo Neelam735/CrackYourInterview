@@ -1,0 +1,152 @@
+---
+title: DFS on Graphs
+description: The same go-deep-then-back-up idea, plus a visited set so cycles don't trap you.
+readingTime: 7 min
+---
+
+## From trees to graphs
+
+A graph is a set of **nodes** connected by **edges**. Trees are a special kind of graph, but general graphs can have:
+
+- **cycles** (you can walk in a loop and come back),
+- **disconnected pieces** (some nodes can't reach others),
+- **direction** (an edge may go only one way).
+
+DFS works on graphs exactly like on trees, with **one addition**: a node can be reached along more than one path, so you must **remember which nodes you've visited**. Without that, a cycle would make the search loop forever.
+
+```python nocheck
+def dfs(node):
+    visited.add(node)
+    for neighbor in graph[node]:
+        if neighbor not in visited:
+            dfs(neighbor)
+```
+
+## When the problem is a graph in disguise
+
+Interview questions rarely say "graph". Look for **things connected to other things**:
+
+- cities and roads, people and friendships, accounts that share an email,
+- courses and prerequisites, words that differ by one letter,
+- cells in a grid (see [Matrices](/learn/code/depth-first-search/matrices)).
+
+## Example: count connected components
+
+Given `n` nodes labelled `0` to `n - 1` and a list of undirected `edges`, count how many separate pieces the graph has.
+
+Loop over every node. Each time you find one that isn't visited yet, you've found a **new component**: count it, then DFS from it to mark everything in that component as visited.
+
+<CodeTabs>
+
+```python
+def count_components(n: int, edges: list[list[int]]) -> int:
+    graph = [[] for _ in range(n)]
+    for a, b in edges:
+        graph[a].append(b)
+        graph[b].append(a)
+
+    visited = [False] * n
+
+    def dfs(node):
+        visited[node] = True
+        for neighbor in graph[node]:
+            if not visited[neighbor]:
+                dfs(neighbor)
+
+    components = 0
+    for node in range(n):
+        if not visited[node]:
+            components += 1     # a node no earlier search reached
+            dfs(node)
+    return components
+```
+
+```java
+public int countComponents(int n, int[][] edges) {
+    List<List<Integer>> graph = new ArrayList<>();
+    for (int i = 0; i < n; i++) graph.add(new ArrayList<>());
+    for (int[] e : edges) {
+        graph.get(e[0]).add(e[1]);
+        graph.get(e[1]).add(e[0]);
+    }
+    boolean[] visited = new boolean[n];
+    int components = 0;
+    for (int node = 0; node < n; node++) {
+        if (!visited[node]) {
+            components++;  // a node no earlier search reached
+            dfs(node, graph, visited);
+        }
+    }
+    return components;
+}
+
+private void dfs(int node, List<List<Integer>> graph, boolean[] visited) {
+    visited[node] = true;
+    for (int neighbor : graph.get(node)) {
+        if (!visited[neighbor]) dfs(neighbor, graph, visited);
+    }
+}
+```
+
+```cpp
+void dfs(int node, const vector<vector<int>>& graph, vector<bool>& visited) {
+    visited[node] = true;
+    for (int neighbor : graph[node]) {
+        if (!visited[neighbor]) dfs(neighbor, graph, visited);
+    }
+}
+
+int countComponents(int n, const vector<vector<int>>& edges) {
+    vector<vector<int>> graph(n);
+    for (const auto& e : edges) {
+        graph[e[0]].push_back(e[1]);
+        graph[e[1]].push_back(e[0]);
+    }
+    vector<bool> visited(n, false);
+    int components = 0;
+    for (int node = 0; node < n; node++) {
+        if (!visited[node]) {
+            components++;  // a node no earlier search reached
+            dfs(node, graph, visited);
+        }
+    }
+    return components;
+}
+```
+
+```javascript
+function countComponents(n, edges) {
+  const graph = Array.from({ length: n }, () => []);
+  for (const [a, b] of edges) {
+    graph[a].push(b);
+    graph[b].push(a);
+  }
+  const visited = new Array(n).fill(false);
+  const dfs = (node) => {
+    visited[node] = true;
+    for (const neighbor of graph[node]) if (!visited[neighbor]) dfs(neighbor);
+  };
+  let components = 0;
+  for (let node = 0; node < n; node++) {
+    if (!visited[node]) {
+      components++; // a node no earlier search reached
+      dfs(node);
+    }
+  }
+  return components;
+}
+```
+
+</CodeTabs>
+
+## Complexity
+
+Each node is visited once and each edge is examined once from each end, so graph DFS is `O(V + E)` time and `O(V)` space for the visited set and the recursion.
+
+<Callout type="interview">
+Before coding a graph problem, say three things out loud: what the **nodes** are, what the **edges** are, and whether the graph is **directed**. That framing makes the rest of the solution much easier to follow.
+</Callout>
+
+## Problems
+
+<ProblemList section="depth-first-search" />

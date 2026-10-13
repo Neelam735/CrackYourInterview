@@ -1,0 +1,102 @@
+---
+title: Diameter of a Binary Tree
+description: Return heights from the recursion while tracking the longest left-height plus right-height seen at any node.
+---
+
+<Problem difficulty="Easy" link="https://leetcode.com/problems/diameter-of-binary-tree/">
+
+The **diameter** of a binary tree is the number of **edges** on the longest path between any two nodes. The path doesn't have to pass through the root. Given the `root`, return the diameter.
+
+**Example:** `root = [1, 2, 3, 4, 5]` returns `3`: the path `4 → 2 → 1 → 3` (or `5 → 2 → 1 → 3`) has 3 edges.
+
+</Problem>
+
+## Approach
+
+Every path has a single **highest node**, where it turns from going up to going down. For a path whose highest node is `node`, the longest one goes down as far as possible on both sides:
+
+```text nocheck
+longest path through node = height(node.left) + height(node.right)
+```
+
+where `height` counts nodes on the longest downward path (an empty tree has height 0). That's exactly the number of edges, because each child subtree contributes one edge per node.
+
+So compute heights bottom-up, as in [Maximum Depth](/learn/code/depth-first-search/maximum-depth). At every node, while you have both children's heights, update the best diameter. The recursion **returns heights**, and the answer is **tracked on the side**.
+
+## Solution
+
+<CodeTabs>
+
+```python
+def diameter_of_binary_tree(root: TreeNode | None) -> int:
+    best = 0
+
+    def height(node):
+        nonlocal best
+        if node is None:
+            return 0
+        left = height(node.left)
+        right = height(node.right)
+        best = max(best, left + right)   # longest path that turns at this node
+        return 1 + max(left, right)
+
+    height(root)
+    return best
+```
+
+```java
+private int best;
+
+public int diameterOfBinaryTree(TreeNode root) {
+    best = 0;
+    height(root);
+    return best;
+}
+
+private int height(TreeNode node) {
+    if (node == null) return 0;
+    int left = height(node.left);
+    int right = height(node.right);
+    best = Math.max(best, left + right);  // longest path that turns at this node
+    return 1 + Math.max(left, right);
+}
+```
+
+```cpp
+int height(TreeNode* node, int& best) {
+    if (!node) return 0;
+    int left = height(node->left, best);
+    int right = height(node->right, best);
+    best = max(best, left + right);  // longest path that turns at this node
+    return 1 + max(left, right);
+}
+
+int diameterOfBinaryTree(TreeNode* root) {
+    int best = 0;
+    height(root, best);
+    return best;
+}
+```
+
+```javascript
+function diameterOfBinaryTree(root) {
+  let best = 0;
+  const height = (node) => {
+    if (node === null) return 0;
+    const left = height(node.left);
+    const right = height(node.right);
+    best = Math.max(best, left + right); // longest path that turns at this node
+    return 1 + Math.max(left, right);
+  };
+  height(root);
+  return best;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(n)" space="O(h)" />
+
+<Callout type="warning">
+Returning `height(left) + height(right)` at the root only checks paths through the root. In a tree where one subtree is long and bushy and the other is tiny, the longest path lives entirely inside the big subtree, which is why you must update `best` at **every** node.
+</Callout>

@@ -1,0 +1,157 @@
+---
+title: Surrounded Regions
+description: Instead of finding the surrounded regions, find the ones that escape to the border and flip everything else.
+---
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/surrounded-regions/">
+
+Given an `m × n` board of `"X"` and `"O"`, capture every region of `"O"` that is **completely surrounded** by `"X"`, by flipping those `"O"`s to `"X"`. A region is surrounded if none of its cells is on the border of the board. Modify the board in place.
+
+**Example:**
+
+```text nocheck
+X X X X        X X X X
+X O O X   →    X X X X
+X X O X        X X X X
+X O X X        X O X X
+```
+
+The bottom `O` touches the border, so it survives.
+
+</Problem>
+
+## Think in reverse
+
+Checking whether a region is surrounded means exploring the whole region and watching for border cells, which is awkward. Flip the question around: **which `O`s survive?** Exactly the ones connected to an `O` on the border.
+
+1. DFS from every `O` on the **border**, marking each reachable `O` as safe (say, `"S"`).
+2. Sweep the whole board:
+   - remaining `O`s weren't reachable from the border, so flip them to `X`;
+   - `S` cells are safe, so turn them back into `O`.
+
+## Solution
+
+<CodeTabs>
+
+```python
+def solve(board: list[list[str]]) -> None:
+    rows, cols = len(board), len(board[0])
+
+    def mark_safe(r, c):
+        if r < 0 or r >= rows or c < 0 or c >= cols or board[r][c] != "O":
+            return
+        board[r][c] = "S"
+        mark_safe(r + 1, c)
+        mark_safe(r - 1, c)
+        mark_safe(r, c + 1)
+        mark_safe(r, c - 1)
+
+    for r in range(rows):              # left and right borders
+        mark_safe(r, 0)
+        mark_safe(r, cols - 1)
+    for c in range(cols):              # top and bottom borders
+        mark_safe(0, c)
+        mark_safe(rows - 1, c)
+
+    for r in range(rows):
+        for c in range(cols):
+            if board[r][c] == "O":
+                board[r][c] = "X"      # surrounded: capture
+            elif board[r][c] == "S":
+                board[r][c] = "O"      # reached the border: restore
+```
+
+```java
+public void solve(char[][] board) {
+    int rows = board.length, cols = board[0].length;
+    for (int r = 0; r < rows; r++) {  // left and right borders
+        markSafe(board, r, 0);
+        markSafe(board, r, cols - 1);
+    }
+    for (int c = 0; c < cols; c++) {  // top and bottom borders
+        markSafe(board, 0, c);
+        markSafe(board, rows - 1, c);
+    }
+    for (int r = 0; r < rows; r++) {
+        for (int c = 0; c < cols; c++) {
+            if (board[r][c] == 'O') board[r][c] = 'X';       // surrounded: capture
+            else if (board[r][c] == 'S') board[r][c] = 'O';  // reached the border: restore
+        }
+    }
+}
+
+private void markSafe(char[][] board, int r, int c) {
+    if (r < 0 || r >= board.length || c < 0 || c >= board[0].length || board[r][c] != 'O') return;
+    board[r][c] = 'S';
+    markSafe(board, r + 1, c);
+    markSafe(board, r - 1, c);
+    markSafe(board, r, c + 1);
+    markSafe(board, r, c - 1);
+}
+```
+
+```cpp
+void markSafe(vector<vector<char>>& board, int r, int c) {
+    if (r < 0 || r >= (int)board.size() || c < 0 || c >= (int)board[0].size() || board[r][c] != 'O') return;
+    board[r][c] = 'S';
+    markSafe(board, r + 1, c);
+    markSafe(board, r - 1, c);
+    markSafe(board, r, c + 1);
+    markSafe(board, r, c - 1);
+}
+
+void solve(vector<vector<char>>& board) {
+    int rows = board.size(), cols = board[0].size();
+    for (int r = 0; r < rows; r++) {  // left and right borders
+        markSafe(board, r, 0);
+        markSafe(board, r, cols - 1);
+    }
+    for (int c = 0; c < cols; c++) {  // top and bottom borders
+        markSafe(board, 0, c);
+        markSafe(board, rows - 1, c);
+    }
+    for (auto& row : board) {
+        for (char& cell : row) {
+            if (cell == 'O') cell = 'X';       // surrounded: capture
+            else if (cell == 'S') cell = 'O';  // reached the border: restore
+        }
+    }
+}
+```
+
+```javascript
+function solve(board) {
+  const rows = board.length;
+  const cols = board[0].length;
+  const markSafe = (r, c) => {
+    if (r < 0 || r >= rows || c < 0 || c >= cols || board[r][c] !== "O") return;
+    board[r][c] = "S";
+    markSafe(r + 1, c);
+    markSafe(r - 1, c);
+    markSafe(r, c + 1);
+    markSafe(r, c - 1);
+  };
+  for (let r = 0; r < rows; r++) {   // left and right borders
+    markSafe(r, 0);
+    markSafe(r, cols - 1);
+  }
+  for (let c = 0; c < cols; c++) {   // top and bottom borders
+    markSafe(0, c);
+    markSafe(rows - 1, c);
+  }
+  for (const row of board) {
+    for (let c = 0; c < cols; c++) {
+      if (row[c] === "O") row[c] = "X";      // surrounded: capture
+      else if (row[c] === "S") row[c] = "O"; // reached the border: restore
+    }
+  }
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(rows × cols)" space="O(rows × cols) for the recursion" />
+
+<Callout type="tip">
+"Start from the boundary and work inward" is a reusable trick. [Pacific Atlantic Water Flow](/learn/code/depth-first-search/pacific-atlantic-water-flow) uses it too.
+</Callout>

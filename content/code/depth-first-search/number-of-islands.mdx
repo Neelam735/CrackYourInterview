@@ -1,0 +1,138 @@
+---
+title: Number of Islands
+description: Scan the grid; every unvisited land cell starts a new island, which you then sink with DFS.
+---
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/number-of-islands/">
+
+Given an `m × n` grid of `"1"` (land) and `"0"` (water), return the number of islands. An island is a group of land cells connected horizontally or vertically, and the grid is surrounded by water.
+
+**Example:**
+
+```text nocheck
+1 1 0 0 0
+1 1 0 0 0
+0 0 1 0 0
+0 0 0 1 1
+```
+
+returns `3`.
+
+</Problem>
+
+## Approach
+
+This is [counting connected components](/learn/code/depth-first-search/graphs-overview) on a grid.
+
+Scan every cell. When you find land that hasn't been explored, you've found a **new island**: count it, then DFS from it and **sink** every connected land cell (turn it into water). Sinking marks those cells as visited, so the scan will never count that island again.
+
+The visualization below explores each island in breadth-first order. DFS visits the same cells in a different order, with the same result.
+
+<Visualizer id="number-of-islands" />
+
+## Solution
+
+<CodeTabs>
+
+```python
+def num_islands(grid: list[list[str]]) -> int:
+    rows, cols = len(grid), len(grid[0])
+
+    def sink(r, c):
+        if r < 0 or r >= rows or c < 0 or c >= cols or grid[r][c] != "1":
+            return
+        grid[r][c] = "0"                 # sink it so it isn't counted again
+        sink(r + 1, c)
+        sink(r - 1, c)
+        sink(r, c + 1)
+        sink(r, c - 1)
+
+    islands = 0
+    for r in range(rows):
+        for c in range(cols):
+            if grid[r][c] == "1":
+                islands += 1             # unexplored land: a new island
+                sink(r, c)
+    return islands
+```
+
+```java
+public int numIslands(char[][] grid) {
+    int islands = 0;
+    for (int r = 0; r < grid.length; r++) {
+        for (int c = 0; c < grid[0].length; c++) {
+            if (grid[r][c] == '1') {
+                islands++;  // unexplored land: a new island
+                sink(grid, r, c);
+            }
+        }
+    }
+    return islands;
+}
+
+private void sink(char[][] grid, int r, int c) {
+    if (r < 0 || r >= grid.length || c < 0 || c >= grid[0].length || grid[r][c] != '1') return;
+    grid[r][c] = '0';  // sink it so it isn't counted again
+    sink(grid, r + 1, c);
+    sink(grid, r - 1, c);
+    sink(grid, r, c + 1);
+    sink(grid, r, c - 1);
+}
+```
+
+```cpp
+void sink(vector<vector<char>>& grid, int r, int c) {
+    if (r < 0 || r >= (int)grid.size() || c < 0 || c >= (int)grid[0].size() || grid[r][c] != '1') return;
+    grid[r][c] = '0';  // sink it so it isn't counted again
+    sink(grid, r + 1, c);
+    sink(grid, r - 1, c);
+    sink(grid, r, c + 1);
+    sink(grid, r, c - 1);
+}
+
+int numIslands(vector<vector<char>> grid) {
+    int islands = 0;
+    for (int r = 0; r < (int)grid.size(); r++) {
+        for (int c = 0; c < (int)grid[0].size(); c++) {
+            if (grid[r][c] == '1') {
+                islands++;  // unexplored land: a new island
+                sink(grid, r, c);
+            }
+        }
+    }
+    return islands;
+}
+```
+
+```javascript
+function numIslands(grid) {
+  const rows = grid.length;
+  const cols = grid[0].length;
+  const sink = (r, c) => {
+    if (r < 0 || r >= rows || c < 0 || c >= cols || grid[r][c] !== "1") return;
+    grid[r][c] = "0"; // sink it so it isn't counted again
+    sink(r + 1, c);
+    sink(r - 1, c);
+    sink(r, c + 1);
+    sink(r, c - 1);
+  };
+  let islands = 0;
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      if (grid[r][c] === "1") {
+        islands++; // unexplored land: a new island
+        sink(r, c);
+      }
+    }
+  }
+  return islands;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(rows × cols)" space="O(rows × cols) worst case for the recursion" />
+
+<Callout type="interview">
+Ask whether you may modify the grid. If not, use a separate `visited` set or boolean grid. Either way the complexity is the same.
+</Callout>

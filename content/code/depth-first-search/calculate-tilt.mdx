@@ -1,0 +1,98 @@
+---
+title: Calculate Tilt
+description: Return each subtree's sum, and add up |left sum - right sum| at every node along the way.
+---
+
+<Problem difficulty="Easy" link="https://leetcode.com/problems/binary-tree-tilt/">
+
+The **tilt** of a node is the absolute difference between the sum of all values in its left subtree and the sum of all values in its right subtree (an empty subtree sums to 0). Given the `root` of a binary tree, return the sum of every node's tilt.
+
+**Example:** `root = [4, 2, 9, 3, 5, null, 7]` returns `15`. The tilts are: `3`, `5`, `7` → 0 (leaves); `2` → `|3 - 5| = 2`; `9` → `|0 - 7| = 7`; `4` → `|10 - 16| = 6`. Total `0 + 0 + 0 + 2 + 7 + 6 = 15`.
+
+</Problem>
+
+## Approach
+
+To compute a node's tilt, you need the **sums** of its two subtrees. Those sums are a classic [return value](/learn/code/depth-first-search/return-values): `sum(node) = node.val + sum(left) + sum(right)`.
+
+So the DFS **returns subtree sums**, and while it has both children's sums in hand, it **adds the node's tilt** to a running total kept outside the recursion.
+
+This is a common pattern: the function returns one thing (the sum) while the problem's answer (the total tilt) is collected on the side.
+
+## Solution
+
+<CodeTabs>
+
+```python
+def find_tilt(root: TreeNode | None) -> int:
+    total_tilt = 0
+
+    def subtree_sum(node):
+        nonlocal total_tilt
+        if node is None:
+            return 0
+        left = subtree_sum(node.left)
+        right = subtree_sum(node.right)
+        total_tilt += abs(left - right)       # this node's tilt
+        return node.val + left + right        # sum for the parent
+
+    subtree_sum(root)
+    return total_tilt
+```
+
+```java
+private int totalTilt;
+
+public int findTilt(TreeNode root) {
+    totalTilt = 0;
+    subtreeSum(root);
+    return totalTilt;
+}
+
+private int subtreeSum(TreeNode node) {
+    if (node == null) return 0;
+    int left = subtreeSum(node.left);
+    int right = subtreeSum(node.right);
+    totalTilt += Math.abs(left - right);  // this node's tilt
+    return node.val + left + right;       // sum for the parent
+}
+```
+
+```cpp
+int subtreeSum(TreeNode* node, int& totalTilt) {
+    if (!node) return 0;
+    int left = subtreeSum(node->left, totalTilt);
+    int right = subtreeSum(node->right, totalTilt);
+    totalTilt += abs(left - right);  // this node's tilt
+    return node->val + left + right; // sum for the parent
+}
+
+int findTilt(TreeNode* root) {
+    int totalTilt = 0;
+    subtreeSum(root, totalTilt);
+    return totalTilt;
+}
+```
+
+```javascript
+function findTilt(root) {
+  let totalTilt = 0;
+  const subtreeSum = (node) => {
+    if (node === null) return 0;
+    const left = subtreeSum(node.left);
+    const right = subtreeSum(node.right);
+    totalTilt += Math.abs(left - right); // this node's tilt
+    return node.val + left + right;      // sum for the parent
+  };
+  subtreeSum(root);
+  return totalTilt;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(n)" space="O(h)" />
+
+<Callout type="warning">
+Computing each node's subtree sums with a separate traversal makes the solution `O(n²)` on a skewed tree. Returning sums from a single post-order pass keeps it `O(n)`.
+</Callout>

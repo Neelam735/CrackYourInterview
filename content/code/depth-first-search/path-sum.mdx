@@ -1,0 +1,71 @@
+---
+title: Path Sum
+description: Subtract each node's value from the target on the way down, and check for zero at a leaf.
+---
+
+<Problem difficulty="Easy" link="https://leetcode.com/problems/path-sum/">
+
+Given the `root` of a binary tree and an integer `targetSum`, return `True` if the tree has a **root-to-leaf** path whose values add up to `targetSum`. A leaf is a node with no children.
+
+**Example:** `root = [5, 4, 8, 11, null, 13, 4, 7, 2, null, null, null, 1]`, `targetSum = 22` returns `True` (5 → 4 → 11 → 2).
+
+</Problem>
+
+## Approach
+
+Ask the question recursively. A path from `node` down to a leaf sums to `target` exactly when a path from one of its **children** sums to `target - node.val`. So:
+
+- **Empty tree:** no path exists, return `False`.
+- **Leaf:** the path is just this node, so check `node.val == target`.
+- **Otherwise:** return whether the left **or** right subtree has a path summing to `target - node.val`.
+
+The remaining target travels **down** as an argument, and the yes/no answer travels **up** as a return value.
+
+## Solution
+
+<CodeTabs>
+
+```python
+def has_path_sum(root: TreeNode | None, target_sum: int) -> bool:
+    if root is None:
+        return False
+    if root.left is None and root.right is None:     # leaf
+        return root.val == target_sum
+    remaining = target_sum - root.val
+    return has_path_sum(root.left, remaining) or has_path_sum(root.right, remaining)
+```
+
+```java
+public boolean hasPathSum(TreeNode root, int targetSum) {
+    if (root == null) return false;
+    if (root.left == null && root.right == null) return root.val == targetSum;  // leaf
+    int remaining = targetSum - root.val;
+    return hasPathSum(root.left, remaining) || hasPathSum(root.right, remaining);
+}
+```
+
+```cpp
+bool hasPathSum(TreeNode* root, int targetSum) {
+    if (!root) return false;
+    if (!root->left && !root->right) return root->val == targetSum;  // leaf
+    int remaining = targetSum - root->val;
+    return hasPathSum(root->left, remaining) || hasPathSum(root->right, remaining);
+}
+```
+
+```javascript
+function hasPathSum(root, targetSum) {
+  if (root === null) return false;
+  if (!root.left && !root.right) return root.val === targetSum; // leaf
+  const remaining = targetSum - root.val;
+  return hasPathSum(root.left, remaining) || hasPathSum(root.right, remaining);
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(n)" space="O(h)" />
+
+<Callout type="warning">
+Check for a **leaf**, not just an empty child. In the tree `[1, 2]` with `targetSum = 1`, the root has an empty right child, but the root alone isn't a root-to-leaf path because it has a left child. Checking `node is None and target == 0` would wrongly return `True`.
+</Callout>

@@ -1,0 +1,103 @@
+---
+title: Passing Values Down and Helper Functions
+description: Send information from the root toward the leaves through extra function parameters.
+readingTime: 6 min
+---
+
+## Top-down thinking
+
+[Return values](/learn/code/depth-first-search/return-values) move information **up** the tree, from children to parents. Some problems need the opposite: a node's answer depends on its **ancestors**, such as the path from the root, the allowed range of values, or the largest value seen so far.
+
+For these, pass the information **down** as extra parameters:
+
+```python nocheck
+def dfs(node, state_from_ancestors):
+    if node is None:
+        return
+    use node and state_from_ancestors
+    dfs(node.left, updated_state)
+    dfs(node.right, updated_state)
+```
+
+Because you use the state at the node before visiting the children, this is a **pre-order** traversal.
+
+## Helper functions
+
+The function signature you're given (say `solve(root)`) usually doesn't have room for extra parameters. So write a **helper** with the parameters you need, and call it from the main function with starting values:
+
+```python nocheck
+def solve(root):
+    def helper(node, extra_state):
+        ...
+    return helper(root, initial_state)
+```
+
+Nested helpers can also read and update variables from the outer function, which is handy for collecting results (in Python, use `nonlocal` to reassign them).
+
+## Example: count good nodes
+
+A node is **good** if no node on the path from the root to it has a greater value. Whether a node is good depends on the **maximum value on the path above it**, so pass that maximum down.
+
+<CodeTabs>
+
+```python
+def good_nodes(root: TreeNode | None) -> int:
+    def dfs(node, max_so_far):
+        if node is None:
+            return 0
+        good = 1 if node.val >= max_so_far else 0
+        new_max = max(max_so_far, node.val)
+        return good + dfs(node.left, new_max) + dfs(node.right, new_max)
+
+    return dfs(root, float("-inf"))
+```
+
+```java
+public int goodNodes(TreeNode root) {
+    return dfs(root, Integer.MIN_VALUE);
+}
+
+private int dfs(TreeNode node, int maxSoFar) {
+    if (node == null) return 0;
+    int good = node.val >= maxSoFar ? 1 : 0;
+    int newMax = Math.max(maxSoFar, node.val);
+    return good + dfs(node.left, newMax) + dfs(node.right, newMax);
+}
+```
+
+```cpp
+int dfs(TreeNode* node, int maxSoFar) {
+    if (!node) return 0;
+    int good = node->val >= maxSoFar ? 1 : 0;
+    int newMax = max(maxSoFar, node->val);
+    return good + dfs(node->left, newMax) + dfs(node->right, newMax);
+}
+
+int goodNodes(TreeNode* root) {
+    return dfs(root, INT_MIN);
+}
+```
+
+```javascript
+function goodNodes(root) {
+  const dfs = (node, maxSoFar) => {
+    if (node === null) return 0;
+    const good = node.val >= maxSoFar ? 1 : 0;
+    const newMax = Math.max(maxSoFar, node.val);
+    return good + dfs(node.left, newMax) + dfs(node.right, newMax);
+  };
+  return dfs(root, -Infinity);
+}
+```
+
+</CodeTabs>
+
+This example does both: the maximum travels **down**, and the count of good nodes travels **up**. Many problems combine the two directions like this.
+
+<Callout type="tip">
+Ask yourself: "to decide something at this node, what do I need to know?" If it's about the node's **descendants**, return it. If it's about its **ancestors**, pass it down.
+</Callout>
+
+## Problems
+
+<ProblemList section="depth-first-search" />

@@ -1,0 +1,102 @@
+---
+title: Flood Fill
+description: Recolor every cell connected to the starting cell that shares its original color.
+---
+
+<Problem difficulty="Easy" link="https://leetcode.com/problems/flood-fill/">
+
+An image is a grid of integers `image`, where `image[r][c]` is a pixel's color. Starting at `(sr, sc)`, change the color of the starting pixel and of every pixel connected to it **4-directionally** that has the **same original color**, to `color`. Return the modified image.
+
+**Example:** `image = [[1, 1, 1], [1, 1, 0], [1, 0, 1]]`, `sr = 1`, `sc = 1`, `color = 2` returns `[[2, 2, 2], [2, 2, 0], [2, 0, 1]]`. The bottom-right `1` isn't connected to the start, so it stays.
+
+</Problem>
+
+## Approach
+
+This is the paint-bucket tool. Remember the starting pixel's color `original`, then DFS from the start using the [matrix template](/learn/code/depth-first-search/matrices):
+
+- Stop if the cell is off the grid or doesn't have the `original` color.
+- Otherwise recolor it and recurse into its four neighbours.
+
+Recoloring doubles as marking the cell visited: once a cell has the new color, it no longer matches `original`, so the search won't come back to it.
+
+**One edge case:** if `original == color`, there's nothing to do. Without this check, recolored cells would still match `original`, and the search would loop forever.
+
+## Solution
+
+<CodeTabs>
+
+```python
+def flood_fill(image: list[list[int]], sr: int, sc: int, color: int) -> list[list[int]]:
+    original = image[sr][sc]
+    if original == color:
+        return image                     # nothing to change (and avoids infinite recursion)
+    rows, cols = len(image), len(image[0])
+
+    def dfs(r, c):
+        if r < 0 or r >= rows or c < 0 or c >= cols or image[r][c] != original:
+            return
+        image[r][c] = color              # recolor = mark visited
+        dfs(r + 1, c)
+        dfs(r - 1, c)
+        dfs(r, c + 1)
+        dfs(r, c - 1)
+
+    dfs(sr, sc)
+    return image
+```
+
+```java
+public int[][] floodFill(int[][] image, int sr, int sc, int color) {
+    int original = image[sr][sc];
+    if (original != color) fill(image, sr, sc, original, color);  // skip if nothing changes
+    return image;
+}
+
+private void fill(int[][] image, int r, int c, int original, int color) {
+    if (r < 0 || r >= image.length || c < 0 || c >= image[0].length || image[r][c] != original) return;
+    image[r][c] = color;  // recolor = mark visited
+    fill(image, r + 1, c, original, color);
+    fill(image, r - 1, c, original, color);
+    fill(image, r, c + 1, original, color);
+    fill(image, r, c - 1, original, color);
+}
+```
+
+```cpp
+void fill(vector<vector<int>>& image, int r, int c, int original, int color) {
+    if (r < 0 || r >= (int)image.size() || c < 0 || c >= (int)image[0].size() || image[r][c] != original) return;
+    image[r][c] = color;  // recolor = mark visited
+    fill(image, r + 1, c, original, color);
+    fill(image, r - 1, c, original, color);
+    fill(image, r, c + 1, original, color);
+    fill(image, r, c - 1, original, color);
+}
+
+vector<vector<int>> floodFill(vector<vector<int>> image, int sr, int sc, int color) {
+    int original = image[sr][sc];
+    if (original != color) fill(image, sr, sc, original, color);  // skip if nothing changes
+    return image;
+}
+```
+
+```javascript
+function floodFill(image, sr, sc, color) {
+  const original = image[sr][sc];
+  if (original === color) return image; // nothing to change
+  const dfs = (r, c) => {
+    if (r < 0 || r >= image.length || c < 0 || c >= image[0].length || image[r][c] !== original) return;
+    image[r][c] = color; // recolor = mark visited
+    dfs(r + 1, c);
+    dfs(r - 1, c);
+    dfs(r, c + 1);
+    dfs(r, c - 1);
+  };
+  dfs(sr, sc);
+  return image;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(rows × cols)" space="O(rows × cols) for the recursion" />

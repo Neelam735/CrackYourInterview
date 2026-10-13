@@ -1,0 +1,95 @@
+---
+title: Validate Binary Search Tree
+description: Pass down the range of values each node is allowed to have, tightening it at every step.
+---
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/validate-binary-search-tree/">
+
+Given the `root` of a binary tree, decide whether it's a valid binary search tree (BST):
+
+- every node in a node's **left** subtree has a smaller value,
+- every node in its **right** subtree has a larger value,
+- and both subtrees are BSTs too.
+
+**Example:** `[2, 1, 3]` is valid. `[5, 1, 4, null, null, 3, 6]` is not: `4` is in the root's right subtree but smaller than `5`.
+
+</Problem>
+
+## The tempting mistake
+
+It's not enough to check that each node is larger than its left child and smaller than its right child. In `[5, 4, 6, null, null, 3, 7]`, every parent-child pair looks fine, but `3` sits in `5`'s right subtree while being smaller than `5`.
+
+The rule is about **all ancestors**, not just the parent.
+
+## Approach: pass the allowed range down
+
+Each node must lie inside a range `(low, high)` set by its ancestors:
+
+- The root can be anything: `(-∞, +∞)`.
+- Going **left** from a node with value `v`, everything must be smaller than `v`: the upper bound becomes `v`.
+- Going **right**, everything must be larger than `v`: the lower bound becomes `v`.
+
+This is a [passing values down](/learn/code/depth-first-search/passing-values-down) problem with a helper that takes `(node, low, high)`.
+
+## Solution
+
+<CodeTabs>
+
+```python
+def is_valid_bst(root: TreeNode | None) -> bool:
+    def check(node, low, high):
+        if node is None:
+            return True
+        if not (low < node.val < high):
+            return False
+        return check(node.left, low, node.val) and check(node.right, node.val, high)
+
+    return check(root, float("-inf"), float("inf"))
+```
+
+```java
+public boolean isValidBST(TreeNode root) {
+    return check(root, Long.MIN_VALUE, Long.MAX_VALUE);
+}
+
+private boolean check(TreeNode node, long low, long high) {
+    if (node == null) return true;
+    if (node.val <= low || node.val >= high) return false;
+    return check(node.left, low, node.val) && check(node.right, node.val, high);
+}
+```
+
+```cpp
+bool check(TreeNode* node, long long low, long long high) {
+    if (!node) return true;
+    if (node->val <= low || node->val >= high) return false;
+    return check(node->left, low, node->val) && check(node->right, node->val, high);
+}
+
+bool isValidBST(TreeNode* root) {
+    return check(root, LLONG_MIN, LLONG_MAX);
+}
+```
+
+```javascript
+function isValidBST(root) {
+  const check = (node, low, high) => {
+    if (node === null) return true;
+    if (node.val <= low || node.val >= high) return false;
+    return check(node.left, low, node.val) && check(node.right, node.val, high);
+  };
+  return check(root, -Infinity, Infinity);
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(n)" space="O(h)" />
+
+<Callout type="interview">
+Java and C++ use `long` bounds on purpose. A node can hold `Integer.MAX_VALUE`, so an `int` bound of `Integer.MAX_VALUE` would wrongly reject it. Pointing out edge cases like this unprompted is a strong signal.
+</Callout>
+
+<Callout type="tip" title="In-order alternative">
+An in-order traversal of a valid BST visits values in strictly increasing order. Traverse in-order, remember the previous value, and fail as soon as a value isn't larger than it.
+</Callout>

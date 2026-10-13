@@ -1,0 +1,79 @@
+---
+title: Adjacency List
+description: Turn an edge list into a map from each node to its neighbours before you start searching.
+readingTime: 5 min
+---
+
+## Why convert the input
+
+Interviews usually give a graph as an **edge list**: `edges = [[0, 1], [1, 2], [2, 0]]`. To find a node's neighbours in an edge list you'd scan every edge, which is `O(E)` per lookup.
+
+An **adjacency list** stores, for each node, the list of its neighbours. Looking up a node's neighbours becomes instant, and a full DFS or BFS costs `O(V + E)`.
+
+| Representation | Space | "Neighbours of u" | Best for |
+|----------------|-------|-------------------|----------|
+| Edge list | `O(E)` | `O(E)` | Input format; algorithms that sort edges (Kruskal) |
+| Adjacency list | `O(V + E)` | `O(degree)` | Almost all traversal problems |
+| Adjacency matrix | `O(V²)` | `O(V)` | Dense graphs; "is there an edge u-v?" in `O(1)` |
+
+## Building one
+
+For an **undirected** graph, add each edge in both directions. For a **directed** graph, add it only from source to target.
+
+<CodeTabs>
+
+```python
+def build_adjacency_list(n: int, edges: list[list[int]], directed: bool = False) -> list[list[int]]:
+    graph = [[] for _ in range(n)]
+    for a, b in edges:
+        graph[a].append(b)
+        if not directed:
+            graph[b].append(a)
+    return graph
+```
+
+```java
+public List<List<Integer>> buildAdjacencyList(int n, int[][] edges, boolean directed) {
+    List<List<Integer>> graph = new ArrayList<>();
+    for (int i = 0; i < n; i++) graph.add(new ArrayList<>());
+    for (int[] e : edges) {
+        graph.get(e[0]).add(e[1]);
+        if (!directed) graph.get(e[1]).add(e[0]);
+    }
+    return graph;
+}
+```
+
+```cpp
+vector<vector<int>> buildAdjacencyList(int n, const vector<vector<int>>& edges, bool directed) {
+    vector<vector<int>> graph(n);
+    for (const auto& e : edges) {
+        graph[e[0]].push_back(e[1]);
+        if (!directed) graph[e[1]].push_back(e[0]);
+    }
+    return graph;
+}
+```
+
+```javascript
+function buildAdjacencyList(n, edges, directed = false) {
+  const graph = Array.from({ length: n }, () => []);
+  for (const [a, b] of edges) {
+    graph[a].push(b);
+    if (!directed) graph[b].push(a);
+  }
+  return graph;
+}
+```
+
+</CodeTabs>
+
+When nodes aren't numbered `0` to `n - 1` (they might be strings, or arbitrary IDs), use a hash map from node to list of neighbours instead: `defaultdict(list)` in Python, `HashMap<K, List<K>>` in Java, `unordered_map` in C++, `Map` in JavaScript.
+
+## Weighted graphs
+
+If edges have weights, store `(neighbour, weight)` pairs: `graph[a].append((b, w))`. You'll need this for [shortest paths](/learn/code/graphs/shortest-path-algorithms).
+
+<Callout type="tip">
+Some graphs are **implicit**: you never build them. In a grid, the neighbours of `(r, c)` are just the four cells around it. In Word Ladder, they're the words one letter away. Compute neighbours on the fly when building the full list would be wasteful.
+</Callout>

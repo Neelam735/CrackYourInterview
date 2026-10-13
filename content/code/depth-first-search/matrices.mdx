@@ -1,0 +1,55 @@
+---
+title: DFS on Matrices
+description: Treat each grid cell as a node whose neighbours are the cells above, below, left and right.
+readingTime: 6 min
+---
+
+## A grid is a graph
+
+Many problems hand you a 2D grid: a map of land and water, an image, a board. Treat it as a graph:
+
+- each **cell** `(r, c)` is a node,
+- its **neighbours** are the 4 cells next to it (sometimes 8, if diagonals count),
+- you never build an adjacency list: you compute neighbours on the fly.
+
+## The template
+
+```python nocheck
+DIRECTIONS = [(1, 0), (-1, 0), (0, 1), (0, -1)]
+
+def dfs(r, c):
+    if r < 0 or r >= rows or c < 0 or c >= cols:   # 1. off the grid
+        return
+    if grid[r][c] is not what we're looking for:     # 2. wrong kind of cell
+        return
+    if (r, c) in visited:                            # 3. already explored
+        return
+    visited.add((r, c))
+    for dr, dc in DIRECTIONS:                        # 4. explore all neighbours
+        dfs(r + dr, c + dc)
+```
+
+Checking at the **top** of the function, before using `grid[r][c]`, keeps the bounds logic in one place: the caller can recurse into any neighbour without checking it first.
+
+## Marking cells as visited
+
+You have two options:
+
+| Option | How | Trade-off |
+|--------|-----|-----------|
+| Visited set or boolean grid | `visited[r][c] = True` | Leaves the input unchanged; uses `O(rows × cols)` extra space |
+| Modify the grid | e.g. change `"1"` to `"0"` or `"#"` | No extra space, but destroys the input |
+
+Changing the input is common in interviews. Ask whether it's allowed first.
+
+## Complexity
+
+Every cell is visited at most once and has at most 4 neighbours, so a full grid DFS is `O(rows × cols)` time. The recursion can go as deep as the number of cells in one region, so space is `O(rows × cols)` in the worst case.
+
+<Callout type="warning">
+On a large grid (say 1000 × 1000 all land), recursion can exceed the default stack depth in Python and Java. Switch to an explicit stack, or to [BFS](/learn/code/breadth-first-search/graphs-overview), when inputs are that large.
+</Callout>
+
+## Problems
+
+<ProblemList section="depth-first-search" />

@@ -1,0 +1,83 @@
+---
+title: Depth-First Search
+description: Explore as deep as possible down one path before backing up. The workhorse for trees, graphs and grids.
+readingTime: 6 min
+---
+
+## What DFS is
+
+Depth-first search explores a structure by going **as deep as possible** along one path, then backing up to the most recent choice and trying the next option. It's how you'd explore a maze by keeping one hand on the wall: follow a corridor to its end, step back, take the next turn.
+
+DFS is the natural way to process **trees** (visit a node, then its whole left subtree, then its whole right subtree), and it works on **graphs** and **grids** too, as long as you remember which nodes you've already visited.
+
+<Visualizer id="max-depth" />
+
+## Why it's usually recursive
+
+"Go deep, then back up" is exactly what a function call stack does. When a function calls itself on a child, the computer remembers where it was. When the call returns, it resumes there. So most DFS code is short and recursive:
+
+```python nocheck
+def dfs(node):
+    if node is None:          # base case: nothing to explore
+        return
+    # ... do something with node ...
+    dfs(node.left)            # go deep on the left
+    dfs(node.right)           # then on the right
+```
+
+You can also write DFS with an explicit stack, which avoids recursion depth limits on very deep inputs.
+
+## What this section covers
+
+| Part | You'll learn |
+|------|--------------|
+| [Fundamentals](/learn/code/depth-first-search/fundamentals) | Traversal orders, base cases, recursive vs iterative DFS |
+| [Return Values](/learn/code/depth-first-search/return-values) | Building an answer from the children's answers (bottom-up) |
+| [Passing Values Down](/learn/code/depth-first-search/passing-values-down) | Sending information from parents to children (top-down) and helper functions |
+| [Graphs Overview](/learn/code/depth-first-search/graphs-overview) | DFS on graphs: visited sets, cycles, connected components |
+| [Matrices](/learn/code/depth-first-search/matrices) | Treating a grid as a graph: islands, flood fill, regions |
+
+## The tree definition used in this section
+
+<CodeTabs>
+
+```python nocheck
+class TreeNode:
+    def __init__(self, val=0, left=None, right=None):
+        self.val = val
+        self.left = left
+        self.right = right
+```
+
+```java nocheck
+class TreeNode {
+    int val;
+    TreeNode left, right;
+    TreeNode(int val) { this.val = val; }
+}
+```
+
+```cpp nocheck
+struct TreeNode {
+    int val;
+    TreeNode* left;
+    TreeNode* right;
+    TreeNode(int v) : val(v), left(nullptr), right(nullptr) {}
+};
+```
+
+```javascript nocheck
+class TreeNode {
+  constructor(val = 0, left = null, right = null) {
+    this.val = val;
+    this.left = left;
+    this.right = right;
+  }
+}
+```
+
+</CodeTabs>
+
+## Problems
+
+<ProblemList section="depth-first-search" />
