@@ -40,8 +40,14 @@ Accounts only switch on when `AUTH_SECRET` and at least one provider are set. Un
 3. **Connect the database.** On the app service's *Variables* tab add `DATABASE_URL` = `${{Postgres.DATABASE_URL}}` (a reference to the database service, using its private network).
 4. **Create the table** once from your machine, using the database's *public* URL (Postgres service → *Variables* → `DATABASE_PUBLIC_URL`):
    ```bash
+   # macOS / Linux
    DATABASE_URL="<DATABASE_PUBLIC_URL>" npm run db:push
    ```
+   ```powershell
+   # Windows PowerShell
+   $env:DATABASE_URL="<DATABASE_PUBLIC_URL>"; npm run db:push
+   ```
+   Run it inside the cloned project folder after `npm install`. The internal URL (`postgres.railway.internal`) only works inside Railway, so use the public one here.
 5. **Get a public URL.** App service → *Settings → Networking → Generate Domain*. You'll get something like `https://<name>.up.railway.app`.
 6. **Create OAuth apps** with that domain:
    - GitHub callback: `https://<name>.up.railway.app/api/auth/callback/github`
