@@ -1,0 +1,129 @@
+---
+title: 01-Matrix
+description: Run one multi-source BFS from every zero to get each cell's distance to its nearest zero.
+---
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/01-matrix/">
+
+Given an `m × n` binary matrix `mat`, return a matrix where each cell holds the distance to the **nearest `0`**. Distance counts steps up, down, left or right.
+
+**Example:** `[[0, 0, 0], [0, 1, 0], [1, 1, 1]]` returns `[[0, 0, 0], [0, 1, 0], [1, 2, 1]]`.
+
+</Problem>
+
+## Approach
+
+Running a separate BFS from every `1` to find its nearest `0` repeats a lot of work: up to `O((m·n)²)`.
+
+Turn it around: run **one multi-source BFS starting from every `0` at once**. Each `0` has distance 0. The search spreads outward one step at a time, and the first time it reaches a cell is from its nearest `0`. That cell's distance is its neighbour's distance plus one.
+
+Use the distance grid itself to track visited cells: start every `1` at "unknown" (`-1`), and only enqueue cells that are still unknown.
+
+## Solution
+
+<CodeTabs>
+
+```python
+from collections import deque
+
+def update_matrix(mat: list[list[int]]) -> list[list[int]]:
+    rows, cols = len(mat), len(mat[0])
+    dist = [[-1] * cols for _ in range(rows)]
+    queue = deque()
+    for r in range(rows):
+        for c in range(cols):
+            if mat[r][c] == 0:
+                dist[r][c] = 0
+                queue.append((r, c))       # every zero is a source
+    while queue:
+        r, c = queue.popleft()
+        for nr, nc in ((r + 1, c), (r - 1, c), (r, c + 1), (r, c - 1)):
+            if 0 <= nr < rows and 0 <= nc < cols and dist[nr][nc] == -1:
+                dist[nr][nc] = dist[r][c] + 1
+                queue.append((nr, nc))
+    return dist
+```
+
+```java
+public int[][] updateMatrix(int[][] mat) {
+    int rows = mat.length, cols = mat[0].length;
+    int[][] dist = new int[rows][cols];
+    Queue<int[]> queue = new ArrayDeque<>();
+    for (int r = 0; r < rows; r++) {
+        for (int c = 0; c < cols; c++) {
+            if (mat[r][c] == 0) queue.offer(new int[] {r, c});  // every zero is a source
+            else dist[r][c] = -1;
+        }
+    }
+    int[][] dirs = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+    while (!queue.isEmpty()) {
+        int[] cell = queue.poll();
+        for (int[] d : dirs) {
+            int nr = cell[0] + d[0], nc = cell[1] + d[1];
+            if (nr >= 0 && nr < rows && nc >= 0 && nc < cols && dist[nr][nc] == -1) {
+                dist[nr][nc] = dist[cell[0]][cell[1]] + 1;
+                queue.offer(new int[] {nr, nc});
+            }
+        }
+    }
+    return dist;
+}
+```
+
+```cpp
+vector<vector<int>> updateMatrix(const vector<vector<int>>& mat) {
+    int rows = mat.size(), cols = mat[0].size();
+    vector<vector<int>> dist(rows, vector<int>(cols, -1));
+    queue<pair<int, int>> q;
+    for (int r = 0; r < rows; r++) {
+        for (int c = 0; c < cols; c++) {
+            if (mat[r][c] == 0) {
+                dist[r][c] = 0;
+                q.push({r, c});  // every zero is a source
+            }
+        }
+    }
+    int dirs[4][2] = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+    while (!q.empty()) {
+        auto [r, c] = q.front();
+        q.pop();
+        for (auto& d : dirs) {
+            int nr = r + d[0], nc = c + d[1];
+            if (nr >= 0 && nr < rows && nc >= 0 && nc < cols && dist[nr][nc] == -1) {
+                dist[nr][nc] = dist[r][c] + 1;
+                q.push({nr, nc});
+            }
+        }
+    }
+    return dist;
+}
+```
+
+```javascript
+function updateMatrix(mat) {
+  const rows = mat.length;
+  const cols = mat[0].length;
+  const dist = mat.map((row) => row.map((v) => (v === 0 ? 0 : -1)));
+  const queue = [];
+  for (let r = 0; r < rows; r++)
+    for (let c = 0; c < cols; c++) if (mat[r][c] === 0) queue.push([r, c]); // every zero is a source
+  for (let head = 0; head < queue.length; head++) {
+    const [r, c] = queue[head];
+    for (const [nr, nc] of [[r + 1, c], [r - 1, c], [r, c + 1], [r, c - 1]]) {
+      if (nr >= 0 && nr < rows && nc >= 0 && nc < cols && dist[nr][nc] === -1) {
+        dist[nr][nc] = dist[r][c] + 1;
+        queue.push([nr, nc]);
+      }
+    }
+  }
+  return dist;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(rows × cols)" space="O(rows × cols)" />
+
+<Callout type="tip" title="Dynamic programming alternative">
+Two sweeps also work: top-left to bottom-right taking the best of the up and left neighbours, then bottom-right to top-left with the down and right neighbours. Same complexity, no queue.
+</Callout>

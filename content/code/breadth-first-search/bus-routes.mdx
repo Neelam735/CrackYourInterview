@@ -1,0 +1,170 @@
+---
+title: Bus Routes
+description: BFS over bus routes rather than stops, since the cost is the number of buses you board.
+---
+
+<Problem difficulty="Hard" link="https://leetcode.com/problems/bus-routes/">
+
+`routes[i]` is the list of stops bus `i` visits, repeating forever. You start at stop `source` (not on any bus) and want to reach stop `target`, travelling only by bus. Return the **fewest buses** you must take, or `-1` if it's impossible.
+
+**Example:** `routes = [[1, 2, 7], [3, 6, 7]]`, `source = 1`, `target = 6` returns `2`: take bus 0 to stop 7, then bus 1 to stop 6.
+
+</Problem>
+
+## What are the nodes?
+
+The answer counts **buses**, not stops. Riding a bus from one stop to any other stop on its route costs nothing extra. So the natural graph has **routes as nodes**: two routes are connected if they share a stop (you can transfer there). The answer is a shortest path in this graph, which BFS finds.
+
+## Approach
+
+1. If `source == target`, no bus is needed: return `0`.
+2. Build a map from each **stop** to the list of **routes** that visit it.
+3. Start BFS with every route that visits `source`, at 1 bus.
+4. For each route you take from the queue, look at its stops:
+   - If one of them is `target`, return the current number of buses.
+   - Otherwise, for each stop, enqueue every unvisited route through that stop (a transfer: one more bus).
+5. Also mark **stops** as visited, so you never expand the same transfer stop twice. Without this, a busy stop shared by many routes is scanned over and over.
+
+## Solution
+
+<CodeTabs>
+
+```python
+from collections import defaultdict, deque
+
+def num_buses_to_destination(routes: list[list[int]], source: int, target: int) -> int:
+    if source == target:
+        return 0
+    stop_to_routes = defaultdict(list)
+    for i, route in enumerate(routes):
+        for stop in route:
+            stop_to_routes[stop].append(i)
+
+    visited_routes = set(stop_to_routes[source])
+    visited_stops = {source}
+    queue = deque(stop_to_routes[source])
+    buses = 1
+    while queue:
+        for _ in range(len(queue)):
+            route = queue.popleft()
+            for stop in routes[route]:
+                if stop == target:
+                    return buses
+                if stop in visited_stops:
+                    continue
+                visited_stops.add(stop)
+                for nxt in stop_to_routes[stop]:      # transfer at this stop
+                    if nxt not in visited_routes:
+                        visited_routes.add(nxt)
+                        queue.append(nxt)
+        buses += 1
+    return -1
+```
+
+```java
+public int numBusesToDestination(int[][] routes, int source, int target) {
+    if (source == target) return 0;
+    Map<Integer, List<Integer>> stopToRoutes = new HashMap<>();
+    for (int i = 0; i < routes.length; i++) {
+        for (int stop : routes[i]) stopToRoutes.computeIfAbsent(stop, k -> new ArrayList<>()).add(i);
+    }
+    boolean[] visitedRoutes = new boolean[routes.length];
+    Set<Integer> visitedStops = new HashSet<>(List.of(source));
+    Queue<Integer> queue = new ArrayDeque<>();
+    for (int route : stopToRoutes.getOrDefault(source, List.of())) {
+        visitedRoutes[route] = true;
+        queue.offer(route);
+    }
+    for (int buses = 1; !queue.isEmpty(); buses++) {
+        for (int i = queue.size(); i > 0; i--) {
+            int route = queue.poll();
+            for (int stop : routes[route]) {
+                if (stop == target) return buses;
+                if (!visitedStops.add(stop)) continue;
+                for (int next : stopToRoutes.get(stop)) {  // transfer at this stop
+                    if (!visitedRoutes[next]) {
+                        visitedRoutes[next] = true;
+                        queue.offer(next);
+                    }
+                }
+            }
+        }
+    }
+    return -1;
+}
+```
+
+```cpp
+int numBusesToDestination(const vector<vector<int>>& routes, int source, int target) {
+    if (source == target) return 0;
+    unordered_map<int, vector<int>> stopToRoutes;
+    for (int i = 0; i < (int)routes.size(); i++)
+        for (int stop : routes[i]) stopToRoutes[stop].push_back(i);
+    vector<bool> visitedRoutes(routes.size(), false);
+    unordered_set<int> visitedStops{source};
+    queue<int> q;
+    for (int route : stopToRoutes[source]) {
+        visitedRoutes[route] = true;
+        q.push(route);
+    }
+    for (int buses = 1; !q.empty(); buses++) {
+        for (int i = q.size(); i > 0; i--) {
+            int route = q.front();
+            q.pop();
+            for (int stop : routes[route]) {
+                if (stop == target) return buses;
+                if (!visitedStops.insert(stop).second) continue;
+                for (int next : stopToRoutes[stop]) {  // transfer at this stop
+                    if (!visitedRoutes[next]) {
+                        visitedRoutes[next] = true;
+                        q.push(next);
+                    }
+                }
+            }
+        }
+    }
+    return -1;
+}
+```
+
+```javascript
+function numBusesToDestination(routes, source, target) {
+  if (source === target) return 0;
+  const stopToRoutes = new Map();
+  routes.forEach((route, i) => {
+    for (const stop of route) {
+      if (!stopToRoutes.has(stop)) stopToRoutes.set(stop, []);
+      stopToRoutes.get(stop).push(i);
+    }
+  });
+  const visitedRoutes = new Set(stopToRoutes.get(source) ?? []);
+  const visitedStops = new Set([source]);
+  let level = [...visitedRoutes];
+  for (let buses = 1; level.length > 0; buses++) {
+    const next = [];
+    for (const route of level) {
+      for (const stop of routes[route]) {
+        if (stop === target) return buses;
+        if (visitedStops.has(stop)) continue;
+        visitedStops.add(stop);
+        for (const r of stopToRoutes.get(stop)) { // transfer at this stop
+          if (!visitedRoutes.has(r)) {
+            visitedRoutes.add(r);
+            next.push(r);
+          }
+        }
+      }
+    }
+    level = next;
+  }
+  return -1;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(total stops across all routes)" space="O(total stops)" />
+
+<Callout type="interview">
+"What should the nodes be?" is the real question here. Using stops as nodes and adding an edge between every pair of stops on a route can create `O(k²)` edges for a route with `k` stops. Using routes as nodes keeps the graph small, and matches what's being counted.
+</Callout>

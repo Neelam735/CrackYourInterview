@@ -1,0 +1,144 @@
+---
+title: BFS on Graphs
+description: Find shortest paths in unweighted graphs and grids, and spread from many sources at once.
+readingTime: 7 min
+---
+
+## Shortest paths in unweighted graphs
+
+BFS reaches nodes in order of their distance from the start. So **the first time BFS reaches a node, it has found a shortest path to it**, measured in number of edges. That makes BFS the standard tool for "fewest moves", "minimum steps" and "shortest transformation" questions, as long as every step costs the same.
+
+(If steps have different costs, you need [Dijkstra's algorithm](/learn/code/graphs/shortest-path-algorithms) instead.)
+
+## Template: distance from one start
+
+Track the distance level by level, and mark nodes visited **when you add them to the queue**, not when you remove them. Otherwise the same node can be queued many times.
+
+<CodeTabs>
+
+```python
+from collections import deque
+
+def shortest_path(n: int, edges: list[list[int]], start: int, target: int) -> int:
+    graph = [[] for _ in range(n)]
+    for a, b in edges:
+        graph[a].append(b)
+        graph[b].append(a)
+
+    visited = {start}
+    queue = deque([start])
+    steps = 0
+    while queue:
+        for _ in range(len(queue)):        # everything at distance `steps`
+            node = queue.popleft()
+            if node == target:
+                return steps
+            for neighbor in graph[node]:
+                if neighbor not in visited:
+                    visited.add(neighbor)  # mark when queued
+                    queue.append(neighbor)
+        steps += 1
+    return -1                              # target unreachable
+```
+
+```java
+public int shortestPath(int n, int[][] edges, int start, int target) {
+    List<List<Integer>> graph = new ArrayList<>();
+    for (int i = 0; i < n; i++) graph.add(new ArrayList<>());
+    for (int[] e : edges) {
+        graph.get(e[0]).add(e[1]);
+        graph.get(e[1]).add(e[0]);
+    }
+    boolean[] visited = new boolean[n];
+    visited[start] = true;
+    Queue<Integer> queue = new ArrayDeque<>(List.of(start));
+    for (int steps = 0; !queue.isEmpty(); steps++) {
+        for (int i = queue.size(); i > 0; i--) {  // everything at distance `steps`
+            int node = queue.poll();
+            if (node == target) return steps;
+            for (int neighbor : graph.get(node)) {
+                if (!visited[neighbor]) {
+                    visited[neighbor] = true;  // mark when queued
+                    queue.offer(neighbor);
+                }
+            }
+        }
+    }
+    return -1;  // target unreachable
+}
+```
+
+```cpp
+int shortestPath(int n, const vector<vector<int>>& edges, int start, int target) {
+    vector<vector<int>> graph(n);
+    for (const auto& e : edges) {
+        graph[e[0]].push_back(e[1]);
+        graph[e[1]].push_back(e[0]);
+    }
+    vector<bool> visited(n, false);
+    visited[start] = true;
+    queue<int> q;
+    q.push(start);
+    for (int steps = 0; !q.empty(); steps++) {
+        for (int i = q.size(); i > 0; i--) {  // everything at distance `steps`
+            int node = q.front();
+            q.pop();
+            if (node == target) return steps;
+            for (int neighbor : graph[node]) {
+                if (!visited[neighbor]) {
+                    visited[neighbor] = true;  // mark when queued
+                    q.push(neighbor);
+                }
+            }
+        }
+    }
+    return -1;  // target unreachable
+}
+```
+
+```javascript
+function shortestPath(n, edges, start, target) {
+  const graph = Array.from({ length: n }, () => []);
+  for (const [a, b] of edges) {
+    graph[a].push(b);
+    graph[b].push(a);
+  }
+  const visited = new Array(n).fill(false);
+  visited[start] = true;
+  let level = [start];
+  for (let steps = 0; level.length > 0; steps++) {
+    const next = [];
+    for (const node of level) {           // everything at distance `steps`
+      if (node === target) return steps;
+      for (const neighbor of graph[node]) {
+        if (!visited[neighbor]) {
+          visited[neighbor] = true;       // mark when queued
+          next.push(neighbor);
+        }
+      }
+    }
+    level = next;
+  }
+  return -1; // target unreachable
+}
+```
+
+</CodeTabs>
+
+## Multi-source BFS
+
+Sometimes there are **many starting points** at once: every rotten orange, every gate, every `0` in a matrix. Put **all of them in the queue before starting**, at distance 0. The search then spreads from all of them simultaneously, and each cell is reached first by whichever source is closest.
+
+This is the same as adding an imaginary "super source" connected to every real source, then running ordinary BFS.
+
+## BFS on grids
+
+Grid BFS is the same template with cells as nodes and the 4 (or 8) adjacent cells as neighbours. See [Rotting Oranges](/learn/code/breadth-first-search/rotting-oranges) and [01-Matrix](/learn/code/breadth-first-search/01-matrix).
+
+<Callout type="interview">
+When a problem asks for the **minimum number of steps** and each step costs the same, say "BFS gives shortest paths in unweighted graphs" before writing code. It immediately tells the interviewer you've identified the right tool.
+</Callout>
+
+## Problems
+
+<ProblemList section="breadth-first-search" />

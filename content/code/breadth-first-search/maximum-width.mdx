@@ -1,0 +1,118 @@
+---
+title: Maximum Width of Binary Tree
+description: Number nodes like positions in a heap array and measure each level from its first to its last position.
+---
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/maximum-width-of-binary-tree/">
+
+The **width** of a level is the distance between its leftmost and rightmost non-null nodes, **counting the empty spots in between** as if the level were complete. Given the `root` of a binary tree, return the maximum width over all levels.
+
+**Example:** `root = [1, 3, 2, 5, 3, null, 9]` returns `4`: the last level spans from `5` to `9`, which covers 4 positions (`5, 3, null, 9`).
+
+</Problem>
+
+## Approach: give every node a position
+
+Number the positions on each level the way a heap array does: if a node has position `p`, its left child has position `2p` and its right child `2p + 1`. Empty spots get positions too, even though no node sits there.
+
+Run a [level-by-level BFS](/learn/code/breadth-first-search/overview), storing `(node, position)` pairs. On each level, the width is `last position - first position + 1`.
+
+### Keeping the numbers small
+
+Positions double every level, so in a deep, skinny tree they overflow 64-bit integers. The fix: at the start of each level, **subtract the first position** on that level from every position. Widths only depend on differences between positions, so this changes nothing, and it keeps the numbers small.
+
+## Solution
+
+<CodeTabs>
+
+```python
+from collections import deque
+
+def width_of_binary_tree(root: TreeNode | None) -> int:
+    if root is None:
+        return 0
+    best = 0
+    queue = deque([(root, 0)])
+    while queue:
+        first = queue[0][1]
+        last = queue[-1][1]
+        best = max(best, last - first + 1)
+        for _ in range(len(queue)):
+            node, pos = queue.popleft()
+            pos -= first                          # renumber from 0 on each level
+            if node.left:
+                queue.append((node.left, 2 * pos))
+            if node.right:
+                queue.append((node.right, 2 * pos + 1))
+    return best
+```
+
+```java
+public int widthOfBinaryTree(TreeNode root) {
+    if (root == null) return 0;
+    int best = 0;
+    Deque<Object[]> queue = new ArrayDeque<>();  // {node, position}
+    queue.offer(new Object[] {root, 0L});
+    while (!queue.isEmpty()) {
+        long first = (long) queue.peekFirst()[1], last = (long) queue.peekLast()[1];
+        best = Math.max(best, (int) (last - first + 1));
+        for (int i = queue.size(); i > 0; i--) {
+            Object[] entry = queue.poll();
+            TreeNode node = (TreeNode) entry[0];
+            long pos = (long) entry[1] - first;  // renumber from 0 on each level
+            if (node.left != null) queue.offer(new Object[] {node.left, 2 * pos});
+            if (node.right != null) queue.offer(new Object[] {node.right, 2 * pos + 1});
+        }
+    }
+    return best;
+}
+```
+
+```cpp
+int widthOfBinaryTree(TreeNode* root) {
+    if (!root) return 0;
+    int best = 0;
+    deque<pair<TreeNode*, unsigned long long>> q{{root, 0}};
+    while (!q.empty()) {
+        unsigned long long first = q.front().second, last = q.back().second;
+        best = max(best, (int)(last - first + 1));
+        for (int i = q.size(); i > 0; i--) {
+            auto [node, pos] = q.front();
+            q.pop_front();
+            pos -= first;  // renumber from 0 on each level
+            if (node->left) q.push_back({node->left, 2 * pos});
+            if (node->right) q.push_back({node->right, 2 * pos + 1});
+        }
+    }
+    return best;
+}
+```
+
+```javascript
+function widthOfBinaryTree(root) {
+  if (root === null) return 0;
+  let best = 0;
+  let level = [[root, 0]];
+  while (level.length > 0) {
+    const first = level[0][1];
+    const last = level[level.length - 1][1];
+    best = Math.max(best, last - first + 1);
+    const next = [];
+    for (const [node, p] of level) {
+      const pos = p - first; // renumber from 0 on each level
+      if (node.left) next.push([node.left, 2 * pos]);
+      if (node.right) next.push([node.right, 2 * pos + 1]);
+    }
+    level = next;
+  }
+  return best;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(n)" space="O(w)" />
+
+<Callout type="interview">
+Explain the renumbering before an interviewer asks about overflow. A 3000-node tree shaped like a zigzag line has positions up to `2^3000` without it.
+</Callout>

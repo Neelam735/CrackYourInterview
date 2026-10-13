@@ -1,0 +1,152 @@
+---
+title: Rotting Oranges
+description: Start a multi-source BFS from every rotten orange and count how many minutes the rot takes to spread.
+---
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/rotting-oranges/">
+
+In a grid, each cell is `0` (empty), `1` (fresh orange) or `2` (rotten orange). Every minute, each fresh orange next to a rotten one (up, down, left or right) becomes rotten. Return the minimum number of minutes until no fresh orange remains, or `-1` if that's impossible.
+
+**Example:** `[[2, 1, 1], [1, 1, 0], [0, 1, 1]]` returns `4`. `[[2, 1, 1], [0, 1, 1], [1, 0, 1]]` returns `-1`: the bottom-left orange can never be reached.
+
+</Problem>
+
+## Approach: multi-source BFS
+
+Rot spreads one step per minute from **every** rotten orange at the same time. That's a BFS where all rotten oranges start in the queue together, at minute 0. Each BFS level is one minute.
+
+1. Put every rotten orange in the queue and count the fresh ones.
+2. Process the queue level by level. For each rotten orange, rot its fresh neighbours (mark them `2`, decrease the fresh count, and enqueue them).
+3. Count a minute for every level that rots at least one orange.
+4. At the end, if fresh oranges remain, they were unreachable: return `-1`.
+
+## Solution
+
+<CodeTabs>
+
+```python
+from collections import deque
+
+def oranges_rotting(grid: list[list[int]]) -> int:
+    rows, cols = len(grid), len(grid[0])
+    queue = deque()
+    fresh = 0
+    for r in range(rows):
+        for c in range(cols):
+            if grid[r][c] == 2:
+                queue.append((r, c))      # every rotten orange is a source
+            elif grid[r][c] == 1:
+                fresh += 1
+
+    minutes = 0
+    while queue and fresh > 0:
+        for _ in range(len(queue)):       # everything that rotted last minute
+            r, c = queue.popleft()
+            for nr, nc in ((r + 1, c), (r - 1, c), (r, c + 1), (r, c - 1)):
+                if 0 <= nr < rows and 0 <= nc < cols and grid[nr][nc] == 1:
+                    grid[nr][nc] = 2
+                    fresh -= 1
+                    queue.append((nr, nc))
+        minutes += 1
+    return minutes if fresh == 0 else -1
+```
+
+```java
+public int orangesRotting(int[][] grid) {
+    int rows = grid.length, cols = grid[0].length, fresh = 0;
+    Queue<int[]> queue = new ArrayDeque<>();
+    for (int r = 0; r < rows; r++) {
+        for (int c = 0; c < cols; c++) {
+            if (grid[r][c] == 2) queue.offer(new int[] {r, c});  // every rotten orange is a source
+            else if (grid[r][c] == 1) fresh++;
+        }
+    }
+    int[][] dirs = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+    int minutes = 0;
+    while (!queue.isEmpty() && fresh > 0) {
+        for (int i = queue.size(); i > 0; i--) {  // everything that rotted last minute
+            int[] cell = queue.poll();
+            for (int[] d : dirs) {
+                int nr = cell[0] + d[0], nc = cell[1] + d[1];
+                if (nr >= 0 && nr < rows && nc >= 0 && nc < cols && grid[nr][nc] == 1) {
+                    grid[nr][nc] = 2;
+                    fresh--;
+                    queue.offer(new int[] {nr, nc});
+                }
+            }
+        }
+        minutes++;
+    }
+    return fresh == 0 ? minutes : -1;
+}
+```
+
+```cpp
+int orangesRotting(vector<vector<int>> grid) {
+    int rows = grid.size(), cols = grid[0].size(), fresh = 0;
+    queue<pair<int, int>> q;
+    for (int r = 0; r < rows; r++) {
+        for (int c = 0; c < cols; c++) {
+            if (grid[r][c] == 2) q.push({r, c});  // every rotten orange is a source
+            else if (grid[r][c] == 1) fresh++;
+        }
+    }
+    int dirs[4][2] = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+    int minutes = 0;
+    while (!q.empty() && fresh > 0) {
+        for (int i = q.size(); i > 0; i--) {  // everything that rotted last minute
+            auto [r, c] = q.front();
+            q.pop();
+            for (auto& d : dirs) {
+                int nr = r + d[0], nc = c + d[1];
+                if (nr >= 0 && nr < rows && nc >= 0 && nc < cols && grid[nr][nc] == 1) {
+                    grid[nr][nc] = 2;
+                    fresh--;
+                    q.push({nr, nc});
+                }
+            }
+        }
+        minutes++;
+    }
+    return fresh == 0 ? minutes : -1;
+}
+```
+
+```javascript
+function orangesRotting(grid) {
+  const rows = grid.length;
+  const cols = grid[0].length;
+  let level = [];
+  let fresh = 0;
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      if (grid[r][c] === 2) level.push([r, c]); // every rotten orange is a source
+      else if (grid[r][c] === 1) fresh++;
+    }
+  }
+  let minutes = 0;
+  while (level.length > 0 && fresh > 0) {
+    const next = [];
+    for (const [r, c] of level) {               // everything that rotted last minute
+      for (const [nr, nc] of [[r + 1, c], [r - 1, c], [r, c + 1], [r, c - 1]]) {
+        if (nr >= 0 && nr < rows && nc >= 0 && nc < cols && grid[nr][nc] === 1) {
+          grid[nr][nc] = 2;
+          fresh--;
+          next.push([nr, nc]);
+        }
+      }
+    }
+    level = next;
+    minutes++;
+  }
+  return fresh === 0 ? minutes : -1;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(rows × cols)" space="O(rows × cols)" />
+
+<Callout type="warning">
+Stop when `fresh` reaches 0, not when the queue empties. Otherwise the last level, which rots nothing, adds an extra minute. Also handle the case with no fresh oranges at all: the answer is `0`.
+</Callout>

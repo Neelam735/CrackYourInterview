@@ -1,0 +1,132 @@
+---
+title: Minimum Knight Moves
+description: BFS over board positions, using symmetry to search only one quadrant of an infinite board.
+---
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/minimum-knight-moves/">
+
+On an **infinite** chessboard, a knight starts at `(0, 0)`. In one move it goes two squares in one direction and one square in a perpendicular direction (8 possible moves). Return the minimum number of moves to reach `(x, y)`.
+
+**Example:** `x = 2`, `y = 1` returns `1`. `x = 5`, `y = 5` returns `4`.
+
+</Problem>
+
+## Approach
+
+Each square is a node, each knight move is an edge, and every move costs the same. So the minimum number of moves is a **shortest path in an unweighted graph**: BFS from `(0, 0)` until you reach the target.
+
+### Taming the infinite board
+
+1. **Symmetry.** The board looks the same in every quadrant, so reaching `(x, y)` takes as many moves as reaching `(|x|, |y|)`. Search toward the positive quadrant.
+2. **Limit the search.** An optimal path never needs to wander far into negative coordinates, but it sometimes needs to step slightly past an axis (reaching `(1, 1)` takes 2 moves via `(2, -1)` or `(-1, 2)`). Allowing coordinates down to `-2` is enough.
+
+Without a limit, BFS would explore squares in every direction and get much slower.
+
+## Solution
+
+<CodeTabs>
+
+```python
+from collections import deque
+
+def min_knight_moves(x: int, y: int) -> int:
+    x, y = abs(x), abs(y)                      # symmetry: search one quadrant
+    moves = [(1, 2), (2, 1), (-1, 2), (-2, 1), (1, -2), (2, -1), (-1, -2), (-2, -1)]
+    visited = {(0, 0)}
+    queue = deque([(0, 0)])
+    steps = 0
+    while queue:
+        for _ in range(len(queue)):
+            r, c = queue.popleft()
+            if (r, c) == (x, y):
+                return steps
+            for dr, dc in moves:
+                nr, nc = r + dr, c + dc
+                if nr >= -2 and nc >= -2 and (nr, nc) not in visited:
+                    visited.add((nr, nc))
+                    queue.append((nr, nc))
+        steps += 1
+    return -1
+```
+
+```java
+public int minKnightMoves(int x, int y) {
+    x = Math.abs(x);
+    y = Math.abs(y);  // symmetry: search one quadrant
+    int[][] moves = {{1, 2}, {2, 1}, {-1, 2}, {-2, 1}, {1, -2}, {2, -1}, {-1, -2}, {-2, -1}};
+    Set<Long> visited = new HashSet<>();
+    visited.add(0L);
+    Queue<int[]> queue = new ArrayDeque<>();
+    queue.offer(new int[] {0, 0});
+    for (int steps = 0; !queue.isEmpty(); steps++) {
+        for (int i = queue.size(); i > 0; i--) {
+            int[] cur = queue.poll();
+            if (cur[0] == x && cur[1] == y) return steps;
+            for (int[] m : moves) {
+                int r = cur[0] + m[0], c = cur[1] + m[1];
+                long key = (long) r * 1_000_000 + c;
+                if (r >= -2 && c >= -2 && visited.add(key)) queue.offer(new int[] {r, c});
+            }
+        }
+    }
+    return -1;
+}
+```
+
+```cpp
+int minKnightMoves(int x, int y) {
+    x = abs(x);
+    y = abs(y);  // symmetry: search one quadrant
+    int moves[8][2] = {{1, 2}, {2, 1}, {-1, 2}, {-2, 1}, {1, -2}, {2, -1}, {-1, -2}, {-2, -1}};
+    set<pair<int, int>> visited{{0, 0}};
+    queue<pair<int, int>> q;
+    q.push({0, 0});
+    for (int steps = 0; !q.empty(); steps++) {
+        for (int i = q.size(); i > 0; i--) {
+            auto [r, c] = q.front();
+            q.pop();
+            if (r == x && c == y) return steps;
+            for (auto& m : moves) {
+                int nr = r + m[0], nc = c + m[1];
+                if (nr >= -2 && nc >= -2 && visited.insert({nr, nc}).second) q.push({nr, nc});
+            }
+        }
+    }
+    return -1;
+}
+```
+
+```javascript
+function minKnightMoves(x, y) {
+  x = Math.abs(x);
+  y = Math.abs(y); // symmetry: search one quadrant
+  const moves = [[1, 2], [2, 1], [-1, 2], [-2, 1], [1, -2], [2, -1], [-1, -2], [-2, -1]];
+  const visited = new Set(["0,0"]);
+  let level = [[0, 0]];
+  for (let steps = 0; level.length > 0; steps++) {
+    const next = [];
+    for (const [r, c] of level) {
+      if (r === x && c === y) return steps;
+      for (const [dr, dc] of moves) {
+        const nr = r + dr;
+        const nc = c + dc;
+        const key = `${nr},${nc}`;
+        if (nr >= -2 && nc >= -2 && !visited.has(key)) {
+          visited.add(key);
+          next.push([nr, nc]);
+        }
+      }
+    }
+    level = next;
+  }
+  return -1;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(max(|x|, |y|)²)" space="O(max(|x|, |y|)²)" />
+
+<Callout type="tip" title="Bidirectional BFS">
+Searching from both the start and the target at once, and stopping when the two frontiers meet, explores far fewer squares. It's a good follow-up to mention for any shortest-path BFS with a known target.
+</Callout>

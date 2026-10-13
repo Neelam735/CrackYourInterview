@@ -1,0 +1,120 @@
+---
+title: Zigzag Level Order
+description: Traverse level by level as usual, and reverse every other level's values before recording them.
+---
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/binary-tree-zigzag-level-order-traversal/">
+
+Given the `root` of a binary tree, return its level order traversal in **zigzag** order: the first level left to right, the next right to left, then left to right again, alternating.
+
+**Example:** `root = [3, 9, 20, null, null, 15, 7]` returns `[[3], [20, 9], [15, 7]]`.
+
+</Problem>
+
+## Approach
+
+Don't change the order in which you **visit** nodes: keep the normal [level-by-level BFS](/learn/code/breadth-first-search/overview), adding children left then right. Only change how you **record** each level: reverse the values on every other level.
+
+Reversing a level costs `O(level size)`, so over the whole tree it adds `O(n)`. Alternatively, write each value directly into its final position: index `i` on left-to-right levels, `size - 1 - i` on right-to-left levels.
+
+## Solution
+
+<CodeTabs>
+
+```python
+from collections import deque
+
+def zigzag_level_order(root: TreeNode | None) -> list[list[int]]:
+    if root is None:
+        return []
+    result = []
+    queue = deque([root])
+    left_to_right = True
+    while queue:
+        level = []
+        for _ in range(len(queue)):
+            node = queue.popleft()
+            level.append(node.val)
+            if node.left:
+                queue.append(node.left)
+            if node.right:
+                queue.append(node.right)
+        result.append(level if left_to_right else level[::-1])
+        left_to_right = not left_to_right
+    return result
+```
+
+```java
+public List<List<Integer>> zigzagLevelOrder(TreeNode root) {
+    List<List<Integer>> result = new ArrayList<>();
+    if (root == null) return result;
+    Queue<TreeNode> queue = new ArrayDeque<>();
+    queue.offer(root);
+    boolean leftToRight = true;
+    while (!queue.isEmpty()) {
+        LinkedList<Integer> level = new LinkedList<>();
+        for (int i = queue.size(); i > 0; i--) {
+            TreeNode node = queue.poll();
+            if (leftToRight) level.addLast(node.val);
+            else level.addFirst(node.val);  // builds the level in reverse
+            if (node.left != null) queue.offer(node.left);
+            if (node.right != null) queue.offer(node.right);
+        }
+        result.add(level);
+        leftToRight = !leftToRight;
+    }
+    return result;
+}
+```
+
+```cpp
+vector<vector<int>> zigzagLevelOrder(TreeNode* root) {
+    vector<vector<int>> result;
+    if (!root) return result;
+    queue<TreeNode*> q;
+    q.push(root);
+    bool leftToRight = true;
+    while (!q.empty()) {
+        int size = q.size();
+        vector<int> level(size);
+        for (int i = 0; i < size; i++) {
+            TreeNode* node = q.front();
+            q.pop();
+            level[leftToRight ? i : size - 1 - i] = node->val;  // write into its final position
+            if (node->left) q.push(node->left);
+            if (node->right) q.push(node->right);
+        }
+        result.push_back(level);
+        leftToRight = !leftToRight;
+    }
+    return result;
+}
+```
+
+```javascript
+function zigzagLevelOrder(root) {
+  const result = [];
+  let level = root ? [root] : [];
+  let leftToRight = true;
+  while (level.length > 0) {
+    const values = level.map((node) => node.val);
+    result.push(leftToRight ? values : values.reverse());
+    const next = [];
+    for (const node of level) {
+      if (node.left) next.push(node.left);
+      if (node.right) next.push(node.right);
+    }
+    level = next;
+    leftToRight = !leftToRight;
+  }
+  return result;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(n)" space="O(w)" />
+
+<Callout type="warning">
+Trying to zigzag by changing the order children are **enqueued** gets messy fast, because reversing one level also reverses the order of the next level's parents. Keep the traversal normal and only reverse the output.
+</Callout>

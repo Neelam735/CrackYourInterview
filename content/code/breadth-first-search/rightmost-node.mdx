@@ -1,0 +1,107 @@
+---
+title: Rightmost Node
+description: The rightmost node of each level is the last one the level-by-level BFS processes.
+---
+
+<Problem difficulty="Medium" link="https://leetcode.com/problems/binary-tree-right-side-view/">
+
+Imagine standing on the right side of a binary tree. Return the values of the nodes you can see, from top to bottom: the **rightmost node of each level**.
+
+**Example:** `root = [1, 2, 3, null, 5, null, 4]` returns `[1, 3, 4]`. For `root = [1, 2, 3, 4]` the answer is `[1, 3, 4]`: the `4` on the left side is visible because nothing on its level is to its right.
+
+</Problem>
+
+## Approach
+
+Run the [level-by-level BFS](/learn/code/breadth-first-search/overview) with children added left before right. Then the **last node** processed on each level is the rightmost one, so record it.
+
+Note the second example: the rightmost node of a level isn't always in the right subtree. That's why a "just keep going right" walk is wrong, and why BFS by level is the right tool.
+
+## Solution
+
+<CodeTabs>
+
+```python
+from collections import deque
+
+def right_side_view(root: TreeNode | None) -> list[int]:
+    if root is None:
+        return []
+    view = []
+    queue = deque([root])
+    while queue:
+        size = len(queue)
+        for i in range(size):
+            node = queue.popleft()
+            if i == size - 1:
+                view.append(node.val)     # last node on this level
+            if node.left:
+                queue.append(node.left)
+            if node.right:
+                queue.append(node.right)
+    return view
+```
+
+```java
+public List<Integer> rightSideView(TreeNode root) {
+    List<Integer> view = new ArrayList<>();
+    if (root == null) return view;
+    Queue<TreeNode> queue = new ArrayDeque<>();
+    queue.offer(root);
+    while (!queue.isEmpty()) {
+        int size = queue.size();
+        for (int i = 0; i < size; i++) {
+            TreeNode node = queue.poll();
+            if (i == size - 1) view.add(node.val);  // last node on this level
+            if (node.left != null) queue.offer(node.left);
+            if (node.right != null) queue.offer(node.right);
+        }
+    }
+    return view;
+}
+```
+
+```cpp
+vector<int> rightSideView(TreeNode* root) {
+    vector<int> view;
+    if (!root) return view;
+    queue<TreeNode*> q;
+    q.push(root);
+    while (!q.empty()) {
+        int size = q.size();
+        for (int i = 0; i < size; i++) {
+            TreeNode* node = q.front();
+            q.pop();
+            if (i == size - 1) view.push_back(node->val);  // last node on this level
+            if (node->left) q.push(node->left);
+            if (node->right) q.push(node->right);
+        }
+    }
+    return view;
+}
+```
+
+```javascript
+function rightSideView(root) {
+  const view = [];
+  let level = root ? [root] : [];
+  while (level.length > 0) {
+    view.push(level[level.length - 1].val); // last node on this level
+    const next = [];
+    for (const node of level) {
+      if (node.left) next.push(node.left);
+      if (node.right) next.push(node.right);
+    }
+    level = next;
+  }
+  return view;
+}
+```
+
+</CodeTabs>
+
+<Complexity time="O(n)" space="O(w)" />
+
+<Callout type="tip" title="DFS alternative">
+Do a DFS that visits the **right** child before the left, passing the depth down. The first node you reach at each new depth is the rightmost one: append it when `depth == len(view)`.
+</Callout>

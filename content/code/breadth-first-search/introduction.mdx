@@ -1,0 +1,42 @@
+---
+title: Breadth-First Search
+description: Explore everything one step away, then two steps away, and so on. The natural tool for levels and shortest paths.
+readingTime: 5 min
+---
+
+## What BFS is
+
+Breadth-first search explores in **rings**: first the starting point, then everything one step away, then everything two steps away, and so on. Think of a ripple spreading out from a stone dropped in a pond.
+
+BFS uses a **queue** (first in, first out). Each node you take from the front adds its unvisited neighbours to the back. Because nodes are added in order of distance, they also come out in order of distance.
+
+<Visualizer id="level-order" />
+
+## BFS vs DFS
+
+| | BFS | DFS |
+|-|-----|-----|
+| Data structure | Queue | Stack or recursion |
+| Visit order | By distance from the start | One branch as deep as possible |
+| Shortest path (unweighted) | Yes: the first time you reach a node is via a shortest path | No |
+| Memory | The widest level of the search | The deepest path of the search |
+| Typical problems | Levels of a tree, fewest moves, spreading processes | Paths, subtree answers, exhaustive search |
+
+## When to reach for BFS
+
+- The problem talks about **levels**, **layers** or **rows** of a tree.
+- You need the **minimum number of steps**, moves or edges in an **unweighted** graph or grid.
+- Something **spreads** one step at a time from several starting points (rot, fire, infection): use **multi-source BFS**.
+
+<Callout type="tip">
+For queues, use `collections.deque` in Python (`list.pop(0)` is `O(n)`), `ArrayDeque` in Java, and `std::queue` in C++. JavaScript has no built-in queue: use an array with a moving head index, or swap in a new array for each level.
+</Callout>
+
+## What this section covers
+
+- [Overview](/learn/code/breadth-first-search/overview): BFS on trees, level by level.
+- [Graphs Overview](/learn/code/breadth-first-search/graphs-overview): BFS on graphs and grids, shortest paths, multi-source BFS.
+
+## Problems
+
+<ProblemList section="breadth-first-search" />
